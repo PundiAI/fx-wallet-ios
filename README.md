@@ -1,2 +1,2 @@
-# FX-Wallet
-FunctionX Wallet
+# f(x)Wallet
+Function X Wallet
