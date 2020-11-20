@@ -1,0 +1,50 @@
+[
+  {
+    "unit" : "ETH",
+    "coinType" : 60,
+    "icon" : "https:
+    "contractAddress" : "",
+    "symbolId" : 1027,
+    "name" : "Ethereum",
+    "decimals" : "18",
+    "currencyId" : 1,
+    "chainType" : 0,
+    "version" : 101
+  },
+  {
+    "unit" : "NPXS",
+    "coinType" : 60,
+    "icon" : "https:
+    "contractAddress" : "0xa15c7ebe1f07caf6bff097d8a589fb8ac49ae5b3",
+    "symbolId" : 2603,
+    "name" : "Pundix Token",
+    "decimals" : "18",
+    "currencyId" : 2,
+    "chainType" : 0,
+    "version" : 101
+  },
+  {
+    "unit" : "FX",
+    "coinType" : 60,
+    "icon" : "https:
+    "contractAddress" : "0x8c15ef5b4b21951d50e53e4fbda8298ffad25057",
+    "symbolId" : 1027,
+    "name" : "Function X",
+    "decimals" : "18",
+    "currencyId" : 3,
+    "chainType" : 0,
+    "version" : 101
+  },
+  {
+    "unit" : "USDT",
+    "coinType" : 60,
+    "icon" : "https:
+    "contractAddress" : "0xdac17f958d2ee523a2206206994597c13d831ec7",
+    "symbolId" : 825,
+    "name" : "USDT",
+    "decimals" : "6",
+    "currencyId" : 4,
+    "chainType" : 0,
+    "version" : 101
+  }
+]

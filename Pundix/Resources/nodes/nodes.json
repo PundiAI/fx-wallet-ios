@@ -1,0 +1,58 @@
+{
+  "bitcoin":[
+  ],
+  "ethereum":[
+      {
+            "name":"MainNet",
+            "bridgeBank":"0x88A99ac744Ca5FCd40825bCe4287Fa261FF0FFC0",
+            "chainId":"1",
+            "url":"https:
+            "wsurl":"",
+            "isTestNet": false
+      },
+      {
+          "name":"Kovan",
+          "bridgeBank":"0x8811358E8D1835c7bCabd0FDc3cebD266E59930b",
+          "chainId":"42",
+          "url":"https:
+          "wsurl":"wss:
+          "isTestNet": true
+    }
+  ],
+  "binance":[
+  ],
+  "hub":[
+      {
+          "name":"FxCore",
+          "chainId":"fxcore",
+          "url":"https:
+          "wsurl":"https:
+          "isTestNet": false
+      },
+      {
+          "name":"FxCore",
+          "chainId":"fxcore",
+          "url":"https:
+          "wsurl":"https:
+          "isTestNet": true
+      }
+  ],
+  "sms":[
+      {
+          "name":"FxMessage",
+          "chainId":"fx-message",
+          "url":"https:
+          "wsurl":"https:
+          "isTestNet": true
+      }
+  ],
+  "order":[
+      {
+          "name":"FxPayment",
+          "chainId":"fx-payment",
+          "url":"https:
+          "wsurl":"https:
+          "isTestNet": true
+    }
+  ]
+}

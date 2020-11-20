@@ -1,0 +1,62 @@
+[
+  {
+    "unit" : "ETH",
+    "coinType" : 60,
+    "icon" : "https:
+    "contractAddress" : "",
+    "symbolId" : 1027,
+    "name" : "Ethereum",
+    "decimals" : "18",
+    "currencyId" : 1,
+    "chainType" : 0,
+    "version" : 101
+  },
+  {
+    "unit" : "NPXS",
+    "coinType" : 60,
+    "icon" : "https:
+    "contractAddress" : "0x9ED87454b3FF198D57f91e584070b865c6503B3b",
+    "symbolId" : 2603,
+    "name" : "Pundix Token",
+    "decimals" : "18",
+    "currencyId" : 2,
+    "chainType" : 0,
+    "version" : 101
+  },
+  {
+    "unit" : "FX",
+    "coinType" : 60,
+    "icon" : "https:
+    "contractAddress" : "0xc5229C5199d8A306c3f7b4CA43122F684F23f6E6",
+    "symbolId" : 1027,
+    "name" : "Function X",
+    "decimals" : "18",
+    "currencyId" : 3,
+    "chainType" : 0,
+    "version" : 101
+  },
+  {
+    "unit" : "USDT",
+    "coinType" : 60,
+    "icon" : "https:
+    "contractAddress" : "0xcfe7ae6649eb6adcdcf0e6fd6d7c5d08ab316be1",
+    "symbolId" : 825,
+    "name" : "USDT",
+    "decimals" : "6",
+    "currencyId" : 4,
+    "chainType" : 0,
+    "version" : 101
+  },
+  {
+    "unit" : "fxcoin",
+    "coinType" : 118,
+    "icon" : "https:
+    "contractAddress" : "",
+    "symbolId" : -1,
+    "name" : "FXCore",
+    "decimals" : "18",
+    "currencyId" : -3,
+    "chainType" : 0,
+    "version" : 101
+  }
+]

@@ -1,0 +1,15 @@
+/* 
+  InfoPlist.strings
+  PundiPundi
+
+  Created by MieJie on 2017/1/7.
+  Copyright © 2017年 Chen Andy. All rights reserved.
+*/
+//是否允许此App使用你的相机？
+NSCameraUsageDescription = "Allows XWallet to use the camera to take photos and scan QR codes.";
+//是否允许此App访问你的媒体资料库?
+NSPhotoLibraryUsageDescription = "Gives permission to XWallet to save QR code image in your gallery.";
+
+NSPhotoLibraryAddUsageDescription = "Gives permission to XWallet to save QR code image in your gallery.";
+
+NSLocationWhenInUseUsageDescription = "XWallet will gain access to your current location and will be able to help you to enter your current address, and search for nearby stores.";

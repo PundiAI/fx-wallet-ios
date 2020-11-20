@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleDisplayName</key>
+	<string>f(x)Wallet</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>f(x)Wallet</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>fxwallet</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>FacebookDisplayName</key>
+	<string>f(x)Wallet</string>
+	<key>FirebaseScreenReportingEnabled</key>
+	<false/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>fbapi</string>
+		<string>fbapi20130214</string>
+		<string>fbapi20130410</string>
+		<string>fbapi20130702</string>
+		<string>fbapi20131010</string>
+		<string>fbapi20131219</string>
+		<string>fbapi20140410</string>
+		<string>fbapi20140116</string>
+		<string>fbapi20150313</string>
+		<string>fbapi20150629</string>
+		<string>fbauth</string>
+		<string>fbauth2</string>
+		<string>fb-messenger-api20140430</string>
+		<string>WhatsApp</string>
+		<string>twitter</string>
+		<string>twitterauth</string>
+	</array>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Allows f(x)Wallet to use the camera to take photos and scan QR codes.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Allow f(x)Wallet to make and manage phone calls?</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Allow f(x)Wallet to use your faceID</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>When you send your location to your friends, f(x)Wallet needs access to show them a map.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>f(x)Wallet will gain access to your current location and will be able to help you to enter your current address, and search for nearby stores.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Allow f(x)Wallet to use your microphone?</string>
+	<key>NSMotionUsageDescription</key>
+	<string>f(x)Wallet requires your permission to access sports and fitness</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Gives permission to f(x)Wallet to save QR code image in your gallery.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Gives permission to f(x)Wallet to save QR code image in your gallery.</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>cash-market-rounded-regular.ttf</string>
+		<string>cash-market-rounded-medium.ttf</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>external-accessory</string>
+		<string>remote-notification</string>
+	</array>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>armv7</string>
+	</array>
+	<key>UIStatusBarHidden</key>
+	<false/>
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleLightContent</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
+	<key>com.apple.developer.nfc.readersession.formats</key>
+	<array>
+		<string>NDEF</string>
+	</array>
+</dict>
+</plist>

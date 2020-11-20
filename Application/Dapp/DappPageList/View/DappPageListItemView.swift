@@ -1,0 +1,2 @@
+import WKKit
+extension DappPageListViewController {}
