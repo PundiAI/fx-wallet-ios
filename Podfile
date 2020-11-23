@@ -8,8 +8,6 @@ use_frameworks!
 
 
 target 'XWallet' do
-    pod 'HapticGenerator'
-    pod 'Presentr'
     pod 'WKKit', :path => './FXCore/Core/WKKit'
     pod 'WKKit/Push', :path => './FXCore/Core/WKKit'
     pod 'WKKit/Contacts', :path => './FXCore/Core/WKKit' 
@@ -20,6 +18,8 @@ target 'XWallet' do
     pod 'XWebKit', :path => './FXCore/Core/XWebKit'
     pod 'FunctionX', :path => './FXCore/Core/FunctionX'
 
+    pod 'HapticGenerator'
+    pod 'Presentr'
     pod 'Kanna', '~> 5.0.0'
     pod 'DateToolsSwift', '= 5.0.0'
     pod 'SwipeCellKit'
@@ -27,18 +27,8 @@ target 'XWallet' do
     pod 'XLPagerTabStrip' 
     pod 'RxViewController'
     pod 'UINavigationControllerWithCompletionBlock'
-    
-    ## 滚动截屏工具
     pod "SwViewCapture"
     
     pod 'KeychainAccess'
     pod 'AloeStackView', '~> 1.2.0'
-end
-
-post_install do |installer|
-    installer.pods_project.targets.each do |target|
-        target.build_configurations.each do |config|
-            config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf'
-        end
-    end
 end
