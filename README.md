@@ -1,6 +1,6 @@
 # f(x)Wallet
 
-[![Version](https://img.shields.io/github/release/HarshilShah/DeckTransition.svg)](https://github.com/FunctionX/fx-wallet-ios/releases/latest) ![Package Managers](https://img.shields.io/badge/supports-CocoaPods-orange.svg) [![License](https://img.shields.io/badge/license-MIT-999999.svg)](https://github.com/HarshilShah/DeckTransition/blob/master/LICENSE) [![Contact](https://img.shields.io/badge/contact-%40FunctionX-3a8fc1.svg)](https://twitter.com/FunctionX)
+[![Version](https://img.shields.io/github/release/FunctionX/fx-wallet-ios.svg)](https://github.com/FunctionX/fx-wallet-ios/releases/latest) ![Package Managers](https://img.shields.io/badge/supports-CocoaPods-orange.svg) [![License](https://img.shields.io/badge/license-MIT-999999.svg)](https://github.com/HarshilShah/DeckTransition/blob/master/LICENSE) [![Contact](https://img.shields.io/badge/contact-%40FunctionX-3a8fc1.svg)](https://twitter.com/FunctionX)
 
 
 
