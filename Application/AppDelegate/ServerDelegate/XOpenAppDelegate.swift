@@ -6,12 +6,13 @@
 //  Copyright © 2019 Andy.Chan 6K. All rights reserved.
 //
 
+import UIKit
 import PluggableApplicationDelegate
 import SwiftSignalKit
-import UIKit
 
 class XOpenAppDelegate: XApplicationService {
-    func application(_: UIApplication, didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+    
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         return true
     }
 }

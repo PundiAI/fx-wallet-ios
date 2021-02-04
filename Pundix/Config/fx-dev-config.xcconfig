@@ -1,0 +1,16 @@
+//
+//  fx-dev-config.xcconfig
+//  f(x)Wallet
+//
+//  Created by Pundix54 on 2020/11/26.
+//  Copyright © 2020 Andy.Chan 6K. All rights reserved.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+GCC_PREPROCESSOR_DEFINITIONS = $(inherited)
+FX_APP_BUNDLE_ID = com.pundi.fx.connect
+FX_APP_ICON = AppIconDEV
+CONFIG_FLAG = DEV
+API_BASE_URL = api.example.com.dev

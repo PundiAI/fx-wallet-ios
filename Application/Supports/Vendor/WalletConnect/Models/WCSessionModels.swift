@@ -33,3 +33,5 @@ public struct WCApproveSessionResponse: Codable {
     public let peerId: String?
     public let peerMeta: WCPeerMeta?
 }
+
+

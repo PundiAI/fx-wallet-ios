@@ -6,56 +6,61 @@
 //  Copyright © 2020 Andy.Chan 6K. All rights reserved.
 //
 
-import FunctionX
-import RxSwift
-import SQLite
-import SwiftyJSON
 import WKKit
+import SQLite
+import RxSwift
+import FunctionX
+import SwiftyJSON
 
 let DBPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first! + "/functionX.sqlite3"
 
-private class DBColumn<Datatype> {
+fileprivate class DBColumn<Datatype> {
+    
     let name: String
     let expression: Expression<Datatype>
     init(_ name: String) {
         self.name = name
-        expression = Expression(name)
+        self.expression = Expression(name)
     }
-
+    
     func value(_ b: Binding?) -> Datatype? {
         if let blob = b as? Blob {
             return Data(blob.bytes) as? Datatype
         }
-
+        
         return b as? Datatype
     }
 }
 
-private class DBOperation {
+fileprivate class DBOperation {
     var insert: Insert?
     var delete: Delete?
     var update: Update?
     init(_ insert: Insert) { self.insert = insert }
     init(_ delete: Delete) { self.delete = delete }
     init(_ update: Update) { self.update = update }
-
+    
     func commit(to db: Connection) throws {
-        if let insert = self.insert { try db.run(insert) } else if let delete = self.delete { try db.run(delete) } else if let update = self.update { try db.run(update) }
+        if let insert = self.insert { try db.run(insert) }
+        else if let delete = self.delete { try db.run(delete) }
+        else if let update = self.update { try db.run(update) }
     }
 }
 
 class DBTable {
+    
     let operationQueue: DispatchQueue
     private(set) var connection: Connection!
 
     var name: String { "" }
     var table: Table { Table(name) }
-
+    
     init(in dbPath: String) {
+        
         if !FileManager.default.fileExists(atPath: dbPath) {
             FileManager.default.createFile(atPath: dbPath, contents: nil, attributes: nil)
         }
-
+        
         operationQueue = DispatchQueue(label: "com.\(Date().timeIntervalSinceNow).currentQueue", qos: .default, attributes: .concurrent)
         do {
             connection = try Connection(dbPath)
@@ -63,27 +68,31 @@ class DBTable {
             print("db error:", error)
         }
     }
-
+    
     var version: Int {
         set { UserDefaults.standard.set(newValue, forKey: "table_\(name)_version") }
         get { return UserDefaults.standard.integer(forKey: "table_\(name)_version") }
     }
-
+    
     var connectionIsNil: WKError { WKError(-1, "connection is nil") }
-
+    
     fileprivate func commit(operations: [DBOperation]) -> Observable<Bool> {
         guard let db = connection else { return Observable.error(connectionIsNil) }
         guard !operations.isEmpty else { return Observable.error(WKError(-1, "operations is empty")) }
-
-        return Observable.create { [weak self] (subscriber) -> Disposable in
+        
+        return Observable.create {[weak self] (subscriber) -> Disposable in
             self?.operationQueue.async(execute: DispatchWorkItem(qos: .default, flags: .barrier) {
                 do {
+                    
                     if operations.count == 1 {
+                        
                         try operations.first!.commit(to: db)
                         subscriber.onNext(true)
                         subscriber.onCompleted()
                     } else {
+                        
                         try db.transaction {
+                                
                             for operation in operations {
                                 try operation.commit(to: db)
                             }
@@ -100,6 +109,9 @@ class DBTable {
     }
 }
 
+
+
+
 private let selfAddress = DBColumn<String>("selfAddress")
 private let chatRoomId = DBColumn<String>("chatRoomId")
 
@@ -111,23 +123,24 @@ private let contactPrimaryKey = DBColumn<String>("contactPrimaryKey")
 private let lastChatMsg = DBColumn<String>("lastChatMsg")
 private let lastChatMsgTime = DBColumn<Int64>("lastCaatMsgTime")
 
-// MARK: SmsContactListCache
-
+//MARK: SmsContactListCache
 class SmsContactListCache: DBTable {
+    
     static let shared = SmsContactListCache(in: DBPath)
-
+    
     override var name: String { "SmsContact" }
-
+    
     override init(in dbPath: String) {
         super.init(in: dbPath)
-
+        
         guard let db = connection else { return }
-
+        
         do {
+            
             try db.run(table.create(temporary: false, ifNotExists: true) { t in
                 t.column(selfAddress.expression)
                 t.column(chatRoomId.expression)
-
+                
                 t.column(contactPK.expression)
                 t.column(contactName.expression)
                 t.column(contactAddress.expression)
@@ -137,41 +150,45 @@ class SmsContactListCache: DBTable {
             print("create table(\(name)) error:", error)
         }
     }
-
+    
     func insertOrReplace(_ contactList: [SmsUser], ofUser userAddress: String) -> Observable<Bool> {
-        let inserts: [DBOperation] = contactList.map { contact in
-
+        
+        let inserts: [DBOperation] = contactList.map{ contact in
+            
             let primaryKey = (userAddress + contact.address).md5()
             let insert = self.table.insert(or: .replace,
-                                           contactPrimaryKey.expression <- primaryKey,
-                                           selfAddress.expression <- userAddress,
-                                           chatRoomId.expression <- contact.chatRoomId,
-                                           contactPK.expression <- contact.publicKey,
-                                           contactName.expression <- contact.name,
-                                           contactAddress.expression <- contact.address)
+                                     contactPrimaryKey.expression <- primaryKey,
+                                     selfAddress.expression <- userAddress,
+                                     chatRoomId.expression <- contact.chatRoomId,
+                                     contactPK.expression <- contact.publicKey,
+                                     contactName.expression <- contact.name,
+                                     contactAddress.expression <- contact.address)
             return DBOperation(insert)
         }
         return commit(operations: inserts)
     }
-
+    
     func selectAll(ofUser userAddress: String) -> Observable<[SmsUser]> {
         guard let db = connection else { return Observable.just([]) }
-
-        return Observable.create { [weak self] (subscriber) -> Disposable in
+        
+        return Observable.create {[weak self] (subscriber) -> Disposable in
             guard let this = self else { return Disposables.create() }
-
+            
             this.operationQueue.async {
                 do {
+                    
                     let query = this.table
                         .filter(selfAddress.expression == userAddress)
-
+                    
                     let sql = query.asSQL().replacingOccurrences(of: "(_:_:)", with: "")
                     let statement = try db.prepare(sql)
-
+                    
                     var users: [SmsUser] = []
                     for row in statement {
+                        
                         let user = SmsUser()
                         for (idx, name) in statement.columnNames.enumerated() {
+                            
                             let v = row[idx]
                             switch name {
                             case chatRoomId.name:
@@ -182,13 +199,13 @@ class SmsContactListCache: DBTable {
                                 user.name = contactName.value(v) ?? ""
                             case contactAddress.name:
                                 user.address = contactAddress.value(v) ?? ""
-
-                            default: continue
+                            
+                            default:continue
                             }
                         }
                         users.append(user)
                     }
-
+                    
                     subscriber.onNext(users)
                     subscriber.onCompleted()
                 } catch {
@@ -199,7 +216,20 @@ class SmsContactListCache: DBTable {
             return Disposables.create()
         }
     }
+    
+    
 }
+
+
+
+
+
+
+
+
+
+
+
 
 private let status = DBColumn<Int64>("status")
 private let sortHeight = DBColumn<Int64>("sortHeight")
@@ -218,31 +248,32 @@ private let txFromPK = DBColumn<Data>("txFromPK")
 private let txTokens = DBColumn<String>("txTokens")
 private let txRawMsg = DBColumn<String>("txRawMsg")
 
-// MARK: SmsMessageCache
-
+//MARK: SmsMessageCache
 class SmsMessageCache: DBTable {
+    
     static let shared = SmsMessageCache(in: DBPath)
-
+    
     override var name: String { "smsMessage" }
-
+    
     override init(in dbPath: String) {
         super.init(in: dbPath)
-
+        
         guard let db = connection else { return }
-
+        
         do {
+            
             try db.run(table.create(temporary: false, ifNotExists: true) { t in
                 t.column(status.expression)
                 t.column(sortHeight.expression, primaryKey: true)
                 t.column(confirmTime.expression)
-
+                
                 t.column(txHash.expression)
                 t.column(txHeight.expression)
                 t.column(txGroupId.expression)
-
+                
                 t.column(preTxHeight.expression)
                 t.column(nextTxHeight.expression)
-
+                
                 t.column(txMsg.expression)
                 t.column(txToPK.expression)
                 t.column(txFromPK.expression)
@@ -253,65 +284,70 @@ class SmsMessageCache: DBTable {
             print("create table(\(name)) error:", error)
         }
     }
-
+    
     func delete(_ messages: [SmsMessage]) -> Observable<Bool> {
+
         var deletes: [DBOperation] = []
         for msg in messages {
-            let item = table.filter(txGroupId.expression == msg.txGroupId && sortHeight.expression == Int64(msg.sortHeight))
+            let item = self.table.filter(txGroupId.expression == msg.txGroupId && sortHeight.expression == Int64(msg.sortHeight))
             deletes.append(DBOperation(item.delete()))
         }
         return commit(operations: deletes)
     }
-
+    
     func insertOrReplace(_ messages: [SmsMessage]) -> Observable<Bool> {
-        let inserts: [DBOperation] = messages.map { msg in
-
-            let tokens = msg.message.transferTokens.map { $0.json }
+        
+        let inserts: [DBOperation] = messages.map{ msg in
+            
+            let tokens = msg.message.transferTokens.map{ $0.json }
             var msgTokens = "[]"
             if let data = try? JSONSerialization.data(withJSONObject: tokens, options: [.sortedKeys]) {
                 msgTokens = String(data: data, encoding: .utf8) ?? "[]"
             }
-
+            
             let insert = self.table.insert(or: .replace,
-                                           status.expression <- Int64(msg.status.rawValue),
-                                           sortHeight.expression <- Int64(msg.sortHeight),
-                                           confirmTime.expression <- msg.confirmTime,
-                                           txHash.expression <- msg.txHash,
-                                           txHeight.expression <- Int64(msg.txHeight),
-                                           preTxHeight.expression <- Int64(msg.preTxHeight),
-                                           nextTxHeight.expression <- Int64(msg.nextTxHeight),
-                                           txGroupId.expression <- msg.txGroupId,
-                                           txMsg.expression <- msg.message.content,
-                                           txToPK.expression <- msg.message.toPublicKey,
-                                           txFromPK.expression <- msg.message.fromPublicKey,
-                                           txTokens.expression <- msgTokens,
-                                           txRawMsg.expression <- msg.message.encryptedContent)
+                                     status.expression <- Int64(msg.status.rawValue),
+                                     sortHeight.expression <- Int64(msg.sortHeight),
+                                     confirmTime.expression <- msg.confirmTime,
+                                     txHash.expression <- msg.txHash,
+                                     txHeight.expression <- Int64(msg.txHeight),
+                                     preTxHeight.expression <- Int64(msg.preTxHeight),
+                                     nextTxHeight.expression <- Int64(msg.nextTxHeight),
+                                     txGroupId.expression <- msg.txGroupId,
+                                     txMsg.expression <- msg.message.content,
+                                     txToPK.expression <- msg.message.toPublicKey,
+                                     txFromPK.expression <- msg.message.fromPublicKey,
+                                     txTokens.expression <- msgTokens,
+                                     txRawMsg.expression <- msg.message.encryptedContent)
             return DBOperation(insert)
         }
         return commit(operations: inserts)
     }
-
-    func select(ofGroupId groupId: String, fromHeight height: UInt64, direction _: Bool = false, pageSize: Int = 20) -> Observable<[SmsMessage]> {
+    
+    func select(ofGroupId groupId: String, fromHeight height: UInt64, direction: Bool = false, pageSize: Int = 20) -> Observable<[SmsMessage]> {
         guard let db = connection else { return Observable.just([]) }
-
-        return Observable.create { [weak self] (subscriber) -> Disposable in
+        
+        return Observable.create {[weak self] (subscriber) -> Disposable in
             guard let this = self else { return Disposables.create() }
-
+            
             this.operationQueue.async {
                 do {
+                    
                     let query = this.table
                         .filter(txGroupId.expression == groupId && sortHeight.expression < Int64(height))
                         .order(sortHeight.expression.desc)
                         .limit(pageSize)
-
+                    
                     let sql = query.asSQL().replacingOccurrences(of: "(_:_:)", with: "")
                     let statement = try db.prepare(sql)
-
+                    
                     var messages: [SmsMessage] = []
                     for row in statement {
+                        
                         let sms = SmsMessage()
                         var sortHeightT: UInt64 = 0
                         for (idx, name) in statement.columnNames.enumerated() {
+                            
                             let v = row[idx]
                             switch name {
                             case status.name:
@@ -340,9 +376,9 @@ class SmsMessageCache: DBTable {
                                 sms.message.encryptedContent = txRawMsg.value(v) ?? ""
                             case txTokens.name:
                                 let tokens = JSON(parseJSON: txTokens.value(v) ?? "[]")
-                                sms.message.transferTokens = tokens.arrayValue.map { TransactionMessage.Coin(amount: $0["amount"].stringValue, denom: $0["denom"].stringValue) }
-
-                            default: continue
+                                sms.message.transferTokens = tokens.arrayValue.map{ TransactionMessage.Coin(amount: $0["amount"].stringValue, denom: $0["denom"].stringValue) }
+                            
+                            default:continue
                             }
                         }
                         if sms.txHeight == 0 { sms.status = .failed }
@@ -350,7 +386,7 @@ class SmsMessageCache: DBTable {
                         sms.message.deriveAddress()
                         messages.append(sms)
                     }
-
+                    
                     subscriber.onNext(messages)
                     subscriber.onCompleted()
                 } catch {
@@ -361,4 +397,6 @@ class SmsMessageCache: DBTable {
             return Disposables.create()
         }
     }
+    
+    
 }

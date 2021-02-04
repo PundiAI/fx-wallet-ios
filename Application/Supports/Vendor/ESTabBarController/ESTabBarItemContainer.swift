@@ -26,7 +26,7 @@
 import UIKit
 
 internal class ESTabBarItemContainer: UIControl {
-
+    
     internal init(_ target: AnyObject?, tag: Int) {
         super.init(frame: CGRect.zero)
         self.tag = tag
@@ -37,11 +37,11 @@ internal class ESTabBarItemContainer: UIControl {
         self.backgroundColor = .clear
         self.isAccessibilityElement = true
     }
-
+    
     internal required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
+    
     internal override func layoutSubviews() {
         super.layoutSubviews()
         for subview in self.subviews {
@@ -63,5 +63,5 @@ internal class ESTabBarItemContainer: UIControl {
         }
         return b
     }
-
+    
 }

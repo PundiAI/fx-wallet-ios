@@ -7,11 +7,11 @@
 //
 
 import Foundation
-import Hero
+import WKKit
 import pop
+import Hero
 import RxCocoa
 import RxSwift
-import WKKit
 
 extension TokenInfoViewController.View {
     func setAnimation() {
@@ -21,8 +21,8 @@ extension TokenInfoViewController.View {
                                          .whenPresenting(.forceNonFade),
                                          .whenDismissing(.fade),
                                          .spring(stiffness: 250, damping: 25)]
-
+        
         tabBarView.hero.modifiers = [.delay(0.001), .whenPresenting(.opacity(1)),
                                      .whenDismissing(.opacity(1))]
-    }
+    } 
 }

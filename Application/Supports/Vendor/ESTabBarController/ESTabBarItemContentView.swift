@@ -25,8 +25,8 @@
 
 import UIKit
 
-public enum ESTabBarItemImageHorizontalAlignment: Int {
-
+public enum ESTabBarItemImageHorizontalAlignment : Int {
+    
     case center = 0
 
     case left = 1
@@ -34,118 +34,120 @@ public enum ESTabBarItemImageHorizontalAlignment: Int {
     case right = 2
 }
 
-public enum ESTabBarItemContentMode: Int {
-
+public enum ESTabBarItemContentMode : Int {
+    
     case alwaysOriginal // Always set the original image size
-
+    
     case alwaysTemplate // Always set the image as a template image size
 }
 
-open class ESTabBarItemContentView: UIView {
 
+open class ESTabBarItemContentView: UIView {
+    
     // MARK: - PROPERTY SETTING
 
     /// 设置contentView的偏移
     open var insets = UIEdgeInsets.zero
-
+    
     /// 是否被选中
     open var selected = false
-
+    
     /// 是否处于高亮状态
     open var highlighted = false
-
+    
     /// 是否支持高亮
     open var highlightEnabled = true
-
+    
     /// 文字颜色
     open var textColor = UIColor(white: 0.57254902, alpha: 1.0) {
         didSet {
             if !selected { titleLabel.textColor = textColor }
         }
     }
-
+    
     /// 高亮时文字颜色
     open var highlightTextColor = UIColor(red: 0.0, green: 0.47843137, blue: 1.0, alpha: 1.0) {
         didSet {
             if selected { titleLabel.textColor = highlightIconColor }
         }
     }
-
+    
     /// icon颜色
     open var iconColor = UIColor(white: 0.57254902, alpha: 1.0) {
         didSet {
             if !selected { imageView.tintColor = iconColor }
         }
     }
-
+    
     /// 高亮时icon颜色
     open var highlightIconColor = UIColor(red: 0.0, green: 0.47843137, blue: 1.0, alpha: 1.0) {
         didSet {
             if selected { imageView.tintColor = highlightIconColor }
         }
     }
-
+    
     /// 背景颜色
     open var backdropColor = UIColor.clear {
         didSet {
             if !selected { backgroundColor = backdropColor }
         }
     }
-
+    
     /// 高亮时背景颜色
     open var highlightBackdropColor = UIColor.clear {
         didSet {
             if selected { backgroundColor = highlightBackdropColor }
         }
     }
-
+    
     open var title: String? {
         didSet {
             self.titleLabel.text = title
             self.updateLayout()
         }
     }
-
+    
     /// Icon imageView renderingMode, default is .alwaysTemplate like UITabBarItem
     open var renderingMode: UIImage.RenderingMode = .alwaysTemplate {
         didSet {
             self.updateDisplay()
         }
     }
-
+    
     /// Item content mode, default is .alwaysTemplate like UITabBarItem
     open var itemContentMode: ESTabBarItemContentMode = .alwaysTemplate {
         didSet {
             self.updateDisplay()
         }
     }
-
+    
     ///
     open var itemImageHorizontalAlignment: ESTabBarItemImageHorizontalAlignment = .center {
         didSet {
             self.updateDisplay()
         }
     }
-
+    
+    
     /// Icon imageView's image
     open var image: UIImage? {
         didSet {
             if !selected { self.updateDisplay() }
         }
     }
-
+    
     open var selectedImage: UIImage? {
         didSet {
             if selected { self.updateDisplay() }
         }
     }
-
+    
     open var imageView: UIImageView = {
         let imageView = UIImageView.init(frame: CGRect.zero)
         imageView.backgroundColor = .clear
         return imageView
     }()
-
+    
     open var titleLabel: UILabel = {
         let titleLabel = UILabel.init(frame: CGRect.zero)
         titleLabel.backgroundColor = .clear
@@ -153,7 +155,8 @@ open class ESTabBarItemContentView: UIView {
         titleLabel.textAlignment = .center
         return titleLabel
     }()
-
+    
+    
     /// Badge value
     open var badgeValue: String? {
         didSet {
@@ -196,20 +199,20 @@ open class ESTabBarItemContentView: UIView {
             }
         }
     }
-
+    
     // MARK: -
     public override init(frame: CGRect) {
         super.init(frame: frame)
         self.isUserInteractionEnabled = false
-
+        
         addSubview(imageView)
         addSubview(titleLabel)
-
+        
         titleLabel.textColor = textColor
         imageView.tintColor = iconColor
         backgroundColor = backdropColor
     }
-
+    
     public required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -220,11 +223,11 @@ open class ESTabBarItemContentView: UIView {
         titleLabel.textColor = selected ? highlightTextColor : textColor
         backgroundColor = selected ? highlightBackdropColor : backdropColor
     }
-
+    
     open func updateLayout() {
         let w = self.bounds.size.width
         let h = self.bounds.size.height
-
+        
         imageView.isHidden = (imageView.image == nil)
         titleLabel.isHidden = (titleLabel.text == nil)
 
@@ -243,7 +246,7 @@ open class ESTabBarItemContentView: UIView {
                 s = 23.0
                 f = 10.0
             }
-
+            
             if !imageView.isHidden && !titleLabel.isHidden {
                 titleLabel.font = UIFont.systemFont(ofSize: f)
                 titleLabel.sizeToFit()
@@ -267,7 +270,7 @@ open class ESTabBarItemContentView: UIView {
                                                   height: s)
                 }
             } else if !imageView.isHidden {
-                var x: CGFloat = (w - s) / 2.0
+                var x:CGFloat = (w - s) / 2.0
                 switch self.itemImageHorizontalAlignment {
                 case .left: x = 0
                 case .right: x = w - s
@@ -276,7 +279,7 @@ open class ESTabBarItemContentView: UIView {
                 imageView.frame = CGRect.init(x: x,
                                               y: (h - s) / 2.0,
                                               width: s,
-                                              height: s)
+                                              height: s) 
             } else if !titleLabel.isHidden {
                 titleLabel.font = UIFont.systemFont(ofSize: f)
                 titleLabel.sizeToFit()
@@ -285,7 +288,7 @@ open class ESTabBarItemContentView: UIView {
                                                width: titleLabel.bounds.size.width,
                                                height: titleLabel.bounds.size.height)
             }
-
+            
             if let _ = badgeView.superview {
                 let size = badgeView.sizeThatFits(self.frame.size)
                 if #available(iOS 11.0, *), isWide {
@@ -295,7 +298,7 @@ open class ESTabBarItemContentView: UIView {
                 }
                 badgeView.setNeedsLayout()
             }
-
+            
         } else {
             if !imageView.isHidden && !titleLabel.isHidden {
                 titleLabel.sizeToFit()
@@ -315,7 +318,7 @@ open class ESTabBarItemContentView: UIView {
                 titleLabel.sizeToFit()
                 titleLabel.center = CGPoint.init(x: w / 2.0, y: h / 2.0)
             }
-
+            
             if let _ = badgeView.superview {
                 let size = badgeView.sizeThatFits(self.frame.size)
                 badgeView.frame = CGRect.init(origin: CGPoint.init(x: w / 2.0 + badgeOffset.horizontal, y: h / 2.0 + badgeOffset.vertical), size: size)
@@ -325,7 +328,7 @@ open class ESTabBarItemContentView: UIView {
     }
 
     // MARK: - INTERNAL METHODS
-    internal final func select(animated: Bool, completion: (() -> Void)?) {
+    internal final func select(animated: Bool, completion: (() -> ())?) {
         selected = true
         if highlightEnabled && highlighted {
             highlighted = false
@@ -338,14 +341,14 @@ open class ESTabBarItemContentView: UIView {
             selectAnimation(animated: animated, completion: completion)
         }
     }
-
-    internal final func deselect(animated: Bool, completion: (() -> Void)?) {
+    
+    internal final func deselect(animated: Bool, completion: (() -> ())?) {
         selected = false
         updateDisplay()
         self.deselectAnimation(animated: animated, completion: completion)
     }
-
-    internal final func reselect(animated: Bool, completion: (() -> Void)?) {
+    
+    internal final func reselect(animated: Bool, completion: (() -> ())?) {
         if selected == false {
             select(animated: animated, completion: completion)
         } else {
@@ -359,8 +362,8 @@ open class ESTabBarItemContentView: UIView {
             }
         }
     }
-
-    internal final func highlight(animated: Bool, completion: (() -> Void)?) {
+    
+    internal final func highlight(animated: Bool, completion: (() -> ())?) {
         if !highlightEnabled {
             return
         }
@@ -370,8 +373,8 @@ open class ESTabBarItemContentView: UIView {
         highlighted = true
         self.highlightAnimation(animated: animated, completion: completion)
     }
-
-    internal final func dehighlight(animated: Bool, completion: (() -> Void)?) {
+    
+    internal final func dehighlight(animated: Bool, completion: (() -> ())?) {
         if !highlightEnabled {
             return
         }
@@ -381,34 +384,34 @@ open class ESTabBarItemContentView: UIView {
         highlighted = false
         self.dehighlightAnimation(animated: animated, completion: completion)
     }
-
-    internal func badgeChanged(animated: Bool, completion: (() -> Void)?) {
+    
+    internal func badgeChanged(animated: Bool, completion: (() -> ())?) {
         self.badgeChangedAnimation(animated: animated, completion: completion)
     }
-
+    
     // MARK: - ANIMATION METHODS
-    open func selectAnimation(animated: Bool, completion: (() -> Void)?) {
+    open func selectAnimation(animated: Bool, completion: (() -> ())?) {
         completion?()
     }
-
-    open func deselectAnimation(animated: Bool, completion: (() -> Void)?) {
+    
+    open func deselectAnimation(animated: Bool, completion: (() -> ())?) {
         completion?()
     }
-
-    open func reselectAnimation(animated: Bool, completion: (() -> Void)?) {
+    
+    open func reselectAnimation(animated: Bool, completion: (() -> ())?) {
         completion?()
     }
-
-    open func highlightAnimation(animated: Bool, completion: (() -> Void)?) {
+    
+    open func highlightAnimation(animated: Bool, completion: (() -> ())?) {
         completion?()
     }
-
-    open func dehighlightAnimation(animated: Bool, completion: (() -> Void)?) {
+    
+    open func dehighlightAnimation(animated: Bool, completion: (() -> ())?) {
         completion?()
     }
-
-    open func badgeChangedAnimation(animated: Bool, completion: (() -> Void)?) {
+    
+    open func badgeChangedAnimation(animated: Bool, completion: (() -> ())?) {
         completion?()
     }
-
+    
 }

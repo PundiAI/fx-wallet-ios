@@ -1,7 +1,17 @@
-import RxCocoa
-import RxSwift
-import SwiftyJSON
+//
+//
+//  XWallet
+//
+//  Created by May on 2020/8/11.
+//  Copyright © 2020 May All rights reserved.
+//
+
 import WKKit
+import RxSwift
+import RxCocoa
+import SwiftyJSON
+
+
 extension String {
     func index(at position: Int, from start: Index? = nil) -> Index? {
         let startingIndex = start ?? startIndex
@@ -25,23 +35,26 @@ extension Array where Element: Hashable {
     }
 
     mutating func removeDuplicates() {
-        self = removingDuplicates()
+        self = self.removingDuplicates()
     }
 }
 
+
 extension SetCurrencyViewController {
+    
     struct Currency {
         var countryname: String
         var name: String
         var currency: String
         var selected: Bool = false
     }
-
+    
+    
     struct Currencys {
         var indexs: [String] = []
-        var items = [String: [CellViewModel]]()
+        var items: [String: [CellViewModel]] = [String: [CellViewModel]]()
     }
-
+    
     class ViewModel {
         init() {
             do {
@@ -49,22 +62,30 @@ extension SetCurrencyViewController {
                     let datas = try Data(contentsOf: fileURL)
                     let json = try JSON(data: datas)
                     if let itemsJson = json.array {
-                        let temp = itemsJson.map { CellViewModel(item: Currency(countryname: $0["countryname"].stringValue,
-                                                                                name: $0["name"].stringValue,
-                                                                                currency: $0["currency"].stringValue)) }
-                        let result = temp.filter { $0.item.currency.length != 0 }.sorted(by: { $0.item.currency < $1.item.currency })
-                        items = result
-                        currencys = ViewModel.groupItmes(items: result)
+                        
+                        let temp = itemsJson.map { CellViewModel.init(item: Currency(countryname: $0["countryname"].stringValue,
+                                                                                      name: $0["name"].stringValue,
+                                                                                      currency: $0["currency"].stringValue))}
+                        
+                        let result = temp.filter {  $0.item.currency.length != 0  }.sorted(by: { $0.item.currency < $1.item.currency  })
+                        self.items = result
+                        self.currencys = ViewModel.groupItmes(items: result)
                     }
                 }
+                
             } catch let error as NSError {
                 WKLog.Error(error.domain)
             }
         }
-
+        
         var items: [CellViewModel]?
+        
+        
         var currencys: Currencys?
+        
         typealias GroupModels = [String: [CellViewModel]]
+        
+        
         class func isContains(items: [CellViewModel], tager: CellViewModel) -> Bool {
             for item in items {
                 if item.item.currency == tager.item.currency {
@@ -73,11 +94,15 @@ extension SetCurrencyViewController {
             }
             return false
         }
-
+        
+        
+        //首字母相同的放在一起
         class func groupItmes(items: [CellViewModel]) -> Currencys {
-            var datas = Currencys()
+            var datas =  Currencys()
+
             let indexs = ViewModel.getIndexs(items: items)
             datas.indexs = indexs
+
             for item in items {
                 if let idx = ViewModel.getCharactor(string: item.item.currency) {
                     if let arr = datas.items[idx], arr.count > 0 {
@@ -90,27 +115,31 @@ extension SetCurrencyViewController {
                     }
                 }
             }
+
             for item in datas.items {
                 let params = item.value
                 if params.count > 0 {
                     datas.items[item.key] = params.sorted(by: { (c1, c2) -> Bool in
-                        c1.item.currency < c2.item.currency
+                        return c1.item.currency < c2.item.currency
                     })
                 }
             }
+
             return datas
         }
-
+        
+        
+        
         class func getIndexs(items: [CellViewModel]) -> [String] {
-            var _indexs = [String]()
+            var _indexs: [String] = [String]()
             for item in items {
                 if let idx = ViewModel.getCharactor(string: item.item.currency) {
                     _indexs.push(newElement: idx)
                 }
             }
-            return _indexs.removingDuplicates().sorted { $0 < $1 }
+            return _indexs.removingDuplicates().sorted {$0<$1}
         }
-
+        
         class func getCharactor(string: String) -> String? {
             let mString = NSMutableString(string: string) as CFMutableString
             if CFStringTransform(mString, nil, kCFStringTransformToLatin, false) {
@@ -124,3 +153,4 @@ extension SetCurrencyViewController {
         }
     }
 }
+        

@@ -1,18 +1,33 @@
+//
+//
+//  XWallet
+//
+//  Created by May on 2020/8/11.
+//  Copyright © 2020 May All rights reserved.
+//
+
 import WKKit
 import RxSwift
 import RxCocoa
+
 extension CheckBackUpViewController {
+    
     class ViewModel {
+        
         var currentPage: Int = 1
-        var selected: [(Int, String)] = []
+        var selected:[(Int, String)] = []
+        
         var checkIdxMnemonics: [(Int, String)] = []
         var checkMnemonics: [String] = []
         var errorMnemonics: [String] = []
+        
         init(mnemonic: String) {
             self.mnemonic = mnemonic
             self.bind()
         }
+        
         var mnemonic: String
+        
         var mnemoniclist: [String] {
             let tags = mnemonic.split(separator: " ")
             var list: [String] = []
@@ -21,11 +36,13 @@ extension CheckBackUpViewController {
             }
             return list
         }
+        
         private func bind() {
             checkMnemonics = setCheckData(list: mnemoniclist)
             setErrorMnemonics(list: mnemoniclist, checkData: checkMnemonics)
         }
-        private func setCheckData(list: [String]) -> [String] {
+        
+        private func setCheckData(list : [String]) -> [String] {
             var temp: [String] = []
             while temp.count < 3 {
                 if let random = list.randomElement() {
@@ -36,26 +53,31 @@ extension CheckBackUpViewController {
             }
             return temp
         }
-        private func setErrorMnemonics(list: [String], checkData: [String]) {
+        
+        private func setErrorMnemonics(list : [String], checkData: [String]) {
             errorMnemonics = list.filter { !checkData.contains($0)}
         }
+        
         func getRandomTags() -> (Int, [String])? {
             var temp: [String] = []
             while temp.count < 5 {
                 if let random = errorMnemonics.randomElement() {
                     if !temp.contains(random) {
-                        temp.append(random)
+                       temp.append(random)
                     }
                 }
             }
             let current = checkMnemonics[currentPage-1]
             let newIndex = Int(arc4random_uniform(UInt32(6)))
+            
             temp.insert(current, at: newIndex)
+            
             if let idx = mnemoniclist.indexOf(condition: { $0 == current}) {
                 return (idx + 1, temp)
             }
             return nil
         }
+        
         func check() -> Bool {
             var bool = true
             for item in selected {
@@ -68,3 +90,4 @@ extension CheckBackUpViewController {
         }
     }
 }
+        

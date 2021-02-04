@@ -20,10 +20,10 @@ public struct WCSession: Codable, Equatable {
 
         let urlString = string.replacingOccurrences(of: "wc:", with: "wc://")
         guard let url = URL(string: urlString),
-              let topic = url.user,
-              let version = url.host,
-              let components = NSURLComponents(url: url, resolvingAgainstBaseURL: false) else {
-            return nil
+            let topic = url.user,
+            let version = url.host,
+            let components = NSURLComponents(url: url, resolvingAgainstBaseURL: false) else {
+                return nil
         }
 
         var dicts = [String: String]()
@@ -33,9 +33,9 @@ public struct WCSession: Codable, Equatable {
             }
         }
         guard let bridge = dicts["bridge"],
-              let bridgeUrl = URL(string: bridge),
-              let key = dicts["key"] else {
-            return nil
+            let bridgeUrl = URL(string: bridge),
+            let key = dicts["key"] else {
+                return nil
         }
 
         return WCSession(topic: topic, version: version, bridge: bridgeUrl, key: Data(hex: key))

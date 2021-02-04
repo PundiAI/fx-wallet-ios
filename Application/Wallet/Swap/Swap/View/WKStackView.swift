@@ -7,18 +7,18 @@
 //
 
 import Foundation
-import RxSwift
 import WKKit
+import RxSwift
 
 extension UIView {
     func height(constant: CGFloat) {
         setConstraint(value: constant, attribute: .height)
     }
-
+    
     func width(constant: CGFloat) {
         setConstraint(value: constant, attribute: .width)
     }
-
+    
     private func removeConstraint(attribute: NSLayoutConstraint.Attribute) {
         constraints.forEach {
             if $0.firstAttribute == attribute {
@@ -26,7 +26,7 @@ extension UIView {
             }
         }
     }
-
+    
     private func setConstraint(value: CGFloat, attribute: NSLayoutConstraint.Attribute) {
         removeConstraint(attribute: attribute)
         let constraint =
@@ -37,9 +37,11 @@ extension UIView {
                                attribute: NSLayoutConstraint.Attribute.notAnAttribute,
                                multiplier: 1,
                                constant: value)
-        addConstraint(constraint)
+        self.addConstraint(constraint)
     }
 }
+
+
 
 class WKScrollStackView: UIView {
     public lazy var scrollView: UIScrollView = {
@@ -47,7 +49,7 @@ class WKScrollStackView: UIView {
         instance.layoutMargins = .zero
         return instance
     }()
-
+    
     lazy var stackView: UIStackView = {
         var view = UIStackView()
         view.backgroundColor = UIColor.lightGray
@@ -56,31 +58,30 @@ class WKScrollStackView: UIView {
         view.axis = .vertical
         return view
     }()
-
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         layoutUI()
         bind()
     }
-
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
+    
+    required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
+    
     private func layoutUI() {
         addSubview(scrollView)
-        scrollView.snp.makeConstraints { make in
+        scrollView.snp.makeConstraints { (make) in
             make.edges.equalToSuperview()
         }
-
+        
         scrollView.addSubview(stackView)
-        stackView.snp.makeConstraints { make in
+        stackView.snp.makeConstraints { (make) in
             make.left.right.top.equalToSuperview()
             make.height.equalToSuperview()
         }
     }
-
+    
     private func bind() {
         stackView.rx.observe(CGRect.self, #keyPath(UIView.bounds))
             .subscribe(onNext: { print("frame: \($0!)") })

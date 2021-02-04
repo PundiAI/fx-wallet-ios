@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A154D4D82362C520003DD3C2"
-               BuildableName = "FX Connect.app"
-               BlueprintName = "XWallet"
+               BuildableName = "fxWallet.app"
+               BlueprintName = "fxWallet"
                ReferencedContainer = "container:Pundix.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -45,8 +45,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A154D4D82362C520003DD3C2"
-            BuildableName = "FX Connect.app"
-            BlueprintName = "XWallet"
+            BuildableName = "fxWallet.app"
+            BlueprintName = "fxWallet"
             ReferencedContainer = "container:Pundix.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -75,8 +75,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A154D4D82362C520003DD3C2"
-            BuildableName = "FX Connect.app"
-            BlueprintName = "XWallet"
+            BuildableName = "fxWallet.app"
+            BlueprintName = "fxWallet"
             ReferencedContainer = "container:Pundix.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

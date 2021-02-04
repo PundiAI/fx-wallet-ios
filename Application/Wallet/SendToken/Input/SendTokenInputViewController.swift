@@ -1,17 +1,28 @@
-import BigInt
+//
+//  Python3
+//  MakeSwiftFiles
+//
+//  Created by HeiHuaBaiHua 
+//  Copyright © 2017年 HeiHuaBaiHua. All rights reserved.
+//
+
 import Hero
-import RxCocoa
-import RxSwift
 import WKKit
+import BigInt
 import XChains
+import RxSwift
+import RxCocoa
+
 extension WKWrapper where Base == SendTokenInputViewController {
     var view: SendTokenInputViewController.View { return base.view as! SendTokenInputViewController.View }
 }
 
 extension SendTokenInputViewController {
-    override class func instance(with context: [String: Any]) -> UIViewController? {
+    
+    class override func instance(with context: [String : Any]) -> UIViewController? {
         guard let wallet = context["wallet"] as? WKWallet,
             let coin = context["coin"] as? Coin else { return nil }
+        
         let account = context["account"] as? Keypair
         let receiver = context["receiver"] as? User
         let amount = context["amount"] as? String
@@ -20,71 +31,93 @@ extension SendTokenInputViewController {
 }
 
 class SendTokenInputViewController: WKViewController {
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) { fatalError("init(coder:) has not been implemented") }
+    
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     init(wallet: WKWallet, coin: Coin, amount: String? = nil, account: Keypair? = nil, receiver: User? = nil) {
-        initialAmount = amount
-        viewModel = ViewModel(wallet: wallet, coin: coin, account: account, receiver: receiver)
+        self.initialAmount = amount
+        self.viewModel = ViewModel(wallet: wallet, coin: coin, account: account, receiver: receiver)
         super.init(nibName: nil, bundle: nil)
         bindHero()
     }
-
+    
     let viewModel: ViewModel
     var initialAmount: String?
     private lazy var calculator = CalculatorBinder(size: wk.view.calculatorSize)
+    
     override func loadView() { view = View(frame: ScreenBounds) }
     override func viewDidLoad() {
         super.viewDidLoad()
         logWhenDeinit()
+        
         bindAmount()
         bindAccount()
         bindCalculator()
+        
         fetchData()
     }
-
+    
     override func bindNavBar() {
         super.bindNavBar()
         navigationBar.hideLine()
-        navigationBar.action(.title, title: TR("Send"))
+        navigationBar.action(.right, title: "")
+        navigationBar.navigationItem.titleView = wk.view.titleView
+        
+        wk.view.titleLabel.text = TR("Send") + " " + viewModel.coin.token
+        wk.view.tokenButton.bind(viewModel.coin)
     }
-
+ 
     private func bindAmount() {
+        
         weak var welf = self
         wk.view.unitButton.action { welf?.switchUnit() }
         wk.view.maxButton.action {
             if welf?.viewModel.isUSD.value == true { welf?.switchUnit() }
             welf?.calculator.set(number: welf?.viewModel.availableBalance ?? "")
         }
+        
+        viewModel.ready
+            .observeOn(MainScheduler.instance)
+            .subscribe(onNext: { (ready) in
+                welf?.wk.view.unitButton.isEnabled = ready
+        }).disposed(by: defaultBag)
     }
-
+    
     private func switchUnit() {
+        
         let unitButton = wk.view.unitButton
         unitButton.isSelected = !unitButton.isSelected
         unitButton.setTitlePosition(.bottom)
         calculator.clear()
         viewModel.isUSD.accept(unitButton.isSelected)
     }
-
+    
     private func bindAccount() {
+        
         let view = wk.view
         let selectedToken = viewModel.selectedToken
-        selectedToken.subscribe(onNext: { coin in
+        selectedToken.subscribe(onNext: { (coin) in
+            view.tokenIV.bind(coin)
             view.tokenIV.setImage(urlString: coin.imgUrl, placeHolderImage: coin.imgPlaceholder)
         }).disposed(by: defaultBag)
-        viewModel.selectedAccount.subscribe(onNext: { [weak self] account in
+        
+        viewModel.selectedAccount.subscribe(onNext: { [weak self](account) in
+            
             view.relayout(hideRemark: account.remark.isEmpty)
             view.remarkLabel.text = account.remark
             view.addressLabel.text = account.address
             self?.calculator.clear()
         }).disposed(by: defaultBag)
+        
         viewModel.balance.asDriver()
             .drive(onNext: {
                 view.balanceLabel.wk.set(amount: $0, symbol: selectedToken.value.token, power: selectedToken.value.decimal, thousandth: selectedToken.value.decimal)
             }).disposed(by: defaultBag)
+        
         view.tokenArrowIV.isHidden = initialAmount != nil
         view.switchAccountButton.isEnabled = initialAmount == nil
         view.switchAccountButton.action { [weak self] in
             guard let this = self else { return }
+            
             let vm = this.viewModel
             Router.showSelectAccount(wallet: vm.wallet, current: (selectedToken.value, vm.selectedAccount.value)) { vc, coin, account in
                 vm.select(coin, account: account)
@@ -92,24 +125,29 @@ class SendTokenInputViewController: WKViewController {
             }
         }
     }
-
+    
     private func bindCalculator() {
+        
         wk.view.add(calculator: calculator.view)
         Observable.combineLatest(calculator.result.distinctUntilChanged(), viewModel.selectedToken, viewModel.rate, viewModel.isUSD)
-            .subscribe(onNext: { [weak self] t in
+            .subscribe(onNext: { [weak self] (t) in
                 guard let this = self else { return }
                 let (v, coin, rate, isUSD) = t
                 let amount = v.isEmpty ? "0" : v
                 DispatchQueue.main.async {
+                    
                     let decimalLimit = (isUSD ? 2 : coin.decimal)
                     if amount.count > min(12, decimalLimit) {
+                        
                         let components = amount.components(separatedBy: ".")
                         var isOverLimit = components.count == 1 && amount.count > 12
                         if components.count == 2 {
+                            
                             let integer = components.first!
                             let decimal = components.last!
                             isOverLimit = integer.count > 12 || decimal.count > decimalLimit
                         }
+                        
                         if isOverLimit {
                             self?.wk.view.amountLabel.shake(times: 6, withDelta: 5, speed: 0.03)
                             self?.calculator.back()
@@ -117,25 +155,30 @@ class SendTokenInputViewController: WKViewController {
                             return
                         }
                     }
+                    
                     let isInsufficient = amount.isGreaterThan(decimal: this.viewModel.availableBalance)
                     self?.wk.view.hideNotice(!isInsufficient)
                     self?.calculator.okIsEnabled = !isInsufficient && amount.f > 0
+                     
                     let point = amount.hasSuffix(".") ? "." : ""
                     let decimal = coin.decimal
-                    let amountText = isUSD ? "$\(amount.thousandth(2))\(point)" : "\(amount.thousandth(decimal))\(point) \(coin.token)"
+                    let amountText = isUSD ? "$\(amount.thousandth(ThisAPP.CurrencyDecimal))\(point)" : "\(amount.thousandth(decimal))\(point) \(coin.token)"
                     self?.wk.view.updateAmountWidth(amountText)
                     self?.wk.view.amountLabel.text = amountText
+                    
                     if rate.isUnknownAmount || amount == "0" {
                         self?.wk.view.exchangeAmountLabel.text = ""
                     } else {
-                        let exchangeAmountText = isUSD ? "\(amount.div(rate, decimal).thousandth(decimal)) \(coin.token)" : "$\(amount.mul(rate, decimal).thousandth(2))"
+                        let exchangeAmountText = isUSD ? "\(amount.div(rate, decimal).thousandth(decimal)) \(coin.token)" : "$\(amount.mul(rate, decimal).thousandth(ThisAPP.CurrencyDecimal))"
                         self?.wk.view.exchangeAmountLabel.text = exchangeAmountText
                     }
                 }
-            }).disposed(by: defaultBag)
+        }).disposed(by: defaultBag)
+        
         if let amount = initialAmount { calculator.set(number: amount) }
         calculator.confirmHandler = { [weak self] result in
             guard let this = self else { return }
+            
             let tx = FxTransaction([:])
             let coin = this.viewModel.selectedToken.value
             var amount = result
@@ -143,43 +186,49 @@ class SendTokenInputViewController: WKViewController {
                 amount = amount.div(this.viewModel.rate.value, coin.decimal)
             }
             amount = amount.mul10(coin.decimal)
+            
             tx.coin = coin
+            tx.from = this.viewModel.selectedAccount.value.address
             tx.set(amount: amount, denom: coin.symbol)
             if coin.isPublicChain { tx.balance = this.viewModel.balance.value }
             if let receiver = this.viewModel.receiver { tx.receiver = receiver }
-            Router.pushToSendTokenCommit(tx: tx, account: this.viewModel.selectedAccount.value)
+            Router.pushToSendTokenCommit(tx: tx, wallet: this.viewModel.wallet, account: this.viewModel.selectedAccount.value)
         }
     }
-
+    
     private func fetchData() {
         viewModel.refreshItems.execute()
     }
 }
-
-extension SendTokenInputViewController: HeroViewControllerDelegate {
-    override func heroAnimator(from: String, to: String) -> WKHeroAnimator? { switch (from, to) {
-    case ("TokenRootViewController", "SendTokenInputViewController"): return animators["0"]
-    case ("DappPageListViewController", "SendTokenInputViewController"): return animators["0"]
-    case ("SendTokenInputViewController", "SendTokenCommitViewController"): return animators["1"]
-    case ("TokenInfoViewController", "SendTokenInputViewController"): return animators["2"]
-    default: return nil
+    
+/// Hero Animator
+extension SendTokenInputViewController : HeroViewControllerDelegate {
+    override func heroAnimator(from: String, to: String) -> WKHeroAnimator? { 
+        switch (from, to) {
+        case ("TokenRootViewController", "SendTokenInputViewController"): return animators["0"]
+        case ("CryptoRootViewController", "SendTokenInputViewController"): return animators["0"]
+        case ("SendTokenInputViewController", "SendTokenCommitViewController"): return animators["1"]
+        case ("TokenInfoViewController", "SendTokenInputViewController"): return animators["2"]
+        default: return nil
+        }
     }
-    }
-
+    
     private func bindHero() {
         weak var welf = self
-        let onSuspendBlock: (WKHeroAnimator) -> Void = { _ in
+        let onSuspendBlock:(WKHeroAnimator)->Void  = { _ in
             welf?.navigationBar.hero.modifiers = nil
             Router.tabBarController?.tabBar.hero.modifiers = nil
             welf?.wk.view.noticeContainer.alpha = 1
             welf?.wk.view.noticeContainer.hero.modifiers = nil
+           
             welf?.wk.view.amountContainer.hero.modifiers = nil
             welf?.wk.view.tokenContainer.hero.modifiers = nil
             welf?.calculator.view.hero.modifiers = nil
             welf?.wk.view.backgoundContainer.hero.modifiers = nil
             welf?.wk.view.backgoundContainer.alpha = 0
         }
-        let animator0 = WKHeroAnimator({ _ in
+        
+        let animator0 = WKHeroAnimator({ a in
             Router.tabBarController?.tabBar.hero.modifiers = [.whenPresenting(.useGlobalCoordinateSpace, .beginWith([.zPosition(100)]),
                                                                               .translate(y: CGFloat(100.0 * 2.0))),
                                                               .whenDismissing(.useGlobalCoordinateSpace, .beginWith([.zPosition(100)]), .delay(0.16),
@@ -191,10 +240,12 @@ extension SendTokenInputViewController: HeroViewControllerDelegate {
             welf?.wk.view.tokenContainer.hero.modifiers = [.translate(x: 0, y: -500, z: 0)]
             welf?.calculator.view.hero.modifiers = [.translate(x: 0, y: 500, z: 0)]
         }, onSuspend: onSuspendBlock)
+        
         animators["0"] = animator0
-        let animator1 = WKHeroAnimator({ _ in
+    
+        let animator1 = WKHeroAnimator({ (_) in
             welf?.wk.view.backgoundContainer.alpha = 1
-            let modifiers: [HeroModifier] = [.scale(0.8), .useGlobalCoordinateSpace, .translate(y: -600)]
+            let modifiers:[HeroModifier] = [.scale(0.8), .useGlobalCoordinateSpace ,.translate(y:-600)]
             welf?.navigationBar.hero.modifiers = modifiers
             welf?.wk.view.amountContainer.hero.modifiers = modifiers
             welf?.wk.view.tokenContainer.hero.modifiers = modifiers
@@ -203,6 +254,7 @@ extension SendTokenInputViewController: HeroViewControllerDelegate {
             welf?.calculator.view.hero.modifiers = [.translate(x: 0, y: 900, z: 0)]
         }, onSuspend: onSuspendBlock)
         animators["1"] = animator1
+        
         animators["2"] = WKHeroAnimator.Share.push()
     }
 }

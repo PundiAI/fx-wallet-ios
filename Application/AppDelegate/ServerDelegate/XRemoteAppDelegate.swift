@@ -1,16 +1,26 @@
-import PluggableApplicationDelegate
-import RxSwift
-import SwiftyJSON
+//
+//  XRemoteAppDelegate.swift
+//  XWallet
+//
+//  Created by Andy.Chan on 2019/9/9.
+//  Copyright © 2019 Chen Andy. All rights reserved.
+//
+
 import UIKit
 import WKKit
-class XRemoteAppDelegate: XApplicationService, WKRemoteDelegate {
-    func application(_ app: UIApplication, open url: URL,
-                     options _: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool
-    {
-        return WKServer.application(application: app, open: url, sourceApplication: nil, annotation: nil)
-    }
+import RxSwift
+import SwiftyJSON
+import PluggableApplicationDelegate
 
-    func application(_: UIApplication, didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+class XRemoteAppDelegate: XApplicationService , WKRemoteDelegate {
+    
+    func application(_ app: UIApplication, open url: URL,
+                     options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+        return  WKServer.application(application: app, open: url, sourceApplication: nil, annotation: nil)
+    }
+ 
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        application.applicationIconBadgeNumber = 0
         WKServer.addServer(aClass: WKRemoteServer.self, params: self)
         return true
     }
@@ -24,19 +34,19 @@ class XRemoteAppDelegate: XApplicationService, WKRemoteDelegate {
         WKRemoteServer.application(application: application,
                                    didRegisterForRemoteNotificationsWithDeviceToken: deviceToken as NSData)
     }
-
-    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any],
-                     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void)
-    {
-        WKRemoteServer.application(application: application, didReceiveRemoteNotification: userInfo as [NSObject: AnyObject],
+ 
+    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any],
+                     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        WKRemoteServer.application(application: application, didReceiveRemoteNotification: userInfo as [NSObject : AnyObject],
                                    fetchCompletionHandler: completionHandler)
     }
 
-    func remoteWillPushNotification(url _: String, userInfo _: [String: Any], isActive _: Bool) -> Bool {
+    func remoteWillPushNotification(url: String, userInfo: [String : Any], isActive: Bool) -> Bool {
         return true
     }
 
-    func remoteNotification(url _: String, userInfo: [String: Any], isActive _: Bool) { let notif = FxNotification(JSON(userInfo))
+    func remoteNotification(url: String, userInfo: [String : Any], isActive: Bool) { 
+        let notif = FxNotification(JSON(userInfo))
         Router.dispatch(notification: notif)
     }
 }

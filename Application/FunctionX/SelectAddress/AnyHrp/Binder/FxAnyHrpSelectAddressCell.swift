@@ -9,7 +9,9 @@
 import WKKit
 
 extension FxAnyHrpSelectAddressViewController {
+    
     class AddressCell: SelectAddressViewController.Cell {
+        
         override func layoutUI() {
             super.layoutUI()
             view.relayoutForNoName()

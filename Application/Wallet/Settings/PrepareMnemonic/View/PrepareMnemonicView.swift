@@ -6,12 +6,14 @@
 //  Copyright © 2019 Andy.Chan 6K. All rights reserved.
 //
 
-import SnapKit
 import UIKit
 import WKKit
+import SnapKit
 
 extension PrepareMnemonicViewController {
+    
     class View: UIView {
+        
         fileprivate lazy var titleLabel: UILabel = {
             let v = UILabel()
             v.text = TR("Mnemonic.Prepare.Title")
@@ -21,7 +23,7 @@ extension PrepareMnemonicViewController {
             v.backgroundColor = .clear
             return v
         }()
-
+        
         fileprivate lazy var noteLabel: UILabel = {
             let v = UILabel()
             v.text = TR("Mnemonic.Prepare.Note")
@@ -31,43 +33,44 @@ extension PrepareMnemonicViewController {
             v.backgroundColor = .clear
             return v
         }()
-
+        
         lazy var startButton = UIButton().doGradient(title: TR("Mnemonic.Prepare.Start"))
-
-        @available(*, unavailable)
-        required init?(coder _: NSCoder) { fatalError("init(coder:) has not been implemented") }
+        
+        required init?(coder aDecoder: NSCoder) { fatalError("init(coder:) has not been implemented") }
         override init(frame: CGRect) {
             super.init(frame: frame)
             logWhenDeinit()
-
+            
             configuration()
             layoutUI()
         }
-
+        
         private func configuration() {
             backgroundColor = COLOR.BACKGROUND
         }
 
         private func layoutUI() {
+        
             addSubview(titleLabel)
             addSubview(noteLabel)
             addSubview(startButton)
-
-            titleLabel.snp.makeConstraints { make in
+        
+            titleLabel.snp.makeConstraints { (make) in
                 make.top.equalTo(20 + FullNavBarHeight)
                 make.left.right.equalToSuperview().inset(24)
             }
-
-            noteLabel.snp.makeConstraints { make in
+        
+            noteLabel.snp.makeConstraints { (make) in
                 make.top.equalTo(titleLabel.snp.bottom).offset(10)
                 make.left.right.equalToSuperview().inset(24)
             }
-
-            startButton.snp.makeConstraints { make in
+        
+            startButton.snp.makeConstraints { (make) in
                 make.bottom.equalTo(self.safeAreaLayout.bottom).offset(-88)
                 make.centerX.equalToSuperview()
                 make.size.equalTo(UIButton.gradientSize())
             }
+        
         }
     }
 }

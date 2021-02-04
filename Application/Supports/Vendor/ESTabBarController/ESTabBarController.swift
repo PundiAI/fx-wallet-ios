@@ -28,17 +28,17 @@ import UIKit
 /// 是否需要自定义点击事件回调类型
 public typealias ESTabBarControllerShouldHijackHandler = ((_ tabBarController: UITabBarController, _ viewController: UIViewController, _ index: Int) -> (Bool))
 /// 自定义点击事件回调类型
-public typealias ESTabBarControllerDidHijackHandler = ((_ tabBarController: UITabBarController, _ viewController: UIViewController, _ index: Int) -> Void)
+public typealias ESTabBarControllerDidHijackHandler = ((_ tabBarController: UITabBarController, _ viewController: UIViewController, _ index: Int) -> (Void))
 
 open class ESTabBarController: UITabBarController, ESTabBarDelegate {
-
+    
     /// 打印异常
     public static func printError(_ description: String) {
         #if DEBUG
-        print("ERROR: ESTabBarController catch an error '\(description)' \n")
+            print("ERROR: ESTabBarController catch an error '\(description)' \n")
         #endif
     }
-
+    
     /// 当前tabBarController是否存在"More"tab
     public static func isShowingMore(_ tabBarController: UITabBarController?) -> Bool {
         return tabBarController?.moreNavigationController.parent != nil
@@ -51,7 +51,7 @@ open class ESTabBarController: UITabBarController, ESTabBarDelegate {
     open var shouldHijackHandler: ESTabBarControllerShouldHijackHandler?
     /// Hijack select action.
     open var didHijackHandler: ESTabBarControllerDidHijackHandler?
-
+    
     /// Observer tabBarController's selectedViewController. change its selection when it will-set.
     open override var selectedViewController: UIViewController? {
         willSet {
@@ -70,7 +70,7 @@ open class ESTabBarController: UITabBarController, ESTabBarDelegate {
             tabBar.select(itemAtIndex: value, animated: false)
         }
     }
-
+    
     /// Observer tabBarController's selectedIndex. change its selection when it will-set.
     open override var selectedIndex: Int {
         willSet {
@@ -85,11 +85,11 @@ open class ESTabBarController: UITabBarController, ESTabBarDelegate {
             tabBar.select(itemAtIndex: value, animated: false)
         }
     }
-
+    
     /// Customize set tabBar use KVC.
     open override func viewDidLoad() {
         super.viewDidLoad()
-        let tabBar = { () -> ESTabBar in
+        let tabBar = { () -> ESTabBar in 
             let tabBar = ESTabBar()
             tabBar.delegate = self
             tabBar.customDelegate = self
@@ -102,12 +102,12 @@ open class ESTabBarController: UITabBarController, ESTabBarDelegate {
     // MARK: - UITabBar delegate
     open override func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
         guard let idx = tabBar.items?.firstIndex(of: item) else {
-            return
+            return;
         }
         if idx == tabBar.items!.count - 1, ESTabBarController.isShowingMore(self) {
             ignoreNextSelection = true
             selectedViewController = moreNavigationController
-            return
+            return;
         }
         if let vc = viewControllers?[idx] {
             ignoreNextSelection = true
@@ -115,19 +115,19 @@ open class ESTabBarController: UITabBarController, ESTabBarDelegate {
             delegate?.tabBarController?(self, didSelect: vc)
         }
     }
-
+    
     open override func tabBar(_ tabBar: UITabBar, willBeginCustomizing items: [UITabBarItem]) {
         if let tabBar = tabBar as? ESTabBar {
             tabBar.updateLayout()
         }
     }
-
+    
     open override func tabBar(_ tabBar: UITabBar, didEndCustomizing items: [UITabBarItem], changed: Bool) {
         if let tabBar = tabBar as? ESTabBar {
             tabBar.updateLayout()
         }
     }
-
+    
     // MARK: - ESTabBar delegate
     internal func tabBar(_ tabBar: UITabBar, shouldSelect item: UITabBarItem) -> Bool {
         if let idx = tabBar.items?.firstIndex(of: item), let vc = viewControllers?[idx] {
@@ -135,18 +135,18 @@ open class ESTabBarController: UITabBarController, ESTabBarDelegate {
         }
         return true
     }
-
+    
     internal func tabBar(_ tabBar: UITabBar, shouldHijack item: UITabBarItem) -> Bool {
         if let idx = tabBar.items?.firstIndex(of: item), let vc = viewControllers?[idx] {
             return shouldHijackHandler?(self, vc, idx) ?? false
         }
         return false
     }
-
+    
     internal func tabBar(_ tabBar: UITabBar, didHijack item: UITabBarItem) {
         if let idx = tabBar.items?.firstIndex(of: item), let vc = viewControllers?[idx] {
             didHijackHandler?(self, vc, idx)
         }
     }
-
+    
 }

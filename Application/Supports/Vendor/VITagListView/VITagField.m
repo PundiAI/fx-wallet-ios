@@ -99,12 +99,7 @@
 - (void)_initView
 {
     self.font = [UIFont fontWithName:@"CashMarket-RegularRounded" size:18];
-//    self.font =  [UIFont systemFontOfSize:18];
-//    self.layer.cornerRadius = 8;
-//    self.layer.masksToBounds = YES;
-//    self.backgroundColor = [UIColor lightGrayColor];
-//    self.layer.borderWidth = 1;
-//    self.layer.borderColor = [UIColor lightGrayColor].CGColor;
+    self.textColor = [UIColor blackColor];
 }
 
 @end

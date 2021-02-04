@@ -1,19 +1,34 @@
+//
+//
+//  XWallet
+//
+//  Created by May on 2020/8/11.
+//  Copyright © 2020 May All rights reserved.
+//
+
 import WKKit
+
 extension SecurityViewController {
     class ItemView: UIView {
-        @available(*, unavailable)
-        required init?(coder _: NSCoder) { fatalError("init(coder:) has not been implemented") }
+        
+        required init?(coder aDecoder: NSCoder) { fatalError("init(coder:) has not been implemented") }
         override init(frame: CGRect) {
             super.init(frame: frame)
             logWhenDeinit()
+            
             configuration()
             layoutUI()
         }
-
+        
         private func configuration() {
             backgroundColor = .clear
         }
-
-        private func layoutUI() {}
+        
+        private func layoutUI() {
+            
+        }
+    
     }
 }
+        
+

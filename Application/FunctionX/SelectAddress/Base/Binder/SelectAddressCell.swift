@@ -9,16 +9,18 @@
 import WKKit
 
 extension SelectAddressViewController {
+    
     class Cell: WKTableViewCell {
+        
         lazy var view = getView()
         func getView() -> ItemView { return ItemView(frame: ScreenBounds) }
-
+        
         private var viewModel: CellViewModel?
-
+        
         override func bind(_ viewModel: Any?) {
             guard let vm = viewModel as? CellViewModel else { return }
             self.viewModel = vm
-
+            
             weak var welf = self
             view.addressLabel.text = vm.address
             vm.addressRemark.asDriver()
@@ -26,50 +28,54 @@ extension SelectAddressViewController {
                     welf?.view.remarkLabel.text = "  \($0)  "
                     welf?.view.relayout(hideRemark: $0.count == 0)
                 }).disposed(by: reuseBag)
-
+            
             vm.isSelected.asDriver()
                 .distinctUntilChanged()
                 .drive(onNext: { welf?.view.relayout(isSelected: $0) })
                 .disposed(by: reuseBag)
         }
-
+        
         func bindAction() {
+            
             weak var welf = self
-            view.copyButton.rx.tap.subscribe(onNext: { _ in
+            view.copyButton.rx.tap.subscribe(onNext: { (_) in
                 UIPasteboard.general.string = welf?.viewModel?.address ?? ""
                 Router.topViewController?.hud?.text(m: TR("Copied"))
             }).disposed(by: defaultBag)
-
-            view.editButton.rx.tap.subscribe(onNext: { _ in
-
+            
+            view.editButton.rx.tap.subscribe(onNext: { (_) in
+                
                 guard let vm = welf?.viewModel else { return }
                 Router.showEditAddressAlert(address: vm.address) { vm.update(addressRemark: $0) }
             }).disposed(by: defaultBag)
         }
 
-        override class func height(model _: Any?) -> CGFloat { return 94 + 5 }
-
-        // MARK: Utils
-
+        override class func height(model: Any?) -> CGFloat { return 94 + 5 }
+        
+        //MARK: Utils
         override public func initSubView() {
+            
             layoutUI()
             configuration()
-
+            
             bindAction()
-
+            
             logWhenDeinit()
         }
-
+        
         func configuration() {
-            backgroundColor = .clear
-            contentView.backgroundColor = .clear
+            
+            self.backgroundColor = .clear
+            self.contentView.backgroundColor = .clear
         }
-
+        
         func layoutUI() {
-            contentView.addSubview(view)
-            view.snp.makeConstraints { make in
+            
+            self.contentView.addSubview(view)
+            self.view.snp.makeConstraints { (make) in
                 make.edges.equalToSuperview()
             }
         }
+        
     }
 }

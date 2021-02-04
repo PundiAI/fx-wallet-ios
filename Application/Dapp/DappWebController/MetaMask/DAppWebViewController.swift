@@ -1,45 +1,58 @@
+// Copyright © 2017-2020 Trust Wallet.
+//
+// This file is part of Trust. The full Trust copyright notice, including
+// terms governing use, modification, and redistribution, is contained in the
+// file LICENSE at the root of the source code distribution tree.
 
-
-import TrustWalletCore
 import UIKit
-import WebKit
 import WKKit
+import WebKit
+import TrustWalletCore
 
 class DAppWebViewController: UIViewController {
-    var urlField = UITextField(frame: CGRect(x: 0, y: 0, width: 375, height: 60))
-    var homepage: String { return "https:--" }
+
+    var urlField: UITextField = UITextField(frame: CGRect(x: 0, y: 0, width: 375, height: 60))
+
+    var homepage: String { return "https://uniswap.consenlabs.com/?locale=zh-CN&utm_source=imtoken" }
+//    var homepage: String { return "http://192.168.20.202:8082/emm" }
 
     let privateKey = PrivateKey(data: Data(hexString: "1b46beca47ac628524b6bac688c3b864e00ebde31352bcff545533e987b25e80")!)!
+
     lazy var scriptConfig: WKUserScriptConfig = {
-        WKUserScriptConfig(
+        return WKUserScriptConfig(
             address: address,
             chainId: 1,
-            rpcUrl: "https:--",
+            rpcUrl: "https://mainnet.infura.io/v3/1d04db7844c84b7491de2eb2e09d1435",
             privacyMode: false
         )
     }()
-
+//    0x4404C00F94280954D18227b3ed20F79713b824b1
     lazy var address: String = {
-        CoinType.ethereum.deriveAddress(privateKey: privateKey).lowercased()
+        return CoinType.ethereum.deriveAddress(privateKey: privateKey).lowercased()
     }()
 
     lazy var webview: WKWebView = {
         let config = WKWebViewConfiguration()
+
         let controller = WKUserContentController()
         controller.addUserScript(scriptConfig.providerScript)
         controller.addUserScript(scriptConfig.injectedScript)
         for name in DAppMethod.allCases {
             controller.add(self, name: name.rawValue)
         }
+
         config.userContentController = controller
+
         let webview = WKWebView(frame: .zero, configuration: config)
         webview.translatesAutoresizingMaskIntoConstraints = false
         webview.uiDelegate = self
+
         return webview
     }()
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+
         setupSubviews()
         urlField.text = homepage
         navigate(to: homepage)
@@ -49,22 +62,24 @@ class DAppWebViewController: UIViewController {
         urlField.keyboardType = .URL
         urlField.delegate = self
         urlField.backgroundColor = .green
+        
         view.addSubview(urlField)
         urlField.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            urlField.topAnchor.constraint(equalTo: view.topAnchor),
+            urlField.topAnchor.constraint(equalTo: self.view.topAnchor),
             urlField.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             urlField.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             urlField.widthAnchor.constraint(equalTo: view.widthAnchor),
-            urlField.heightAnchor.constraint(equalToConstant: 60),
+            urlField.heightAnchor.constraint(equalToConstant: 60)
         ])
+
         view.addSubview(webview)
         NSLayoutConstraint.activate([
             webview.topAnchor.constraint(equalTo: urlField.bottomAnchor),
             webview.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             webview.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             webview.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            webview.widthAnchor.constraint(equalTo: view.widthAnchor),
+            webview.widthAnchor.constraint(equalTo: view.widthAnchor)
         ])
     }
 
@@ -83,13 +98,12 @@ extension DAppWebViewController: UITextFieldDelegate {
 }
 
 extension DAppWebViewController: WKScriptMessageHandler {
-    func userContentController(_: WKUserContentController, didReceive message: WKScriptMessage) {
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         let json = message.json
         print(json)
         guard let name = json["name"] as? String,
             let method = DAppMethod(rawValue: name),
-            let id = json["id"] as? Int64
-        else {
+            let id = json["id"] as? Int64 else {
             return
         }
         switch method {
@@ -101,12 +115,14 @@ extension DAppWebViewController: WKScriptMessageHandler {
                 return
             }
             handleSignMessage(id: id, data: data, addPrefix: false)
+            break
         case .signPersonalMessage:
             guard let data = extractMessage(json: json) else {
                 print("data is missing")
                 return
             }
             handleSignMessage(id: id, data: data, addPrefix: true)
+            break
         case .ecRecover:
             guard let tuple = extractSignature(json: json) else {
                 print("signature or message is missing")
@@ -117,6 +133,7 @@ extension DAppWebViewController: WKScriptMessageHandler {
             DispatchQueue.main.async {
                 self.webview.sendResult(recovered, to: id)
             }
+            break
         default:
             break
         }
@@ -158,8 +175,7 @@ extension DAppWebViewController: WKScriptMessageHandler {
     private func extractMessage(json: [String: Any]) -> Data? {
         guard let params = json["object"] as? [String: Any],
             let string = params["data"] as? String,
-            let data = Data(hexString: string)
-        else {
+            let data = Data(hexString: string) else {
             return nil
         }
         return data
@@ -168,8 +184,7 @@ extension DAppWebViewController: WKScriptMessageHandler {
     private func extractSignature(json: [String: Any]) -> (signature: Data, message: Data)? {
         guard let params = json["object"] as? [String: Any],
             let signature = params["signature"] as? String,
-            let message = params["message"] as? String
-        else {
+            let message = params["message"] as? String else {
             return nil
         }
         return (Data(hexString: signature)!, Data(hexString: message)!)
@@ -186,8 +201,7 @@ extension DAppWebViewController: WKScriptMessageHandler {
         let data = ethereumMessage(for: message)
         let hash = Hash.keccak256(data: data)
         guard let publicKey = PublicKey.recover(signature: signature, message: hash),
-            PublicKey.isValid(data: publicKey.data, type: publicKey.keyType)
-        else {
+            PublicKey.isValid(data: publicKey.data, type: publicKey.keyType) else {
             return nil
         }
         return CoinType.ethereum.deriveAddressFromPublicKey(publicKey: publicKey).lowercased()
@@ -200,15 +214,15 @@ extension DAppWebViewController: WKScriptMessageHandler {
 }
 
 extension DAppWebViewController: WKUIDelegate {
-    func webView(_ webView: WKWebView, createWebViewWith _: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures _: WKWindowFeatures) -> WKWebView? {
+    func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
         guard navigationAction.request.url != nil else {
-            return nil
+           return nil
         }
         _ = webView.load(navigationAction.request)
         return nil
     }
 
-    func webView(_: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame _: WKFrameInfo, completionHandler: @escaping () -> Void) {
+    func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
         let alert = UIAlertController(title: "", message: message, preferredStyle: .alert)
         alert.addAction(.init(title: "OK", style: .default, handler: { _ in
             completionHandler()
@@ -216,7 +230,7 @@ extension DAppWebViewController: WKUIDelegate {
         present(alert, animated: true, completion: nil)
     }
 
-    func webView(_: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame _: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
+    func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
         let alert = UIAlertController(title: "", message: message, preferredStyle: .alert)
         alert.addAction(.init(title: "OK", style: .default, handler: { _ in
             completionHandler(true)

@@ -1,18 +1,31 @@
-import RxCocoa
-import RxSwift
-import WKKit
-extension SetLanguageViewController {
-    class CellViewModel {
-        var item: Language
-        fileprivate(set) var selected = BehaviorRelay<Bool>(value: false)
-        init(item: Language) {
-            self.item = item
-            set(item: item)
-        }
+//
+//
+//  XWallet
+//
+//  Created by May on 2020/8/11.
+//  Copyright © 2020 May All rights reserved.
+//
 
-        func set(item: Language) {
+import WKKit
+import RxSwift
+import RxCocoa
+
+extension SetLanguageViewController {
+    
+    class CellViewModel {
+        var item: LanguageItem
+        fileprivate(set) var selected = BehaviorRelay<Bool>(value: false)
+        
+        init(item: LanguageItem) {
             self.item = item
-            selected.accept(item.selected)
+            self.set(item: item)
+        }
+        
+        func set(item: LanguageItem) {
+            self.item = item
+            let select = WKLocale.Shared.language.title == item.title
+            selected.accept(select)
         }
     }
 }
+        

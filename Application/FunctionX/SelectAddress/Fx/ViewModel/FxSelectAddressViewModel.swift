@@ -6,24 +6,26 @@
 //  Copyright © 2020 Andy.Chan 6K. All rights reserved.
 //
 
+import WKKit
 import RxSwift
 import TrustWalletCore
-import WKKit
 
-// MARK: FXListViewModel
-
+//MARK: FXListViewModel
 extension SelectAddressViewController {
+    
     class FxListViewModel: ListViewModel {
+        
         override func cellVM(derivationAddress: Int) -> CellViewModel {
             return FxCellViewModel(wallet, derivationAddress: derivationAddress)
         }
     }
 }
 
-// MARK: FXCellViewModel
-
+//MARK: FXCellViewModel
 extension SelectAddressViewController {
+    
     class FxCellViewModel: CellViewModel {
+        
         override func generateAddress() -> String {
             return AnyAddress(publicKey: publicKey, coin: .cosmos).description
         }

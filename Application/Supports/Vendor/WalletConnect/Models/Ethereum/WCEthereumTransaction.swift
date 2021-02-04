@@ -15,7 +15,7 @@ public struct WCEthereumTransaction: Codable {
     public let gasLimit: String?
     public let value: String?
     public let data: String
-
+    
     var gasValue: String? { gas ?? gasLimit }
 }
 

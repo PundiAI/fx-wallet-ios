@@ -28,6 +28,7 @@ import RxCocoa
 import RxSwift
 import WKKit
 
+
 /// 对原生的UITabBarItemPositioning进行扩展，通过UITabBarItemPositioning设置时，系统会自动添加insets，这使得添加背景样式的需求变得不可能实现。ESTabBarItemPositioning完全支持原有的item Position 类型，除此之外还支持完全fill模式。
 ///
 /// - automatic: UITabBarItemPositioning.automatic
@@ -35,18 +36,20 @@ import WKKit
 /// - centered: UITabBarItemPositioning.centered
 /// - fillExcludeSeparator: 完全fill模式，布局不覆盖tabBar顶部分割线
 /// - fillIncludeSeparator: 完全fill模式，布局覆盖tabBar顶部分割线
-public enum ESTabBarItemPositioning: Int {
-
+public enum ESTabBarItemPositioning : Int {
+    
     case automatic
-
+    
     case fill
-
+    
     case centered
-
+    
     case fillExcludeSeparator
-
+    
     case fillIncludeSeparator
 }
+
+
 
 /// 对UITabBarDelegate进行扩展，以支持UITabBarControllerDelegate的相关方法桥接
 internal protocol ESTabBarDelegate: NSObjectProtocol {
@@ -58,7 +61,7 @@ internal protocol ESTabBarDelegate: NSObjectProtocol {
     ///   - item: 当前item
     /// - Returns: Bool
     func tabBar(_ tabBar: UITabBar, shouldSelect item: UITabBarItem) -> Bool
-
+    
     /// 当前item是否需要被劫持
     ///
     /// - Parameters:
@@ -66,7 +69,7 @@ internal protocol ESTabBarDelegate: NSObjectProtocol {
     ///   - item: 当前item
     /// - Returns: Bool
     func tabBar(_ tabBar: UITabBar, shouldHijack item: UITabBarItem) -> Bool
-
+    
     /// 当前item的点击被劫持
     ///
     /// - Parameters:
@@ -76,19 +79,21 @@ internal protocol ESTabBarDelegate: NSObjectProtocol {
     func tabBar(_ tabBar: UITabBar, didHijack item: UITabBarItem)
 }
 
+
+
 /// ESTabBar是高度自定义的UITabBar子类，通过添加UIControl的方式实现自定义tabBarItem的效果。目前支持tabBar的大部分属性的设置，例如delegate,items,selectedImge,itemPositioning,itemWidth,itemSpacing等，以后会更加细致的优化tabBar原有属性的设置效果。
 open class ESTabBar: UITabBar {
-    @objc dynamic var _backgoundView: UIView?
-
-    public var backgoundView: UIView? { return _backgoundView }
-
+    @objc dynamic var _backgoundView:UIView?
+    
+    public var backgoundView:UIView? { return _backgoundView }
+    
     internal weak var customDelegate: ESTabBarDelegate?
-
+    
     open override func sizeThatFits(_ size: CGSize) -> CGSize {
-        let height: CGFloat = TabBarHeight
+        let height:CGFloat = TabBarHeight
         return CGSize(width: size.width, height: height)
     }
-
+    
     /// tabBar中items布局偏移量
     public var itemEdgeInsets = UIEdgeInsets.zero
     /// 是否设置为自定义布局方式，默认为空。如果为空，则通过itemPositioning属性来设置。如果不为空则忽略itemPositioning,所以当tabBar的itemCustomPositioning属性不为空时，如果想改变布局规则，请设置此属性而非itemPositioning。
@@ -117,13 +122,13 @@ open class ESTabBar: UITabBar {
     open var moreContentView: ESTabBarItemContentView? = ESTabBarItemMoreContentView.init() {
         didSet { self.reload() }
     }
-
+    
     open override var items: [UITabBarItem]? {
         didSet {
             self.reload()
         }
     }
-
+    
     open var isEditing: Bool = false {
         didSet {
             if oldValue != isEditing {
@@ -131,24 +136,24 @@ open class ESTabBar: UITabBar {
             }
         }
     }
-
+    
     open override func setItems(_ items: [UITabBarItem]?, animated: Bool) {
         super.setItems(items, animated: animated)
         self.reload()
     }
-
+    
     open override func beginCustomizingItems(_ items: [UITabBarItem]) {
         ESTabBarController.printError("beginCustomizingItems(_:) is unsupported in ESTabBar.")
         super.beginCustomizingItems(items)
     }
-
+    
     open override func endCustomizing(animated: Bool) -> Bool {
         ESTabBarController.printError("endCustomizing(_:) is unsupported in ESTabBar.")
         return super.endCustomizing(animated: animated)
     }
-
+    
     open override func layoutSubviews() {
-        super.layoutSubviews()
+        super.layoutSubviews() 
         _backgoundView = subviews.find { (view) -> Bool in
             return  NSStringFromClass(view.classForCoder).contains("UIBarBackground")
         }?.subviews.find { (view) -> Bool in
@@ -156,7 +161,7 @@ open class ESTabBar: UITabBar {
         }
         self.updateLayout()
     }
-
+    
     open override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
         var b = super.point(inside: point, with: event)
         if !b {
@@ -168,32 +173,32 @@ open class ESTabBar: UITabBar {
         }
         return b
     }
-
+    
 }
 
 internal extension ESTabBar /* Layout */ {
-
+    
     func updateLayout() {
         guard let tabBarItems = self.items else {
             ESTabBarController.printError("empty items")
             return
         }
-
+         
         let tabBarButtons = subviews.filter { subview -> Bool in
             if let cls = NSClassFromString("UITabBarButton") {
                 return subview.isKind(of: cls)
             }
             return false
-        } .sorted { (subview1, subview2) -> Bool in
-            return subview1.frame.origin.x < subview2.frame.origin.x
+            } .sorted { (subview1, subview2) -> Bool in
+                return subview1.frame.origin.x < subview2.frame.origin.x
         }
-
+        
         if isCustomizing {
             for (idx, _) in tabBarItems.enumerated() {
                 tabBarButtons[idx].isHidden = false
                 moreContentView?.isHidden = true
             }
-            for (_, container) in containers.enumerated() {
+            for (_, container) in containers.enumerated(){
                 container.isHidden = true
             }
         } else {
@@ -207,11 +212,11 @@ internal extension ESTabBar /* Layout */ {
                     tabBarButtons[idx].isHidden = true
                 }
             }
-            for (_, container) in containers.enumerated() {
+            for (_, container) in containers.enumerated(){
                 container.isHidden = false
             }
         }
-
+        
         var layoutBaseSystem = true
         if let itemCustomPositioning = itemCustomPositioning {
             switch itemCustomPositioning {
@@ -221,10 +226,10 @@ internal extension ESTabBar /* Layout */ {
                 layoutBaseSystem = false
             }
         }
-
+        
         if layoutBaseSystem {
             // System itemPositioning
-            for (idx, container) in containers.enumerated() {
+            for (idx, container) in containers.enumerated(){
                 if !tabBarButtons[idx].frame.isEmpty {
                     container.frame = tabBarButtons[idx].frame
                     container.height = 55
@@ -246,7 +251,7 @@ internal extension ESTabBar /* Layout */ {
             let height = bounds.size.height - y - itemEdgeInsets.bottom
             let eachWidth = itemWidth == 0.0 ? width / CGFloat(containers.count) : itemWidth
             let eachSpacing = itemSpacing == 0.0 ? 0.0 : itemSpacing
-
+            
             for container in containers {
                 container.frame = CGRect.init(x: x, y: y, width: eachWidth, height: height)
                 x += eachWidth
@@ -257,18 +262,18 @@ internal extension ESTabBar /* Layout */ {
 }
 
 internal extension ESTabBar /* Actions */ {
-
+    
     func isMoreItem(_ index: Int) -> Bool {
         return ESTabBarController.isShowingMore(tabBarController) && (index == (items?.count ?? 0) - 1)
     }
-
+    
     func removeAll() {
         for container in containers {
             container.removeFromSuperview()
         }
         containers.removeAll()
     }
-
+    
     func reload() {
         removeAll()
         guard let tabBarItems = self.items else {
@@ -279,7 +284,7 @@ internal extension ESTabBar /* Actions */ {
             let container = ESTabBarItemContainer.init(self, tag: 1000 + idx)
             self.addSubview(container)
             self.containers.append(container)
-
+            
             if let item = item as? ESTabBarItem, let contentView = item.contentView {
                 container.addSubview(contentView)
             }
@@ -287,11 +292,11 @@ internal extension ESTabBar /* Actions */ {
                 container.addSubview(moreContentView)
             }
         }
-
+        
         self.updateAccessibilityLabels()
         self.setNeedsLayout()
     }
-
+    
     @objc func highlightAction(_ sender: AnyObject?) {
         guard let container = sender as? ESTabBarItemContainer else {
             return
@@ -300,18 +305,18 @@ internal extension ESTabBar /* Actions */ {
         guard newIndex < items?.count ?? 0, let item = self.items?[newIndex], item.isEnabled == true else {
             return
         }
-
+        
         if (customDelegate?.tabBar(self, shouldSelect: item) ?? true) == false {
             return
         }
-
+        
         if let item = item as? ESTabBarItem {
             item.contentView?.highlight(animated: true, completion: nil)
         } else if self.isMoreItem(newIndex) {
             moreContentView?.highlight(animated: true, completion: nil)
         }
     }
-
+    
     @objc func dehighlightAction(_ sender: AnyObject?) {
         guard let container = sender as? ESTabBarItemContainer else {
             return
@@ -320,36 +325,36 @@ internal extension ESTabBar /* Actions */ {
         guard newIndex < items?.count ?? 0, let item = self.items?[newIndex], item.isEnabled == true else {
             return
         }
-
+        
         if (customDelegate?.tabBar(self, shouldSelect: item) ?? true) == false {
             return
         }
-
+        
         if let item = item as? ESTabBarItem {
             item.contentView?.dehighlight(animated: true, completion: nil)
         } else if self.isMoreItem(newIndex) {
             moreContentView?.dehighlight(animated: true, completion: nil)
         }
     }
-
+    
     @objc func selectAction(_ sender: AnyObject?) {
         guard let container = sender as? ESTabBarItemContainer else {
             return
         }
         select(itemAtIndex: container.tag - 1000, animated: true)
     }
-
+    
     @objc func select(itemAtIndex idx: Int, animated: Bool) {
         let newIndex = max(0, idx)
         let currentIndex = (selectedItem != nil) ? (items?.firstIndex(of: selectedItem!) ?? -1) : -1
         guard newIndex < items?.count ?? 0, let item = self.items?[newIndex], item.isEnabled == true else {
             return
         }
-
+        
         if (customDelegate?.tabBar(self, shouldSelect: item) ?? true) == false {
             return
         }
-
+        
         if (customDelegate?.tabBar(self, shouldHijack: item) ?? false) == true {
             customDelegate?.tabBar(self, didHijack: item)
             if animated {
@@ -365,9 +370,9 @@ internal extension ESTabBar /* Actions */ {
             }
             return
         }
-
+        
         if currentIndex != newIndex {
-            if currentIndex != -1 && currentIndex < items?.count ?? 0 {
+            if currentIndex != -1 && currentIndex < items?.count ?? 0{
                 if let currentItem = items?[currentIndex] as? ESTabBarItem {
                     currentItem.contentView?.deselect(animated: animated, completion: nil)
                 } else if self.isMoreItem(currentIndex) {
@@ -385,7 +390,7 @@ internal extension ESTabBar /* Actions */ {
             } else if self.isMoreItem(newIndex) {
                 moreContentView?.reselect(animated: animated, completion: nil)
             }
-
+            
             if let tabBarController = tabBarController {
                 var navVC: UINavigationController?
                 if let n = tabBarController.selectedViewController as? UINavigationController {
@@ -393,11 +398,11 @@ internal extension ESTabBar /* Actions */ {
                 } else if let n = tabBarController.selectedViewController?.navigationController {
                     navVC = n
                 }
-
+                
                 if let navVC = navVC {
                     if navVC.viewControllers.contains(tabBarController) {
                         if navVC.viewControllers.count > 1 && navVC.viewControllers.last != tabBarController {
-                            navVC.popToViewController(tabBarController, animated: true)
+                            navVC.popToViewController(tabBarController, animated: true);
                         }
                     } else {
                         if navVC.viewControllers.count > 1 {
@@ -405,28 +410,28 @@ internal extension ESTabBar /* Actions */ {
                         }
                     }
                 }
-
+            
             }
         }
-
+        
         delegate?.tabBar?(self, didSelect: item)
         self.updateAccessibilityLabels()
     }
-
+    
     func updateAccessibilityLabels() {
         guard let tabBarItems = self.items, tabBarItems.count == self.containers.count else {
             return
         }
-
+        
         for (idx, item) in tabBarItems.enumerated() {
             let container = self.containers[idx]
             container.accessibilityIdentifier = item.accessibilityIdentifier
             container.accessibilityTraits = item.accessibilityTraits
-
+            
             if item == selectedItem {
                 container.accessibilityTraits = container.accessibilityTraits.union(.selected)
             }
-
+            
             if let explicitLabel = item.accessibilityLabel {
                 container.accessibilityLabel = explicitLabel
                 container.accessibilityHint = item.accessibilityHint ?? container.accessibilityHint
@@ -436,15 +441,15 @@ internal extension ESTabBar /* Actions */ {
                     accessibilityTitle = item.accessibilityLabel ?? item.title ?? ""
                 }
                 if self.isMoreItem(idx) {
-                    accessibilityTitle = NSLocalizedString("More_TabBarItem", bundle: Bundle(for: ESTabBarController.self), comment: "")
+                    accessibilityTitle = NSLocalizedString("More_TabBarItem", bundle: Bundle(for:ESTabBarController.self), comment: "")
                 }
-
+                
                 let formatString = NSLocalizedString(item == selectedItem ? "TabBarItem_Selected_AccessibilityLabel" : "TabBarItem_AccessibilityLabel",
                                                      bundle: Bundle(for: ESTabBarController.self),
                                                      comment: "")
                 container.accessibilityLabel = String(format: formatString, accessibilityTitle, idx + 1, tabBarItems.count)
             }
-
+            
         }
     }
 }

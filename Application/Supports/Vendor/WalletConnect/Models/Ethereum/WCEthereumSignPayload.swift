@@ -43,7 +43,7 @@ extension WCEthereumSignPayload: Decodable {
             let id = try container.decode(Int64.self, forKey: .id)
             let address = params[0].value as? String ?? ""
             if let string = params[1].value as? String,
-               let data = string.data(using: .utf8) {
+                let data = string.data(using: .utf8) {
                 self = .signTypeData(id: id, data: data, raw: [address, string])
             } else if let dict = params[1].value as? [String: Any] {
                 let data = try JSONSerialization.data(withJSONObject: dict, options: [])
@@ -54,7 +54,7 @@ extension WCEthereumSignPayload: Decodable {
             }
         }
     }
-
+    
     public var data: Data {
         switch self {
         case .sign(let data, _):
@@ -89,7 +89,7 @@ extension WCEthereumSignPayload: Decodable {
 }
 
 struct DappCommand: Decodable {
-
+    
     enum Method: String, Decodable {
         //case getAccounts
         case sendTransaction
@@ -103,7 +103,7 @@ struct DappCommand: Decodable {
             self = Method(rawValue: string) ?? .unknown
         }
     }
-
+    
     let name: Method
     let id: Int
     let object: [String: DappCommandObjectValue]

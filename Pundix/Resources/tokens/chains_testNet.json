@@ -1,62 +1,92 @@
 [
-  {
-    "unit" : "ETH",
-    "coinType" : 60,
-    "icon" : "https:
-    "contractAddress" : "",
-    "symbolId" : 1027,
-    "name" : "Ethereum",
-    "decimals" : "18",
-    "currencyId" : 1,
-    "chainType" : 0,
-    "version" : 101
-  },
-  {
-    "unit" : "NPXS",
-    "coinType" : 60,
-    "icon" : "https:
-    "contractAddress" : "0x9ED87454b3FF198D57f91e584070b865c6503B3b",
-    "symbolId" : 2603,
-    "name" : "Pundix Token",
-    "decimals" : "18",
-    "currencyId" : 2,
-    "chainType" : 0,
-    "version" : 101
-  },
-  {
-    "unit" : "FX",
-    "coinType" : 60,
-    "icon" : "https:
-    "contractAddress" : "0xc5229C5199d8A306c3f7b4CA43122F684F23f6E6",
-    "symbolId" : 1027,
-    "name" : "Function X",
-    "decimals" : "18",
-    "currencyId" : 3,
-    "chainType" : 0,
-    "version" : 101
-  },
-  {
-    "unit" : "USDT",
-    "coinType" : 60,
-    "icon" : "https:
-    "contractAddress" : "0xcfe7ae6649eb6adcdcf0e6fd6d7c5d08ab316be1",
-    "symbolId" : 825,
-    "name" : "USDT",
-    "decimals" : "6",
-    "currencyId" : 4,
-    "chainType" : 0,
-    "version" : 101
-  },
-  {
-    "unit" : "fxcoin",
-    "coinType" : 118,
-    "icon" : "https:
-    "contractAddress" : "",
-    "symbolId" : -1,
-    "name" : "FXCore",
-    "decimals" : "18",
-    "currencyId" : -3,
-    "chainType" : 0,
-    "version" : 101
-  }
+    {
+        "symbolId":1027,
+        "unit":"ETH",
+        "chainType":0,
+        "decimals":18,
+        "contractAddress":"",
+        "version":101,
+        "chainIcon":"",
+        "currencyId":1,
+        "icon":"https://file.pundi-pundi.com/dec/dev/4_1027.png",
+        "name":"Ethereum",
+        "status":1,
+        "coinType":"60",
+        "sort":1
+    },
+    {
+        "symbolId":2603,
+        "unit":"NPXS",
+        "chainType":0,
+        "decimals":18,
+        "contractAddress":"0xa15c7ebe1f07caf6bff097d8a589fb8ac49ae5b3",
+        "version":101,
+        "chainIcon":"",
+        "currencyId":2,
+        "icon":"https://file.pundi-pundi.com/dec/dev/2_2603.png",
+        "name":"Pundix Token",
+        "status":1,
+        "coinType":"60",
+        "sort":2
+    },
+    {
+        "symbolId":3884,
+        "unit":"FX",
+        "chainType":0,
+        "decimals":18,
+        "contractAddress":"0x8c15ef5b4b21951d50e53e4fbda8298ffad25057",
+        "version":101,
+        "chainIcon":"",
+        "currencyId":3,
+        "icon":"https://file.pundi-pundi.com/dec/dev/1_3884.png",
+        "name":"Function X",
+        "status":1,
+        "coinType":"60",
+        "sort":3
+    },
+    {
+        "symbolId":825,
+        "unit":"USDT",
+        "chainType":0,
+        "decimals":6,
+        "contractAddress":"0xdac17f958d2ee523a2206206994597c13d831ec7",
+        "version":101,
+        "chainIcon":"",
+        "currencyId":4,
+        "icon":"https://file.pundi-pundi.com/dec/dev/3_825.png",
+        "name":"USDT",
+        "status":1,
+        "coinType":"60",
+        "sort":4
+    },
+    {
+        "symbolId":0,
+        "unit":"FXCOIN",
+        "chainType":3,
+        "decimals":18,
+        "contractAddress":"",
+        "version":101,
+        "chainIcon":"",
+        "currencyId":5,
+        "icon":"https://d2s06u7r6ai7du.cloudfront.net/xwallet/619040203511084768.png",
+        "name":"FX Core",
+        "status":3,
+        "coinType":"118",
+        "sort":5
+    },
+    {
+        "symbolId":1,
+        "unit":"BTC",
+        "chainType":1,
+        "decimals":8,
+        "contractAddress":"",
+        "version":101,
+        "chainIcon":"",
+        "currencyId":6,
+        "icon":"http://d2s06u7r6ai7du.cloudfront.net/xwallet/165014168010075895.png",
+        "name":"Bitcoin",
+        "status":1,
+        "coinType":"0",
+        "sort":6
+    }
 ]

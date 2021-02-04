@@ -1,58 +1,56 @@
-{
-  "bitcoin":[
-  ],
-  "ethereum":[
-      {
-            "name":"MainNet",
-            "bridgeBank":"0x88A99ac744Ca5FCd40825bCe4287Fa261FF0FFC0",
-            "chainId":"1",
-            "url":"https:
-            "wsurl":"",
-            "isTestNet": false
-      },
-      {
-          "name":"Kovan",
-          "bridgeBank":"0x8811358E8D1835c7bCabd0FDc3cebD266E59930b",
-          "chainId":"42",
-          "url":"https:
-          "wsurl":"wss:
-          "isTestNet": true
+[
+    {
+        "Chain":"Ethereum",
+        "Nodes":[
+            {
+                "chainType":0,
+                "name":"Mainnet",
+                "chainId":"1",
+                "url":"https://eth-mainnet.functionx.io",
+                "wsurl":""
+            },
+            {
+                "chainType":20,
+                "name":"Kovan",
+                "chainId":"42",
+                "url":"https://eth-kovan.functionx.io",
+                "wsurl":""
+            }
+        ]
+    },
+    {
+        "Chain":"FunctionX",
+        "Nodes":[
+            {
+                "chainType":3,
+                "name":"Mainnet",
+                "hrp": "fx",
+                "symbol": "fxcoin",
+                "chainId":"fxcore",
+                "url":"https://v68sbvamoqe4-test.blockchain.functionx.io/chain/fxcore-1/",
+                "wsurl":""
+            },
+            {
+                "chainType":23,
+                "name":"Testnet",
+                "hrp": "fx",
+                "symbol": "fxc",
+                "chainId":"fxcore",
+                "url":"https://v68sbvamoqe4-test.blockchain.functionx.io/chain/fxcore-1/",
+                "wsurl":""
+            }
+        ]
+    },
+    {
+        "Chain":"Bitcoin",
+        "Nodes":[
+            {
+                "chainType":1,
+                "name":"Mainnet",
+                "url":"https://api.blockcypher.com/v1/btc/main",
+                "token":"4a3fb04508724090b5d9bed646662bb4",
+                "wsurl":""
+            }
+        ]
     }
-  ],
-  "binance":[
-  ],
-  "hub":[
-      {
-          "name":"FxCore",
-          "chainId":"fxcore",
-          "url":"https:
-          "wsurl":"https:
-          "isTestNet": false
-      },
-      {
-          "name":"FxCore",
-          "chainId":"fxcore",
-          "url":"https:
-          "wsurl":"https:
-          "isTestNet": true
-      }
-  ],
-  "sms":[
-      {
-          "name":"FxMessage",
-          "chainId":"fx-message",
-          "url":"https:
-          "wsurl":"https:
-          "isTestNet": true
-      }
-  ],
-  "order":[
-      {
-          "name":"FxPayment",
-          "chainId":"fx-payment",
-          "url":"https:
-          "wsurl":"https:
-          "isTestNet": true
-    }
-  ]
-}
+]

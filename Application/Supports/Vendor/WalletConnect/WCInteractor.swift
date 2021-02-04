@@ -29,6 +29,7 @@ open class WCInteractor {
             didUpdateState?(state)
         }
     }
+    
 
     public let clientId: String
     public let clientMeta: WCPeerMeta
@@ -74,14 +75,14 @@ open class WCInteractor {
         socket.onConnect = { [weak self] in self?.onConnect() }
         socket.onDisconnect = { [weak self] error in self?.onDisconnect(error: error) }
         socket.onText = { [weak self] text in self?.onReceiveMessage(text: text) }
-        //        socket.onPong = { _ in WCLog("<== pong") }
-        //        socket.onData = { data in WCLog("<== websocketDidReceiveData: \(data.toHexString())") }
+//        socket.onPong = { _ in WCLog("<== pong") }
+//        socket.onData = { data in WCLog("<== websocketDidReceiveData: \(data.toHexString())") }
     }
 
     deinit {
         disconnect()
     }
-
+    
     public func disableSSLCertValidation() {
         self.socket.disableSSLCertValidation = true
     }
@@ -191,7 +192,7 @@ extension WCInteractor {
         let data = message.encoded
         return Promise { seal in
             socket.write(data: data) {
-                //                WCLog("==> sent \(String(data: data, encoding: .utf8)!) ")
+//                WCLog("==> sent \(String(data: data, encoding: .utf8)!) ")
                 seal.fulfill(())
             }
         }
@@ -228,7 +229,7 @@ extension WCInteractor {
 
     private func setupPingTimer() {
         pingTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak socket] _ in
-            //            WCLog("==> ping")
+//            WCLog("==> ping")
             socket?.write(ping: Data())
         }
     }
@@ -260,7 +261,7 @@ extension WCInteractor {
 // MARK: WebSocket event handler
 extension WCInteractor {
     private func onConnect() {
-        //        WCLog("<== websocketDidConnect")
+//        WCLog("<== websocketDidConnect")
 
         setupPingTimer()
         checkExistingSession()
@@ -292,12 +293,12 @@ extension WCInteractor {
     }
 
     private func onReceiveMessage(text: String) {
-        //        WCLog("<== receive: \(text)")
+//        WCLog("<== receive: \(text)")
         guard let (topic, payload) = WCEncryptionPayload.extract(text) else { return }
         do {
             let decrypted = try WCEncryptor.decrypt(payload: payload, with: session.key)
             guard let json = try JSONSerialization.jsonObject(with: decrypted, options: [])
-                    as? [String: Any] else {
+                as? [String: Any] else {
                 throw WCError.badServerResponse
             }
             WCLog("<== receive(decrypted): \(String(data: decrypted, encoding: .utf8)!)")
@@ -307,7 +308,7 @@ extension WCInteractor {
                 } else {
                     onCustomRequest?(topic, json)
                 }
-            } else {
+            }else {
                 onCustomRequest?(topic, json)
             }
         } catch let error {
