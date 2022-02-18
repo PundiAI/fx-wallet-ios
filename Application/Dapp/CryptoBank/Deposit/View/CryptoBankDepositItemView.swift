@@ -1,10 +1,4 @@
-//
-//  Python3
-//  MakeSwiftFiles
-//
-//  Created by HeiHuaBaiHua 
-//  Copyright © 2017年 HeiHuaBaiHua. All rights reserved.
-//
+
 
 import WKKit
 
@@ -98,15 +92,15 @@ class CryptoBankTxInputCell: FxTableViewCell {
         
         let edge: CGFloat = 24.auto()
         addressTitleLabel.snp.makeConstraints { (make) in
-            make.top.equalTo(16.auto())
+            make.top.equalTo(24.auto())
             make.left.equalTo(edge)
-            make.height.equalTo(20.auto())
+            make.height.equalTo(19.auto())
         }
         
         addressLabel.snp.makeConstraints { (make) in
             make.top.equalTo(addressTitleLabel.snp.bottom).offset(8.auto())
             make.left.right.equalToSuperview().inset(edge)
-            make.height.equalTo(18.auto())
+            make.height.equalTo(17.auto())
         }
         
         line.snp.makeConstraints { (make) in
@@ -186,7 +180,7 @@ class CryptoBankConfirmTxCell: FxTableViewCell {
         let v = UIButton()
         v.image = nil
         v.bgImage = UIImage.createImageWithColor(color: .clear)
-        v.selectedImage = IMG("ic_check")?.reRender(color: .white)
+        v.selectedImage = IMG("ic_check_white")
         v.selectedBGImage = UIImage.createImageWithColor(color: HDA(0x0552DC))
         v.cornerRadius = 4
         v.borderWidth = 2

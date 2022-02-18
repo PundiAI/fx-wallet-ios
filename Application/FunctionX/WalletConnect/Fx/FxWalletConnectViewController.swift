@@ -86,9 +86,11 @@ class FxWalletConnectViewController: WalletConnectViewController {
     private func bindListView() {
         
         wk.view.didConnect(true)
+        navigationBar.leftBarButton?.image = IMG("ic_arrow_down_black")
         listBinder.push(DappCell.self, vm: session.dapp)
         listBinder.push(WCInfoCell.self, vm: WCInfoCellViewModel(title: TR("WalletConnect.TSelectAddress"), subtitle: session.account.address))
-        listBinder.push(WCInfoCell.self, vm: WCInfoCellViewModel(title: TR("Balance"), subtitle: ""))
+        let balanceCell = listBinder.push(WCInfoCell.self, vm: WCInfoCellViewModel(title: TR("Balance"), subtitle: ""))
+        addCoinType(balanceCell)
         
         guard let account = session.account else { return }
         let address = account.address
@@ -130,6 +132,25 @@ class FxWalletConnectViewController: WalletConnectViewController {
         return session
     }
     
+    private func addCoinType(_ titleCell: WCInfoCell) {
+        guard !session.coin.isEmpty else { return }
+        
+        let coinIV = CoinTypeView()
+        titleCell.contentView.addSubview(coinIV)
+        
+        titleCell.titleLabel.snp.remakeConstraints { (make) in
+            make.top.equalTo(24.auto())
+            make.left.equalTo(48.auto())
+            make.height.equalTo(20)
+        }
+        
+        coinIV.snp.makeConstraints { (make) in
+            make.bottom.equalTo(titleCell.titleLabel)
+            make.left.equalTo(titleCell.titleLabel.snp.right).offset(12.auto())
+            make.size.equalTo(CGSize(width: 0, height: 16.auto()))
+        }
+        coinIV.bind(session.coin)
+    }
 }
 
 

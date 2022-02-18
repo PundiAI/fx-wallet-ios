@@ -27,12 +27,11 @@ extension CryptoBankViewController {
                 let cellVM = vm.items[indexPath.row]
                 Router.pushToCryptoBankAssetsOverview(wallet: vm.wallet, coin: cellVM.coin)
             }
-            
-            view.tipButton.isEnabled = false
+             
             view.tipButton.rx.tap.throttle(.milliseconds(30), scheduler: MainScheduler.instance)
                 .subscribe(onNext: {
-                    Router.showWebViewController(url: ThisAPP.WebURL.helpDepositURL) 
-            }).disposed(by: reuseBag)
+                    Router.showRevWebViewController(url: ThisAPP.WebURL.helpDepositURL) 
+            }).disposed(by: reuseBag) 
             
             view.allAssertsButton.rx.tap.throttle(.milliseconds(30), scheduler: MainScheduler.instance)
                 .subscribe(onNext: {
@@ -46,10 +45,9 @@ extension CryptoBankViewController {
         }
         
         func reloadIfNeed() {
+            guard viewModel?.reloadIfNeed() == true else { return }
             
-            if viewModel?.reloadIfNeed() == true {
-                view.assetListView.reloadData()
-            }
+            view.assetListView.reloadData()
         }
         
         override class func height(model: Any?) -> CGFloat { return (model as? DepositCellViewModel)?.height ?? 44 }

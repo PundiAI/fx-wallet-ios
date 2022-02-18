@@ -32,7 +32,7 @@ extension CryptoBankViewController {
         lazy var height: CGFloat = {
            
             let descHeight = TR("CryptoBank.PurchaseDesc").height(ofWidth: ScreenWidth - 24.auto() * 4, attributes: [.font: XWallet.Font(ofSize: 14)])
-            let titleHeight = 64.auto() + descHeight
+            let titleHeight = 62.auto() + descHeight
             let listHeight = CGFloat(items.count * 80.auto()) 
             let actionHeight: CGFloat = 68.auto()
             return 24.auto() + titleHeight + listHeight + actionHeight

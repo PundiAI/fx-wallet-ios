@@ -3,7 +3,7 @@
 //  AllPurchaseViewController
 //
 //  Created by HeiHuaBaiHua 
-//  Copyright © 2017年 HeiHuaBaiHua. All rights reserved.
+//  Copyright © 2017 HeiHuaBaiHua. All rights reserved.
 //
 
 import WKKit

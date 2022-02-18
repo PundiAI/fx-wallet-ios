@@ -47,6 +47,7 @@ class FxValidatorListViewController: WKViewController {
         bindLeftListView()
         bindRightListView()
         bindTitleAnimator()
+        bindRightTitleAnimator()
     }
     
     override func bindNavBar() {
@@ -64,29 +65,30 @@ class FxValidatorListViewController: WKViewController {
     
     @objc private func switchTo(_ sender: UIButton) {
         
-        let isMyAssets = sender == wk.view.switchToMyAssets
-        let reduceHeader = leftListBinder.view.contentOffset.y < FullNavBarHeight
-
-        wk.view.switchToAll.isSelected = !isMyAssets
-        wk.view.switchToMyAssets.isSelected = isMyAssets
+        let isLeft = sender == wk.view.switchToMyAssets
+        wk.view.switchToAll.isSelected = !isLeft
+        wk.view.switchToMyAssets.isSelected = isLeft
         wk.view.switchIndicator.snp.updateConstraints { (make) in
-            make.left.equalTo(isMyAssets ? 4 : 4 + sender.width)
+            make.left.equalTo(isLeft ? 4 : 4 + sender.width)
         }
 
-        if !reduceHeader {
-            UIView.animate(withDuration: 0.2) {
-                self.wk.view.switchView.layoutIfNeeded()
-            }
+        UIView.animate(withDuration: 0.2) {
+            self.wk.view.switchView.layoutIfNeeded()
         }
-
-        if isMyAssets {
+        
+        if isLeft {
             rightListBinder.view.endEditing(true)
-            bindTitleAnimator()
         } else {
             leftListBinder.view.endEditing(true)
-            bindRightTitleAnimator()
         }
-        wk.view.contentView.setContentOffset(CGPoint(x: isMyAssets ? 0 : ScreenWidth, y: 0), animated: true)
+        wk.view.contentView.setContentOffset(CGPoint(x: isLeft ? 0 : ScreenWidth, y: 0), animated: true)
+
+        let titleAnimator = wk.view.titleAnimator
+        let listView = isLeft ? leftListBinder.view : rightListBinder.view
+        wk.view.blurContainer.origin.y = -min(FullNavBarHeight, max(0, listView.contentOffset.y))
+        UIView.animate(withDuration: 0.1, delay: 0, options: .curveEaseInOut, animations: {
+            self.wk.view.titleAnimator.set(percent: listView.contentOffset.y / titleAnimator.maxOffset)
+        })
     }
     
     private func bindLeftListView() {

@@ -1,11 +1,4 @@
-//
-//
-//  XWallet
-//
-//  Created by May on 2020/12/14.
-//  Copyright © 2020 May All rights reserved.
-//
-
+ 
 import WKKit
 import RxSwift
 import RxCocoa
@@ -91,7 +84,7 @@ class MessageSetViewController: WKViewController {
                     self?.vmodel.enable = false
                 case .authorized, .provisional, .ephemeral:
                     self?.vmodel.enable = true
-                    WKRemoteServer.didRequestRemoteNotif = true
+                    WKRemoteServer.didRequestRemoteNotif = 1
                 @unknown default:
                     self?.vmodel.enable = false
                 } 
@@ -219,19 +212,14 @@ class MessageSetViewController: WKViewController {
             preferredStyle: .alert
         )
 
-        alert.addAction(UIAlertAction(title: TR("Cancel"), style: UIAlertAction.Style.default, handler: { (_) in
+        alert.addAction(UIAlertAction(title: TR("NotNow"), style: UIAlertAction.Style.default, handler: { (_) in
             completed?()
         }))
         
-        alert.addAction(UIAlertAction(title: TR("Go to set"), style: UIAlertAction.Style.default, handler: { (_) in
+        alert.addAction(UIAlertAction(title: TR("Settings.Title"), style: UIAlertAction.Style.default, handler: { (_) in
             completed?()
             if let url = URL(string: "App-Prefs:root=NOTIFICATIONS_ID"), UIApplication.shared.canOpenURL(url) {
-
-                if #available(iOS 10.0, *) {
-                    UIApplication.shared.open(url, options: [:], completionHandler: nil)
-                } else {
-                    // Fallback on earlier versions
-                }
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
             }
         }))
 

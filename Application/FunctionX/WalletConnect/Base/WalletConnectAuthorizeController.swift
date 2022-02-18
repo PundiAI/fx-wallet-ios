@@ -73,7 +73,13 @@ class WalletConnectAuthorizeController: WKViewController {
     private func bindAction() {
         
         weak var welf = self
-        wk.view.cancelButton.action { welf?.dismiss(userCanceled: true) }
+        wk.view.cancelButton.action {
+            Router.pushToDisconnectWalletConnect { (v) in
+                if v {
+                    welf?.dismiss(userCanceled: true, animated: false)
+                }
+            }
+        }
         wk.view.authButton.action { welf?.dismiss(userCanceled: false) }
     }
     
@@ -83,7 +89,7 @@ class WalletConnectAuthorizeController: WKViewController {
         if let handler = completionHandler {
             handler(self, !userCanceled)
         } else {
-            Router.pop(self, animated: true, completion: nil)
+            Router.pop(self, animated: animated, completion: nil)
         }
     }
 }

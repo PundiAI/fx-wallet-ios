@@ -1,14 +1,9 @@
-//
-//  Python3
-//  MakeSwiftFiles
-//
-//  Created by HeiHuaBaiHua 
-//  Copyright © 2017年 HeiHuaBaiHua. All rights reserved.
-//
+
 
 import WKKit
 import RxSwift
 import RxCocoa
+import XChains
 
 extension WKWrapper where Base == FxMyDelegatesViewController {
     var view: Base.View { return base.view as! Base.View }
@@ -50,7 +45,7 @@ class FxMyDelegatesViewController: WKViewController {
         
         logWhenDeinit()
         
-        bindAction()
+        bindHeader()
         bindListView()
     }
     
@@ -65,12 +60,36 @@ class FxMyDelegatesViewController: WKViewController {
         navigationBar.action(.title, title: TR("MyDelegates.Title"))
     }
     
-    private func bindAction() {
+    private func bindHeader() {
+        let header = wk.view.header
         
-        wk.view.chooseButton.action { [weak self] in
+        let fxc = coin.token
+        header.fxcLabel.text = fxc
+        header.fxUSDLabel.text = Coin.FxUSDSymbol
+
+        let fxcReward = Observable.combineLatest(items.map{ $0.fxcReward })
+        fxcReward.subscribe(onNext: { [weak self](values) in
             guard let this = self else { return }
-            Router.pushToValidatorList(wallet: this.wallet, coin: this.coin)
-        }
+            header.fxcRewardsLabel.text = this.total(values).div10(this.coin.decimal).thousandth()
+        }).disposed(by: defaultBag)
+        
+        let fxUSDReward = Observable.combineLatest(items.map{ $0.fxUSDReward })
+        fxUSDReward.subscribe(onNext: { [weak self](values) in
+            guard let this = self else { return }
+            header.fxUSDRewardsLabel.text = this.total(values).div10(this.coin.decimal).thousandth()
+        }).disposed(by: defaultBag)
+        
+        let delegated = Observable.combineLatest(items.map{ $0.delegateAmount })
+        delegated.subscribe(onNext: { [weak self](values) in
+            guard let this = self else { return }
+            header.delegatedLabel.text = "\(this.total(values).div10(this.coin.decimal).thousandth()) \(fxc)"
+        }).disposed(by: defaultBag)
+        
+        let balance = Observable.combineLatest(items.map{ $0.balance.value })
+        balance.subscribe(onNext: { [weak self](values) in
+            guard let this = self else { return }
+            header.availableLabel.text = "\(this.total(values).div10(this.coin.decimal).thousandth()) \(fxc)"
+        }).disposed(by: defaultBag)
     }
     
     private func fetchData() {
@@ -79,6 +98,15 @@ class FxMyDelegatesViewController: WKViewController {
         DispatchQueue.main.asyncAfter(deadline: .now() + (displayItems.isEmpty ? 0 : 1)) {
             self.items.forEach{ $0.refreshAction.execute() }
         }
+    }
+    
+    private func total(_ values: [String]) -> String {
+        
+        var total = "0"
+        for v in values {
+            if !v.isUnknownAmount { total = total.add(v, coin.decimal) }
+        }
+        return total
     }
 }
         
@@ -91,7 +119,7 @@ extension FxMyDelegatesViewController: UITableViewDataSource, UITableViewDelegat
         listView.delegate = self
         listView.dataSource = self
         listView.register(Cell.self, forCellReuseIdentifier: "cell")
-        listView.register(ListHeader.self, forHeaderFooterViewReuseIdentifier: "header")
+        listView.register(SectionHeader.self, forHeaderFooterViewReuseIdentifier: "header")
         
         items.first?.refreshAction.executing.subscribe(onNext: { [weak self] executing in
             if !executing { self?.hud?.hide() }
@@ -125,8 +153,9 @@ extension FxMyDelegatesViewController: UITableViewDataSource, UITableViewDelegat
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         if isNoData { return nil }
         
-        let header = tableView.dequeueReusableHeaderFooterView(withIdentifier: "header") as? ListHeader
-        header?.balanceLabel.text = "Total \(displayItems[section].amount)"
+        let header = tableView.dequeueReusableHeaderFooterView(withIdentifier: "header") as? SectionHeader
+        let amount = displayItems[section].delegateAmount.value.div10(coin.decimal).thousandth()
+        header?.totalLabel.text = "\(TR("Total")) \(amount)"
         header?.addressLabel.text = displayItems[section].account.address
         return header
     }
@@ -152,7 +181,7 @@ extension FxMyDelegatesViewController: UITableViewDataSource, UITableViewDelegat
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let vm = displayItems[indexPath.section].items[indexPath.row]
+        guard let vm = displayItems.get(indexPath.section)?.items.get(indexPath.row) else { return }
         
         Router.pushToFxValidatorOverview(wallet: wallet, coin: coin, validator: vm.validator, account: vm.account)
     }

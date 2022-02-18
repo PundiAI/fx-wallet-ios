@@ -51,8 +51,7 @@ class DappJSStorage: WKJSAction {
         DappJSStorage.setKeyValues(forProject: projectName(), keyValues)
         callback.success()
     }
-
-    // 获取缓存数据
+ 
     @objc func getValues(_ parmas: [String: Any], _ callback: XWVScriptObject) {
         guard let keys = parmas["keys"] as? [String] else {
             callback.error(code: .unrecognizedParams)

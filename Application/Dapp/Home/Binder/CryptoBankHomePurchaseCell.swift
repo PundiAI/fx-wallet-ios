@@ -29,12 +29,11 @@ extension CryptoBankViewController {
             view.allAssertsButton.rx.tap.subscribe(onNext: { [weak self] value in
                 self?.router(event: "all", context: [:])
             }).disposed(by: reuseBag)
-            
-            view.tipButton.isEnabled = false
+             
             view.tipButton.rx.tap.throttle(.milliseconds(30), scheduler: MainScheduler.instance)
                 .subscribe(onNext: {
-                    Router.showWebViewController(url: ThisAPP.WebURL.helpPurchaseURL)
-            }).disposed(by: reuseBag)
+                    Router.showRevWebViewController(url: ThisAPP.WebURL.helpPurchaseURL)
+            }).disposed(by: reuseBag) 
         }
         
         override class func height(model: Any?) -> CGFloat { return (model as? PurchaseCellViewModel)?.height ?? 44 }

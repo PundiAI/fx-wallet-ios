@@ -1,10 +1,4 @@
-//
-//  Python3
-//  MakeSwiftFiles
-//
-//  Created by HeiHuaBaiHua 
-//  Copyright © 2017年 HeiHuaBaiHua. All rights reserved.
-//
+
 
 import WKKit
 import RxSwift
@@ -27,7 +21,7 @@ class CashBuyTxInputContentCell: UIView {
         v.editBorderColors = (HDA(0x0552DC), .clear)
         v.borderWidth = 2
         v.interactor.keyboardType = .decimalPad
-        v.backgroundColor = HDA(0xF7F7FA)
+        v.backgroundColor = .white
         return v
     }()
     
@@ -68,8 +62,12 @@ class CashBuyTxInputContentCell: UIView {
         bgView.addSubviews([inputVIew, addressButton])
         addressButton.addSubviews([addressTitleLabel, addressLabel, addressArrowIV])
         
+        inputTitleLabel.isHidden = true
+        inputVIew.isHidden = true
+        
+        
         bgView.snp.makeConstraints { (make) in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 8, left: 24, bottom: 32, right: 24).auto())
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 16, left: 24, bottom: 32, right: 24).auto())
         }
         
         let edge: CGFloat = 24.auto()
@@ -105,13 +103,13 @@ class CashBuyTxInputContentCell: UIView {
         }
         
         addressButton.snp.makeConstraints { (make) in
-            make.top.equalTo(inputVIew.snp.bottom).offset(16.auto())
             make.left.right.equalToSuperview().inset(edge)
-            make.bottom.equalToSuperview().inset(19.auto())
+            make.centerY.equalToSuperview()
+            make.height.greaterThanOrEqualTo(90)
         }
         
         addressTitleLabel.snp.makeConstraints { (make) in
-            make.bottom.lessThanOrEqualTo(addressButton.snp.centerY).offset(-4.auto())
+            make.bottom.lessThanOrEqualTo(addressButton.snp.centerY).offset(-10.auto())
             make.left.right.equalTo(addressLabel)
             make.height.equalTo(20.auto())
         }
@@ -146,7 +144,7 @@ class CashBuyConfirmTxContentCell: UIView {
         let v = UIButton()
         v.image = nil
         v.bgImage = UIImage.createImageWithColor(color: .clear)
-        v.selectedImage = IMG("ic_check")?.reRender(color: .white)
+        v.selectedImage = IMG("ic_check_white")
         v.selectedBGImage = UIImage.createImageWithColor(color: HDA(0x0552DC))
         v.cornerRadius = 4
         v.borderWidth = 2

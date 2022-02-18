@@ -43,8 +43,7 @@ extension OxApprovingController {
         
         
         override class func height(model: Any?) -> CGFloat {
-            guard let token = model as? String else {
-                print("-")
+            guard let token = model as? String else { 
                 return 0
             }
             

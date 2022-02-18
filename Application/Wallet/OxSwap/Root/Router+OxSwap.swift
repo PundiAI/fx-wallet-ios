@@ -30,11 +30,11 @@ extension Router {
 
     static func showOxTipAlert(current: (String, String)) {
         Haptic.impactMedium.generate()
-        presentViewController("OxNotFeeViewController", context:["minNeedPay": current.0, "balance": current.1])
+        pushViewController("OxNotFeeViewController", context:["minNeedPay": current.0, "balance": current.1])
     }
     
     static func showOxReceiveInfoToast(amountsMdoel: OxAmountsModel) {
-        presentViewController("OxToastViewController", context: ["amountsModel": amountsMdoel])
+        pushViewController("OxToastViewController", context: ["amountsModel": amountsMdoel])
     }
     
     static func pushToAdvancedSetting(wallet: WKWallet, completionHandler:((CGFloat) -> Void)? = nil) {

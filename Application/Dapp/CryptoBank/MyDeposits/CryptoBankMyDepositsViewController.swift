@@ -1,10 +1,4 @@
-//
-//  Python3
-//  MakeSwiftFiles
-//
-//  Created by HeiHuaBaiHua 
-//  Copyright © 2017年 HeiHuaBaiHua. All rights reserved.
-//
+
 
 import WKKit
 import RxSwift
@@ -121,7 +115,7 @@ extension CryptoBankMyDepositsViewController: UITableViewDataSource, UITableView
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let vm = viewModel.items[indexPath.section].items[indexPath.row]
+        _ = viewModel.items[indexPath.section].items[indexPath.row]
         
     }
 }

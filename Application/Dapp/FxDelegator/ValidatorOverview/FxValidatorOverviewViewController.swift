@@ -1,10 +1,4 @@
-//
-//  Python3
-//  MakeSwiftFiles
-//
-//  Created by HeiHuaBaiHua 
-//  Copyright © 2017年 HeiHuaBaiHua. All rights reserved.
-//
+
 
 import WKKit
 import RxSwift
@@ -40,9 +34,9 @@ class FxValidatorOverviewViewController: WKViewController {
     
     let coin: Coin
     let wallet: WKWallet
-    let account: Keypair?
+    var account: Keypair?
     let validator: Validator
-    lazy var listBinder = WKStaticTableViewBinder(view: wk.view.listView)
+    lazy var listBinder = ListBinder(view: wk.view.listView)
     
     override func loadView() { view = View(frame: ScreenBounds) }
     override func viewDidLoad() {
@@ -51,6 +45,10 @@ class FxValidatorOverviewViewController: WKViewController {
         
         predisplay()
         bindAction()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         
         fetchData()
     }
@@ -79,7 +77,28 @@ class FxValidatorOverviewViewController: WKViewController {
         weak var welf = self
         wk.view.delegateButton.action {
             guard let this = welf else { return }
-            Router.pushToFxDelegate(wallet: this.wallet, coin: this.coin, validator: this.validator, account: this.account)
+            
+            if this.account != nil {
+                Router.pushToFxDelegate(wallet: this.wallet, coin: this.coin, validator: this.validator, account: this.account)
+            } else {
+                
+                let erc20FX = CoinService.current.coin(forSymbol: Coin.ERC20FxSymbol, chain: NodeManager.shared.currentEthereumNode.chainType)
+                let filter: (Coin, [String : Any]?) -> Bool = { c,_ in c.id == this.coin.id || c.id == erc20FX?.id }
+                Router.showSelectAccount(wallet: this.wallet, current: nil, push: true, filter: filter) { (selectAccountVC, coin, account) in
+                    
+                    let isFxCore = coin.isFxCore
+                    if isFxCore { this.account = account }
+                    if isFxCore {
+                        Router.pushToFxDelegate(wallet: this.wallet, coin: this.coin, validator: this.validator, account: this.account)
+                    } else {
+                        Router.pushToERC20ToFxTransferAlert(wallet: this.wallet, coin: coin, account: account)
+                    }
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        Router.currentNavigator?.remove([selectAccountVC])
+                    }
+                }
+            }
         }
         
         wk.view.undelegateButton.action {
@@ -93,7 +112,11 @@ class FxValidatorOverviewViewController: WKViewController {
         }
     }
     
-    private func bind(_ info: ValidatorInfo) {
+    private func bind(_ info: Validator) {
+        
+        validator.delegateAmount = info.delegateAmount
+        validator.delegateReward = info.delegateReward
+        validator.delegateRewards = info.delegateRewards
         
         let coin = self.coin
         let header = wk.view.listHeader
@@ -103,43 +126,67 @@ class FxValidatorOverviewViewController: WKViewController {
         header.stakeLabel.text = info.totalDelegate.div10(coin.decimal).thousandth(ThisAPP.NumberDecimal)
         header.votingPowerLabel.text = TR("ValidatorOverview.VotingPower$", info.votingPowerPercent) + "%"
         header.rewardsLabel.text = String(format: "%.2f%@", info.rewards.f, "%")
+        header.myDelegateLabel.text = "\(info.delegateAmount.div10(coin.decimal).thousandth()) \(coin.token)"
         
+        header.fxcRewardsTLabel.text = "\(coin.token) \(TR("FXDelegator.Rewards")):"
+        header.fxcRewardsLabel.text = "\(info.reward(of: coin.symbol).div10(coin.decimal).thousandth()) \(coin.token)"
+        
+        header.fxUSDRewardsTLabel.text = "\(Coin.FxUSDSymbol) \(TR("FXDelegator.Rewards")):"
+        header.fxUSDRewardsLabel.text = "\(info.reward(of: Coin.FxUSDSymbol).div10(coin.decimal).thousandth()) \(Coin.FxUSDSymbol)"
+        
+        let showMyDelegate = info.delegateAmount.isGreaterThan(decimal: "0")
+        let myDelegateHeight: CGFloat = showMyDelegate ? (header.delegatedContentHeight + 24).auto() : 0
         let descHeight = info.description.height(ofWidth: ScreenWidth - 24.auto() * 4, attributes: [.font: XWallet.Font(ofSize: 14)])
-        wk.view.listView.tableHeaderView = nil
-        header.height = 8.auto() + (descHeight + 365.auto()) + 16.auto()
-        wk.view.listView.tableHeaderView = header
+        let headerHeight = 8.auto() + (myDelegateHeight + descHeight + 365.auto() + header.foldHeight) + 16.auto()
+        if abs(header.height - headerHeight) > 2 {
+            wk.view.listView.tableHeaderView = nil
+            header.height = headerHeight
+            wk.view.listView.tableHeaderView = header
+        }
         
-        listBinder.push(Cell.self) {
-            $0.titleLabel.text = TR("ValidatorOverview.SelfStake")
-            $0.contentLabel.text = String(format: "%@ / %.2f%@", info.selfDelegate.div10(coin.decimal, 0), info.selfDelegatePercent.f, "%")
+        if listBinder.itemCount == 0 {
+            
+            listBinder.push(Cell.self) {
+                $0.titleLabel.text = TR("ValidatorOverview.SelfStake")
+                $0.contentLabel.text = String(format: "%@ / %.2f%@", info.selfDelegate.div10(coin.decimal, 0), info.selfDelegatePercent.f, "%")
+            }
+            listBinder.push(Cell.self) {
+                $0.titleLabel.text = TR("ValidatorOverview.Validator")
+                $0.contentLabel.text = TR("Validator.Block", info.validatorSince)
+            }
+            listBinder.push(Cell.self) {
+                $0.titleLabel.text = TR("ValidatorOverview.Uptime")
+                $0.contentLabel.text = String(format: "%.2f%@", info.uptime.f, "%")
+            }
+            listBinder.push(Cell.self) {
+                $0.titleLabel.text = TR("ValidatorOverview.CurrentCommissionRate")
+                $0.contentLabel.text = String(format: "%.2f%@", info.currentCommissionRate.f, "%")
+            }
+            listBinder.push(Cell.self) {
+                $0.titleLabel.text = TR("ValidatorOverview.MaxCommissionRate")
+                $0.contentLabel.text = String(format: "%.2f%@", info.commissionMaxRate.f, "%")
+            }
+            listBinder.push(Cell.self) {
+                $0.titleLabel.text = TR("ValidatorOverview.MaxDailyCommissionChange")
+                $0.contentLabel.text = String(format: "%.2f%@", info.maxDailyCommissionChange.f, "%")
+            }
+            listBinder.push(Cell.self) {
+                $0.titleLabel.text = TR("ValidatorOverview.LastCommissionChange")
+                $0.contentLabel.text = Date(timeIntervalSince1970: Double(info.lastCommissionChange) / 1000).formattedText
+            }
+            listBinder.refresh()
+            
+            let foldButton = header.foldButton
+            foldButton.action { [weak self] in
+                foldButton.inactiveAWhile(1)
+                foldButton.isSelected = !foldButton.isSelected
+                header.relayout(expand: foldButton.isSelected)
+                self?.listBinder.expand(foldButton.isSelected)
+            }
         }
-        listBinder.push(Cell.self) {
-            $0.titleLabel.text = TR("ValidatorOverview.Validator")
-            $0.contentLabel.text = TR("Validator.Block", info.validatorSince)
-        }
-        listBinder.push(Cell.self) {
-            $0.titleLabel.text = TR("ValidatorOverview.Uptime")
-            $0.contentLabel.text = String(format: "%.2f%@", info.uptime.f, "%")
-        }
-        listBinder.push(Cell.self) {
-            $0.titleLabel.text = TR("ValidatorOverview.CurrentCommissionRate")
-            $0.contentLabel.text = String(format: "%.2f%@", info.currentCommissionRate.f, "%")
-        }
-        listBinder.push(Cell.self) {
-            $0.titleLabel.text = TR("ValidatorOverview.MaxCommissionRate")
-            $0.contentLabel.text = String(format: "%.2f%@", info.commissionMaxRate.f, "%")
-        }
-        listBinder.push(Cell.self) {
-            $0.titleLabel.text = TR("ValidatorOverview.MaxDailyCommissionChange")
-            $0.contentLabel.text = String(format: "%.2f%@", info.maxDailyCommissionChange.f, "%")
-        }
-        listBinder.push(Cell.self) {
-            $0.titleLabel.text = TR("ValidatorOverview.Last Commission Change")
-            $0.contentLabel.text = Date(timeIntervalSince1970: Double(info.lastCommissionChange) / 1000).format(with: "z YYYY-MM-dd HH:mm:ss")
-        }
-        listBinder.refresh()
         
-        if info.delegateAmount.isGreaterThan(decimal: "0") {
+        if showMyDelegate {
+            header.relayoutForMyDelegate()
             wk.view.relayoutForMutilActions()
         }
     }
@@ -147,7 +194,7 @@ class FxValidatorOverviewViewController: WKViewController {
     private func fetchData() {
         
         weak var welf = self
-        self.hud?.waiting()
+        if listBinder.itemCount == 0  { self.hud?.waiting() }
         FxAPIManager.fx.fetchValidatorInfo(validatorAddress: validator.validatorAddress, delegateAddress: account?.address ?? "").subscribe(onNext: { value in
             self.hud?.hide()
             welf?.bind(value)

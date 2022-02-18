@@ -22,8 +22,8 @@ extension Router {
         pushViewController("FxCloudWalletConnectViewController", context: ["url": url, "wallet": wallet], completion: completion)
     }
     
-    static func showDisconnectWalletConnect(confirmHandler: @escaping (Bool) -> Void,completion:((UIViewController) -> Void)? = nil) {
-        presentViewController("WalletConnectDisconnectAlertController", context: ["handler": confirmHandler], completion: completion)
+    static func pushToDisconnectWalletConnect(confirmHandler: @escaping (Bool) -> Void,completion:((UIViewController) -> Void)? = nil) {
+        pushViewController("WalletConnectDisconnectAlertController", context: ["handler": confirmHandler], completion: completion)
     }
     
     static func showDisconnectWalletConnect() {

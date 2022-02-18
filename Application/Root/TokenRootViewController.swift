@@ -35,15 +35,15 @@ extension Router {
                 rootController = WKNavigationController(rootViewController: Router.backUpNowController(wallet: wallet))
             case .completed:
                 rootController = WKNavigationController(rootViewController: Router.walletRootController(wallet.rawValue))
+            case .none:
+                rootController = WKNavigationController(rootViewController: Router.welcomeCreateWalletController)
             }
         } else {
             rootController = WKNavigationController(rootViewController: Router.welcomeCreateWalletController)
         }
         
         rootController.hero.isEnabled = false
-        rootController.hero.navigationAnimationType = .none
-        rootController.interactivePopGestureRecognizer?.delegate = nil
-        rootController.interactivePopGestureRecognizer?.isEnabled = true
+        rootController.hero.navigationAnimationType = .none 
         return rootController
     }
     
@@ -151,7 +151,7 @@ extension TokenRootViewController {
     }
 }
 
-// MARK: - TokenRootViewController 添加通知视图
+// MARK: - TokenRootViewController
 class TokenRootViewController: TokenListViewController {
     private var isVisible:Bool = true
     
@@ -174,8 +174,6 @@ class TokenRootViewController: TokenListViewController {
         
         bindNotif()
         bindScrollNot()
-        
-        Router.showNotifAlertIfNeed().subscribe().disposed(by: defaultBag)
     }
  
     override func viewWillAppear(_ animated: Bool) {
@@ -183,7 +181,7 @@ class TokenRootViewController: TokenListViewController {
     }
  
     private func bindNotif() { 
-        notifBinder.show(in: wk.view)
+        notifBinder.show(in: wk.view) 
         notifBinder.view.snp.remakeConstraints { (make) in
             make.left.right.equalToSuperview()
             make.top.equalTo(navigationBar.snp.top)
@@ -191,10 +189,10 @@ class TokenRootViewController: TokenListViewController {
         }
         
         notifBinder.viewModel.itemCount
-            .subscribe(onNext: {[weak self] (count, _) in
+            .subscribe(onNext: {[weak self] (count, layout) in
                 self?.isVisible = count > 0
-                self?.setNeedsStatusBarAppearanceUpdate()
-                self?.wk.view.layoutNotif(count > 0) 
+                self?.setNeedsStatusBarAppearanceUpdate() 
+                self?.wk.view.layoutNotif(count > 0 && layout == .fold)
         }).disposed(by: defaultBag)
           
         wk.navigationBar.notifButton.rx.tap.asObservable()
@@ -202,24 +200,18 @@ class TokenRootViewController: TokenListViewController {
             .bind { [weak self] in
                 self?.notifBinder.toExpandAction()
             }.disposed(by: defaultBag)
-         
-    } 
+        
+        let listView = self.notifBinder.wk.view.listView
+        notifBinder.wk.view.listView.rx.observe(CGSize.self, "contentSize").filterNil()
+            .map { _ in  !listView.collectionViewLayout.isKind(of: NotificationExpandLayout.self) }
+            .subscribe(onNext: {  [weak self]  enbale in
+            self?.wk.view.listView.scrollsToTop = enbale
+        }).disposed(by: defaultBag)
     
-//    private func showNotifAlertIfNeed() {
-//        let didRequestRemoteNotif = UserDefaults.standard.bool(forKey: "fx.didRequestRemoteNotif")
-//        if didRequestRemoteNotif {
-//            WKRemoteServer.request()
-//        } else {
-//            UserDefaults.standard.set(true, forKey: "fx.didRequestRemoteNotif")
-//            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1) {
-//                Router.showNotificationAlert()
-//            }
-//        }
-//    }
+    }
 }
-
-// MARK:- 滚动通知栏
 extension TokenRootViewController {
+    
     private func bindScrollNot() {
         let listView = self.wk.view.listView
         let navigationBar = self.navigationBar
@@ -327,16 +319,12 @@ extension TokenRootViewController {
 extension TokenRootViewController {
     override func heroAnimator(from: String, to: String) -> WKHeroAnimator? { 
         switch (from, to) {
-        case ("TokenRootViewController", "TokenInfoViewController"): return animators["0"]
-        case ("TokenRootViewController", "SendTokenInputViewController"): return animators["1"]
-        case ("TokenRootViewController", "ReceiveTokenViewController"): return animators["1"]
-        case ("TokenRootViewController", "AddTokenViewController"): return animators["2"] 
-        case ("TokenRootViewController", "SelectOrAddAccountViewController"):  return animators["2"]
+        case ("TokenRootViewController", "TokenInfoViewController"): return animators["0"] 
         default: return nil
         }
     }
     
-    private func clearHeroModifersForCell() {
+    fileprivate func clearHeroModifersForCell() {
         wk.view.listView.visibleCells.each { (_cell) in
             _cell.hero.modifiers = nil
             (_cell as? Cell)?.view.tokenLabel.hero.id = nil
@@ -352,83 +340,84 @@ extension TokenRootViewController {
         }
     }
     
+    fileprivate func clearHeroModifersForView() {
+        weak var welf = self
+        welf?.navigationBar.backgoundView?.alpha = 1
+        welf?.navigationBar.visualEffectView?.alpha = 1
+        (welf?.navigationBar as? TokenNavigationBar)?.backgroundBlurView.alpha = 1
+        welf?.navigationBar.hero.modifiers = nil
+        
+        welf?.wk.view.bgroundView.hero.id = nil
+        welf?.wk.view.bgroundView.hero.modifiers = nil
+        welf?.wk.view.bgroundColorView.hero.modifiers = nil
+        welf?.wk.view.listView.hero.modifiers = nil
+        welf?.clearHeroModifersForCell()
+        welf?.wk.view.listView.tableFooterView?.hero.modifiers = nil
+        Router.fxTabBarController?.setHeroModifiers(modifiers: nil)
+        welf?.notifBinder.view.hero.modifiers = nil
+        welf?.wk.view.listView.hero.modifiers = nil
+        welf?.wk.view.listView.tableHeaderView?.hero.modifiers = nil
+    }
     
     private func bindHero( ) {
         weak var welf = self
         let onSuspend:(WKHeroAnimator) ->Void = { a in
-            welf?.navigationBar.backgoundView?.alpha = 1
-            welf?.navigationBar.visualEffectView?.alpha = 1
-            (welf?.navigationBar as? TokenNavigationBar)?.backgroundBlurView.alpha = 1
-            welf?.navigationBar.hero.modifiers = nil
-            
-            welf?.wk.view.bgroundView.hero.id = nil
-            welf?.wk.view.bgroundView.hero.modifiers = nil
-            welf?.wk.view.bgroundColorView.hero.modifiers = nil
-            welf?.wk.view.listView.hero.modifiers = nil
-            welf?.clearHeroModifersForCell()
-            welf?.wk.view.listView.tableFooterView?.hero.modifiers = nil
-            Router.tabBarController?.tabBar.hero.modifiers = nil 
-            welf?.notifBinder.view.hero.modifiers = nil
-            welf?.wk.view.listView.hero.modifiers = nil
-            welf?.wk.view.listView.tableHeaderView?.hero.modifiers = nil
+            welf?.clearHeroModifersForView()
         }
         
         let infoAnimator = InfoAnimator({ a in
             guard let this = welf else { return }
             guard let animator = a as? InfoAnimator else {return}
+            welf?.clearHeroModifersForCell()
             
             welf?.wk.view.navBarView.hero.id = "token_list_navbar_view"
             welf?.wk.view.bgroundView.hero.id = "token_list_background"
             welf?.wk.view.bgroundView.hero.modifiers = [.useGlobalCoordinateSpace, .useOptimizedSnapshot]
-            welf?.wk.view.bgroundColorView.hero.modifiers = [.forceAnimate,.useGlobalCoordinateSpace, .useNormalSnapshot]
-            welf?.wk.view.listView.hero.modifiers = [.cascade, .whenAppearing(.fade),
-                                                     .whenDisappearing(.forceNonFade),
-                                                     .useOptimizedSnapshot]
-            
-            animator.cell.view.tokenLabel.hero.id = "token_title_lable"
-            animator.cell.view.tokenLabel.hero.modifiers = [.useScaleBasedSizeChange] 
-            
+            welf?.wk.view.listView.hero.modifiers = [.cascade]
+               
             animator.cell.view.tokenIV.hero.id = "token_image_view"
             animator.cell.view.tokenIV.hero.modifiers = [.fade, .useOptimizedSnapshot,
                                                                .useGlobalCoordinateSpace]
+            welf?.wk.view.listView.visibleCells.each(call: { (index, _cell) in
+                _cell.hero.modifiers = [.fade, .useOptimizedSnapshot, .useGlobalCoordinateSpace,
+                                        .translate(x: 0, y: CGFloat((100 + index * 20)), z: 10)]
+            })
+
+            for i in 0 ..< this.viewModel.displayItems.count {
+                if let sectionView = this.wk.view.listView.headerView(forSection: i) as? SectionView {
+                    sectionView.hero.modifiers = [.fade, .useOptimizedSnapshot, .useGlobalCoordinateSpace,
+                                                  .translate(x: 0, y: CGFloat((100 + i * 20)), z: 10),
+                                                  .backgroundColor(.white)]
+                }
+            }
+
+            welf?.wk.view.listView.tableHeaderView?.hero.modifiers = [.fade, .useOptimizedSnapshot, .useGlobalCoordinateSpace,
+                                                                      .translate(x: 0, y: -300, z: 0)]
+            welf?.wk.view.listView.tableFooterView?.hero.modifiers = [.fade, .useOptimizedSnapshot, .useGlobalCoordinateSpace]
             welf?.navigationBar.hero.modifiers = [.useGlobalCoordinateSpace,.useLayerRenderSnapshot,
                                                   .translate(y:-1000)]
             welf?.notifBinder.view.hero.modifiers = [.useGlobalCoordinateSpace,.useOptimizedSnapshot,
                                                      .translate(y:-1000)]
-            welf?.clearHeroModifersForCell()
-             
-            welf?.wk.view.listView.visibleCells.each(call: { (index, _cell) in
-                _cell.hero.modifiers = [.fade, .useOptimizedSnapshot, .useGlobalCoordinateSpace,
-                                        .scale(0.9), .translate(x: 0, y: CGFloat((100 + index * 20)), z: 10)]
-            })
-            
-            for i in 0 ..< this.viewModel.displayItems.count {
-                if let sectionView = this.wk.view.listView.headerView(forSection: i) as? SectionView {
-                    sectionView.hero.modifiers = [.fade, .useOptimizedSnapshot, .useGlobalCoordinateSpace,
-                                                  .scale(0.9), .translate(x: 0, y: CGFloat((100 + i * 20)), z: 10), .backgroundColor(.white)]
-                }
-            }
-            
-            welf?.wk.view.listView.tableHeaderView?.hero.modifiers = [.fade, .useOptimizedSnapshot, .useGlobalCoordinateSpace,
-                                                                      .translate(x: 0, y: -300, z: 0)]
-            welf?.wk.view.listView.tableFooterView?.hero.modifiers = [.fade, .useOptimizedSnapshot, .useGlobalCoordinateSpace, ]
-            
+            Router.fxTabBarController?.setHeroDefaultModifiers()
         }, onSuspend: onSuspend)
         animators["0"] = infoAnimator
         
         let sendAnimator = WKHeroAnimator({ a in
             welf?.wk.view.hero.modifiers = nil
-            welf?.wk.view.bgroundView.hero.id = "token_list_background"
             welf?.clearHeroModifersForCell()
-            welf?.navigationBar.hero.modifiers = [.fade, .useGlobalCoordinateSpace,.useLayerRenderSnapshot, .translate(y:-1000)]
+            welf?.wk.view.bgroundView.hero.id = "token_list_background"
+            welf?.wk.view.bgroundView.hero.modifiers = [.useNormalSnapshot, .useGlobalCoordinateSpace]
+             
             welf?.notifBinder.view.hero.modifiers = [.useGlobalCoordinateSpace,.useOptimizedSnapshot, .translate(y:-1500)]
             welf?.wk.view.listView.hero.modifiers =  [.fade, .useOptimizedSnapshot, .useGlobalCoordinateSpace,
                                                       .translate(x: 0, y: 1000, z: 0)]
-            welf?.wk.view.bgroundView.hero.modifiers = [.useNormalSnapshot, .useGlobalCoordinateSpace,
-                                                        .translate(x: 0, y: 1000, z: 0)]
-            welf?.wk.view.bgroundColorView.hero.modifiers = [.forceAnimate,.useGlobalCoordinateSpace, .useNormalSnapshot]
-            welf?.wk.view.listView.tableHeaderView?.hero.modifiers = [.fade, .useOptimizedSnapshot, .useGlobalCoordinateSpace,
-                                                                      .translate(x: 0, y: -300, z: 0)]
+            
+            welf?.wk.view.listView.tableFooterView?.hero.modifiers = [.fade, .useOptimizedSnapshot, .useGlobalCoordinateSpace]
+            welf?.navigationBar.hero.modifiers = [.useGlobalCoordinateSpace,.useLayerRenderSnapshot,
+                                                  .translate(y:-1000)]
+            welf?.notifBinder.view.hero.modifiers = [.useGlobalCoordinateSpace,.useOptimizedSnapshot,
+                                                     .translate(y:-1000)]
+            Router.fxTabBarController?.setHeroDefaultModifiers()
         }, onSuspend: onSuspend)
         animators["1"] = sendAnimator
         
@@ -444,7 +433,7 @@ extension TokenRootViewController {
                                                       .translate(x: 0, y: 1000, z: 0)]
             welf?.wk.view.listView.tableHeaderView?.hero.modifiers = [.fade, .useOptimizedSnapshot,
                                                                       .useGlobalCoordinateSpace,
-                                                                      .translate(x: 0, y: -300, z: 0)]
+                                                                      .translate(x: 0, y: -300, z: 0)] 
         }, onSuspend: onSuspend)
         animators["2"] = addAnimator
     }
@@ -452,29 +441,36 @@ extension TokenRootViewController {
 
 extension TokenRootViewController : HeroViewControllerDelegate {
     func heroWillStartAnimatingFrom(viewController: UIViewController) {
-        if let vController = viewController as? AddTokenViewController, let coin = vController.heroDidAddCoinOb.value {
-            if let newCell = (wk.view.listView.visibleCells.find { (cell) -> Bool in
-                if let ccoin = (cell as? Cell)?.viewModel?.coin {
-                    return ccoin.name == coin.name && ccoin.symbol == coin.symbol
+        if let _ = viewController as? TokenInfoViewController {
+            self.wk.view.listView.visibleCells.each(call: { (index, _cell) in
+                let dIndex = Double(index)
+                _cell.hero.modifiers = [.delay(dIndex * 0.04), .fade, .useOptimizedSnapshot, .useGlobalCoordinateSpace,
+                                        .translate(x: 0, y: CGFloat((100 + dIndex * 20)), z: 10)]
+            })
+
+            for index in 0 ..< self.viewModel.displayItems.count {
+                let dIndex = Double(index)
+                if let sectionView = wk.view.listView.headerView(forSection: index) as? SectionView {
+                    sectionView.hero.modifiers = [.delay(dIndex * 0.04), .fade, .useOptimizedSnapshot, .useGlobalCoordinateSpace,
+                                                  .translate(x: 0, y: CGFloat((100 + dIndex * 20)), z: 10),
+                                                  .backgroundColor(.white)]
                 }
-                return false
-            } as? Cell) {
-                newCell.view.tokenIV.hero.id = "hero_add_coin_image"  
-                newCell.view.tokenIV.hero.modifiers = [.useGlobalCoordinateSpace, .arc(intensity: -1), .duration(1)]
             }
         }
     }
+        
+    func heroDidEndTransition() {
+        clearHeroModifersForView()
+    }
 }
-
-
-
-// MARK: -  window rootViewController 转场动画
+ 
 extension FxTabBarController {
     func startAnimate(from fromView:UIView, to toView:UIView) ->Observable<Bool> {
         weak var welk = self
         return Observable.create { (observer) -> Disposable in
             guard let view = welk?.view else {return Disposables.create()}
             guard let tabBar = welk?.tabBar else {return Disposables.create()}
+            
             let containerView = UIView(frame: toView.bounds, UIColor.clear)
             if let sfromView = fromView.snapshotView(afterScreenUpdates: true) {
                 let backView = UIView(frame: containerView.bounds, HDA(0x080A32))
@@ -509,11 +505,18 @@ extension FxTabBarController {
                     
                     if let sTabbarView = tabBar.snapshotView() ,
                        let topListView = topListView(),
-                       let listBackView = sViewController.wk.view.bgroundView.snapshotView() {
-                        
+                       let listBackView = sViewController.wk.view.bgroundView.snapshotView(),
+                       let tabMenuView = welk?.menuView?.container,
+                       let tabMenuCloseView = welk?.menuView?.closeView,
+                       let sTabMenuView = tabMenuView.snapshotView(),
+                       let sTabMenuCloseView = tabMenuCloseView.snapshotView()
+                       {
                         DispatchQueue.main.async {
                             let sListView = bottomListView() ?? UIView()
                             let sTabbarFrame = view.convert(tabBar.frame, to: fromView)
+                            let mTabMenuFrame = view.convert(tabMenuView.frame, to: fromView)
+                            let mTabMenuCloseFrame = view.convert(tabMenuCloseView.frame, to: fromView)
+                            
                             let bListViewFrame = sViewController.wk.view.convert(sViewController.wk.view.bgroundView.frame, to: fromView)
                             let lListViewFrame = sViewController.wk.view.convert(sViewController.wk.view.listView.frame, to: fromView)
                             let tListViewFrame = sViewController.wk.view.listView.convert(sViewController.wk.view.listHeaderView.frame, to: fromView)
@@ -532,7 +535,15 @@ extension FxTabBarController {
                             sTabbarView.alpha = 0
                             sTabbarView.transform = CGAffineTransform.identity.translatedBy(x: 0, y: 150)
                             
-                            containerView.addView(listBackView, sListView, topListView, sTabbarView)
+                            sTabMenuView.frame = mTabMenuFrame
+                            sTabMenuView.alpha = 0
+                            sTabMenuView.transform = CGAffineTransform.identity.translatedBy(x: 0, y: 150)
+                            
+                            sTabMenuCloseView.frame = mTabMenuCloseFrame
+                            sTabMenuCloseView.alpha = 0
+                            sTabMenuCloseView.transform = CGAffineTransform.identity.translatedBy(x: 0, y: 150)
+                            
+                            containerView.addView(listBackView, sListView, topListView, sTabbarView, sTabMenuView, sTabMenuCloseView)
                             
                             UIView.animate(withDuration: 0.25, delay: 0, options: UIView.AnimationOptions.curveEaseInOut, animations: {
                                 backView.alpha = 1
@@ -546,6 +557,12 @@ extension FxTabBarController {
                                 
                                 sListView.alpha = 1
                                 sListView.transform = CGAffineTransform.identity
+                                
+                                sTabMenuView.alpha = 1
+                                sTabMenuView.transform = CGAffineTransform.identity
+                                
+                                sTabMenuCloseView.alpha = 1
+                                sTabMenuCloseView.transform = CGAffineTransform.identity
                             }, completion: { (_) in
                                 observer.onCompleted()
                             })
@@ -563,5 +580,3 @@ extension FxTabBarController {
         }
     }
 }
-
-

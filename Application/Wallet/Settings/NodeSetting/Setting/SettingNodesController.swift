@@ -34,7 +34,7 @@ class SettingNodesController: WKViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        logWhenDeinit()
         self.view.backgroundColor = HDA(0xe5e5e5)
         self.view.addSubview(listView)
         self.view.bringSubviewToFront(navigationBar)
@@ -47,6 +47,7 @@ class SettingNodesController: WKViewController {
         listView.viewModels = { section in
             guard let this = welf else { return section }
             for nodeList in this.dataSouce {
+                if this.ignore(nodeList) { continue }
                 
                 let chain = nodeList.chain.rawValue
                 if chain == Node.Chain.functionX.rawValue {
@@ -60,8 +61,6 @@ class SettingNodesController: WKViewController {
                 section.push(TopSpaceCell.self)
                 
                 for item in nodeList.items {
-                    
-                    if item.chain == .functionX { item.enable = item.isTestnet }
                     
                     section.push(SingleCell.self, m: item) {
                         $0.titleLabel.text = item.name
@@ -116,50 +115,55 @@ class SettingNodesController: WKViewController {
         }
     }
     
+    private func ignore(_ node: NodeList) -> Bool {
+        if node.chain == .binance || node.chain == .binance_smart_chain || node.chain == .fxPayment { return true }
+        return false
+    }
+    
     private func addCoin(_ url: String) {
         
-        weak var welf = self
-        let eth = CoinService.current.ethereum
-        let node = FxHubNode(endpoints: FxNode.Endpoints(rpc: url), wallet: nil)
-        self.hud?.waiting()
-        node.genesisBlock().flatMap{ value -> Observable<[Coin]> in
-
-            let chainId = value["result", "genesis", "chain_id"].stringValue
-            let account = value["result", "genesis", "app_state", "auth", "accounts", 0, "value", "address"].stringValue
-            guard chainId.isNotEmpty,
-               let (hrp, _) = FunctionXAddress.decode(address: account) else {
-                return .error(WKError(.default, "unrecognized url"))
-            }
-
-            return FunctionX.shared.ethereum.manager.bridgeRecords(of: hrp).flatMap{ info -> Observable<[Coin]> in
-
-                let bridge = FunctionXEthereumBridge(rpc: eth.node.url, chainId: eth.node.chainId.i, contract: info.bridgeContract)
-                return bridge.allTokens().map{ (objs) in
-                    
-                    var result: [Coin] = []
-                    for i in 0..<objs.count {
-                        
-                        let symbol = objs[i].2
-                        let contract = objs[i].0
-                        let suffix = contract.substring(from: contract.count - 3)
-                        result.append(Coin.cloud(rpc: url, hrp: hrp, chainId: chainId, name: "\(symbol.uppercased())-KETH", symbol: "\(symbol)-keth-\(suffix)".lowercased(), decimals: objs[i].3))
-                    }
-                    result.append(Coin.cloud(rpc: url, hrp: hrp, chainId: chainId, name: "ETHER-KETH", symbol: "ether-keth-000", decimals: 18))
-                    return result
-                }
-            }
-        }.subscribe(onNext: { items in
-            welf?.hud?.hide()
-            CoinService.current.add(coins: items)
-
-            Router.popToRoot()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                Router.topViewController?.hud?.text(m: TR("Setting.Newtrok.Add.Success"))
-            }
-        }, onError: { (e) in
-            welf?.hud?.hide()
-            welf?.hud?.text(m: e.asWKError().msg)
-        }).disposed(by: defaultBag)
+//        weak var welf = self
+//        let eth = CoinService.current.ethereum
+//        let node = FxHubNode(endpoints: FxNode.Endpoints(rpc: url), wallet: nil)
+//        self.hud?.waiting()
+//        node.genesisBlock().flatMap{ value -> Observable<[Coin]> in
+//
+//            let chainId = value["result", "genesis", "chain_id"].stringValue
+//            let account = value["result", "genesis", "app_state", "auth", "accounts", 0, "value", "address"].stringValue
+//            guard chainId.isNotEmpty,
+//               let (hrp, _) = FunctionXAddress.decode(address: account) else {
+//                return .error(WKError(.default, "unrecognized url"))
+//            }
+//
+//            return FunctionX.shared.ethereum.manager.bridgeRecords(of: hrp).flatMap{ info -> Observable<[Coin]> in
+//
+//                let bridge = FunctionXEthereumBridge(rpc: eth.node.url, chainId: eth.node.chainId.i, contract: info.bridgeContract)
+//                return bridge.allTokens().map{ (objs) in
+//                    
+//                    var result: [Coin] = []
+//                    for i in 0..<objs.count {
+//                        
+//                        let symbol = objs[i].2
+//                        let contract = objs[i].0
+//                        let suffix = contract.substring(from: contract.count - 3)
+//                        result.append(Coin.cloud(rpc: url, hrp: hrp, chainId: chainId, name: "\(symbol.uppercased())-KETH", symbol: "\(symbol)-keth-\(suffix)".lowercased(), decimals: objs[i].3))
+//                    }
+//                    result.append(Coin.cloud(rpc: url, hrp: hrp, chainId: chainId, name: "ETHER-KETH", symbol: "ether-keth-000", decimals: 18))
+//                    return result
+//                }
+//            }
+//        }.subscribe(onNext: { items in
+//            welf?.hud?.hide()
+//            CoinService.current.add(coins: items)
+//
+//            Router.popToRoot()
+//            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+//                Router.topViewController?.hud?.text(m: TR("Setting.Newtrok.Add.Success"))
+//            }
+//        }, onError: { (e) in
+//            welf?.hud?.hide()
+//            welf?.hud?.text(m: e.asWKError().msg)
+//        }).disposed(by: defaultBag)
     }
 }
 

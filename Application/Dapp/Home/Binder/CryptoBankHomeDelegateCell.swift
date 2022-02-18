@@ -22,15 +22,20 @@ extension CryptoBankViewController {
             guard let vm = viewModel as? DelegateCellViewModel else { return }
             self.viewModel = vm
             
+            weak var welf = self
             view.tokenIV.setImage(urlString: vm.coin.imgUrl, placeHolderImage: vm.coin.imgPlaceholder)
-            view.apyLabel.text = "~%"
             view.tokenLabel.text = vm.coin.token
+            view.ethButton.bind(CoinService.current.ethereum)
+            view.functionXButton.bind(CoinService.current.fxCore)
             
-            view.tipButton.isEnabled = false
+            vm.apy.asDriver().drive(onNext: { v in
+                welf?.view.apyLabel.text = v.isUnknownAmount ? "~%" : String(format: "%.2f%@", v.f, "%")
+            }).disposed(by: reuseBag)
+             
             view.tipButton.rx.tap.throttle(.milliseconds(30), scheduler: MainScheduler.instance)
                 .subscribe(onNext: {
-                    Router.showWebViewController(url: ThisAPP.WebURL.helpDelegateURL)
-            }).disposed(by: reuseBag)
+                    Router.showRevWebViewController(url: ThisAPP.WebURL.helpDelegateURL)
+            }).disposed(by: reuseBag) 
             
             view.delegateButton.rx.tap.throttle(.milliseconds(30), scheduler: MainScheduler.instance)
                 .subscribe(onNext: {
@@ -40,6 +45,13 @@ extension CryptoBankViewController {
             view.myDelegatesButton.rx.tap.throttle(.milliseconds(30), scheduler: MainScheduler.instance)
                 .subscribe(onNext: {
                     Router.pushToFxMyDelegates(wallet: vm.wallet, coin: vm.coin)
+            }).disposed(by: reuseBag)
+            
+            view.detailButton.rx.tap.throttle(.milliseconds(30), scheduler: MainScheduler.instance)
+                .subscribe(onNext: {
+                    vm.showDetail()
+                    welf?.view.showDetail()
+                    welf?.router(event: "DelegateDetail")
             }).disposed(by: reuseBag)
         }
         

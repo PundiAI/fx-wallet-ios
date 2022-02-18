@@ -43,11 +43,10 @@ class AllPurchaseViewController: WKViewController {
     private func bind() {
         let listView = wk.view.listView
         listView.viewModels = { section in
-            section.push(TopCell.self) { cell in
-                cell.tipButton.isEnabled = false
+            section.push(TopCell.self) { cell in 
                 cell.tipButton.rx.tap.throttle(.milliseconds(30), scheduler: MainScheduler.instance)
                     .subscribe(onNext: {
-                        Router.showWebViewController(url: ThisAPP.WebURL.helpPurchaseURL)
+                        Router.showRevWebViewController(url: ThisAPP.WebURL.helpPurchaseURL)
                 }).disposed(by: cell.reuseBag)
             }
             

@@ -109,11 +109,7 @@ class OxSwapConfirmViewController: WKViewController {
         } else {
             inputAmountBig =  "0"
             outputAmountBig = amountsModel.to.inputBigValue
-        }
-        
-        
-        print(viewModel.startFrom, inputAmountBig, outputAmountBig)
-        
+        } 
          
         var slippagePercentage = "0.01"
         
@@ -136,7 +132,6 @@ class OxSwapConfirmViewController: WKViewController {
                                     self?.view.hud?.hide()
                                     let _error = error as NSError
                                     if let _rerror = JSON(_error.userInfo)["validationErrors"].array?.get(0) {
-                                        print("===", _rerror["code"], _rerror["reason"])
                                         if _rerror["code"].stringValue == "1004" {
                                             self?.view.hud?.error(m: TR("Ox.Insufficient.Liquidity"), d: 2, c: {
                                                 
@@ -160,9 +155,19 @@ class OxSwapConfirmViewController: WKViewController {
                                                 }
                                             })
                                         }
+                                    } else {
+                                        
+                                        self?.view.hud?.error(m: TR("Ox.Order.Quote.Error"), d: 2, c: {
+                                            
+                                            guard let wallet = XWallet.currentWallet else {
+                                                return
+                                            }
+                                        
+                                            Router.pushToSwap(wallet: wallet.wk) { vc in
+                                                Router.setRootController(wallet: wallet, viewControllers: [vc])
+                                            }
+                                        })
                                     }
-                                    
-                                    
                                     
                                 }).disposed(by: self.actionBag)
     }
@@ -173,7 +178,7 @@ class OxSwapConfirmViewController: WKViewController {
             return
         }
         
-        guard let toETHAddress = EthereumAddress(hexString: toAddress) else {
+        guard let toETHAddress = EthereumAddress(hex: toAddress) else {
             print("toAddress is invalid")
             return
         }
@@ -202,6 +207,7 @@ class OxSwapConfirmViewController: WKViewController {
         _ = bulidTx.subscribe(onNext: {[weak self] (tx) in
             self?.hud?.hide()
             tx.is0x = true
+            tx.amountInData = amountModel.from.inputValue
             tx.is0xMsg = TR("Ox.Transaction.SubTitle", amountModel.from.inputformatValue.thousandth(), amountModel.from.token.symbol, amountModel.to.inputformatValue.thousandth(), amountModel.to.token.symbol)
             Router.pushToSendTokenFee(tx: tx, account: amountModel.from.account) { (error, json) in
                 var value = false
@@ -243,12 +249,12 @@ class OxSwapConfirmViewController: WKViewController {
         var minValue = 0.0044
         if let quote = amountsModel.quote {
             let fee = quote.gasPrice.mul(quote.gas)
-            minValue =  fee.div10(Coin.ethereum.decimal).thousandth(4).d
+            minValue =  fee.div10(Coin.ethereum.decimal).thousandth(ThisAPP.FeeDecimal).d
         }
         
         if amount <= minValue {
             let minValue = "\(minValue) \(Coin.ethereum.symbol)"
-            let balance = "\(balance.value.value.div10(18).thousandth(4)) \(Coin.ethereum.symbol)"
+            let balance = "\(balance.value.value.div10(18).thousandth(ThisAPP.FeeDecimal)) \(Coin.ethereum.symbol)"
             Router.showOxTipAlert(current: (minValue, balance))
             return false
         }

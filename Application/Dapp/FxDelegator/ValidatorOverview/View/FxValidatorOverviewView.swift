@@ -1,10 +1,4 @@
-//
-//  Python3
-//  MakeSwiftFiles
-//
-//  Created by HeiHuaBaiHua 
-//  Copyright © 2017年 HeiHuaBaiHua. All rights reserved.
-//
+
 
 import WKKit
 
@@ -96,6 +90,7 @@ extension FxValidatorOverviewViewController {
         }
          
         func relayoutForMutilActions() {
+            guard undelegateButton.superview == nil else { return }
             
             let blurHeight: CGFloat = (16.auto() + 56.auto()) * 2 + CGFloat(16.auto().ifull(50.auto()))
             listView.tableFooterView = UIView(frame: CGRect(x: 0, y: 0, width: ScreenWidth, height: blurHeight), .white)
@@ -137,9 +132,28 @@ extension FxValidatorOverviewViewController {
 extension FxValidatorOverviewViewController {
     class HeaderView: UIView {
         
-        lazy var infoContentView = UIView(HDA(0xF0F3F5), cornerRadius: 24)
+        lazy var delegatedContentHeight: CGFloat = 237.auto()
+        lazy var myDelegateContentView = UIView(HDA(0xF0F3F5), cornerRadius: 16)
+        private lazy var myDelegateTitleLabel = UILabel(text: TR("ValidatorOverview.Delegated"), font: XWallet.Font(ofSize: 14), textColor: COLOR.subtitle)
+        lazy var myDelegateLabel = UILabel(text: unknownAmount, font: XWallet.Font(ofSize: 16, weight: .medium), textColor: COLOR.title)
+        private lazy var line4 = UIView(HDA(0xEBEEF0))
         
-        lazy var validatorIV = CoinImageView(size: CGSize(width: 48, height: 48).auto()).relayout(cornerRadius: 4.auto())
+        lazy var fxcRewardsTLabel = UILabel(font: XWallet.Font(ofSize: 14), textColor: COLOR.subtitle)
+        lazy var fxcRewardsLabel = UILabel(text: "0", font: XWallet.Font(ofSize: 16, weight: .medium), textColor: HDA(0x71A800))
+//        lazy var fxcRewardsPerDayLabel = UILabel(text: unknownAmount, font: XWallet.Font(ofSize: 14), textColor: COLOR.subtitle)
+        private lazy var line5 = UIView(HDA(0xEBEEF0))
+        
+        lazy var fxUSDRewardsTLabel = UILabel(font: XWallet.Font(ofSize: 14), textColor: COLOR.subtitle)
+        lazy var fxUSDRewardsLabel = UILabel(text: "0", font: XWallet.Font(ofSize: 16, weight: .medium), textColor: HDA(0x71A800))
+//        lazy var fxUSDRewardsPerDayLabel = UILabel(text: unknownAmount, font: XWallet.Font(ofSize: 14), textColor: COLOR.subtitle)
+        
+        lazy var infoContentView = UIView(HDA(0xF0F3F5), cornerRadius: 16)
+        
+        lazy var validatorIV = CoinImageView(size: CGSize(width: 48, height: 48).auto()).then{
+            $0.relayout(cornerRadius: 4.auto())
+            $0.layer.shadowRadius = 8
+            $0.layer.shadowOpacity = 0.02
+        }
         lazy var validatorNameLabel = UILabel(font: XWallet.Font(ofSize: 16, weight: .medium), textColor: COLOR.title)
         lazy var validatorAddressButton: UIButton = {
             
@@ -170,7 +184,26 @@ extension FxValidatorOverviewViewController {
         private lazy var line3 = UIView(HDA(0xEBEEF0))
         
         private lazy var rewardsTitleLabel = UILabel(text: TR("FXDelegator.Rewards"), font: XWallet.Font(ofSize: 14), textColor: COLOR.subtitle)
-        lazy var rewardsLabel = UILabel(text: unknownAmount, font: XWallet.Font(ofSize: 16, weight: .medium), textColor: COLOR.title)
+        lazy var rewardsLabel = UILabel(text: unknownAmount, font: XWallet.Font(ofSize: 16, weight: .medium), textColor: HDA(0x71A800))
+        
+        private lazy var infoBGView = UIView(.white).then{
+            $0.wk.displayShadow()
+            $0.layer.shadowOffset = .zero
+            $0.layer.cornerRadius = 16.auto()
+            $0.layer.shadowRadius = 20
+        }
+        
+        var foldHeight: CGFloat { 36.auto() + 1 }
+        lazy var foldButton: UIButton = {
+            let v = UIButton()
+            v.image = IMG("ic_arrow_down_black")
+            v.title = TR("ValidatorOverview.More")
+            v.selectedTitle = TR("ValidatorOverview.Less")
+            v.titleFont = XWallet.Font(ofSize: 16, weight: .medium)
+            v.titleColor = COLOR.title
+            v.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 0)
+            return v
+        }()
         
         required init?(coder aDecoder: NSCoder) { fatalError("init(coder:) has not been implemented") }
         override init(frame: CGRect) {
@@ -187,16 +220,27 @@ extension FxValidatorOverviewViewController {
         
         private func layoutUI() {
             
-            addSubviews([infoContentView])
+            addSubviews([infoBGView, infoContentView, foldButton])
+            
             infoContentView.addSubviews([validatorIV, validatorAddressButton, validatorNameLabel, statusButton, line1])
             infoContentView.addSubviews([descTitleLabel, validatorDescLabel, validatorLinkButton, line2])
             infoContentView.addSubviews([stakeTitleLabel, stakeLabel, votingPowerLabel, line3])
             infoContentView.addSubviews([rewardsTitleLabel, rewardsLabel])
             
-            infoContentView.snp.makeConstraints { (make) in
+            infoBGView.snp.makeConstraints { (make) in
                 make.top.equalTo(8.auto())
                 make.left.right.equalToSuperview().inset(24.auto())
                 make.bottom.equalTo(-16.auto())
+            }
+            
+            infoContentView.snp.makeConstraints { (make) in
+                make.edges.equalTo(infoBGView).inset(UIEdgeInsets(top: 1, left: 1, bottom: 36.auto(), right: 1))
+            }
+            
+            foldButton.snp.makeConstraints { (make) in
+                make.top.equalTo(infoContentView.snp.bottom)
+                make.left.right.equalTo(infoContentView)
+                make.height.equalTo(36.auto())
             }
             
             //info...b
@@ -301,7 +345,98 @@ extension FxValidatorOverviewViewController {
             
             //info...e
         }
-    
+        
+        func relayout(expand: Bool) {
+            
+            UIView.animate(withDuration: 0.2) {
+                self.foldButton.imageView?.transform = expand ? CGAffineTransform(rotationAngle: CGFloat.pi) : .identity
+            }
+        }
+        
+        func relayoutForMyDelegate() {
+            guard myDelegateContentView.superview == nil else { return }
+            
+            addSubviews([myDelegateContentView])
+            myDelegateContentView.addSubviews([myDelegateTitleLabel, myDelegateLabel, line4])
+            myDelegateContentView.addSubviews([fxcRewardsTLabel, fxcRewardsLabel, line5])
+            myDelegateContentView.addSubviews([fxUSDRewardsTLabel, fxUSDRewardsLabel])
+            
+            myDelegateContentView.snp.makeConstraints { (make) in
+                make.top.equalTo(8.auto())
+                make.left.right.equalToSuperview().inset(24.auto())
+                make.height.equalTo(delegatedContentHeight)
+            }
+            
+            infoBGView.snp.updateConstraints { (make) in
+                make.top.equalTo(delegatedContentHeight + 24.auto())
+            }
+            
+            let edge: CGFloat = 16.auto()
+            myDelegateTitleLabel.snp.makeConstraints { (make) in
+                make.top.equalTo(16.auto())
+                make.left.equalTo(edge)
+                make.height.equalTo(17.auto())
+            }
+            
+            myDelegateLabel.snp.makeConstraints { (make) in
+                make.top.equalTo(myDelegateTitleLabel.snp.bottom).offset(8.auto())
+                make.left.equalTo(edge)
+                make.height.equalTo(19.auto())
+            }
+            
+            line4.snp.makeConstraints { (make) in
+                make.top.equalTo(76.auto())
+                make.left.right.equalToSuperview()
+                make.height.equalTo(1)
+            }
+            
+            fxcRewardsTLabel.snp.makeConstraints { (make) in
+                make.top.equalTo(line4.snp.bottom).offset(16.auto())
+                make.left.equalTo(edge)
+                make.right.equalTo(-16.auto())
+                make.height.equalTo(17.auto())
+            }
+            
+            fxcRewardsLabel.snp.makeConstraints { (make) in
+                make.top.equalTo(fxcRewardsTLabel.snp.bottom).offset(8.auto())
+                make.left.equalTo(edge)
+                make.right.equalTo(-16.auto())
+                make.height.equalTo(20.auto())
+            }
+            
+//            fxcRewardsPerDayLabel.snp.makeConstraints { (make) in
+//                make.top.equalTo(fxcRewardsLabel.snp.bottom).offset(8.auto())
+//                make.left.right.equalTo(fxcRewardsLabel)
+//                make.height.equalTo(17.auto())
+//            }
+            
+            line5.snp.makeConstraints { (make) in
+                make.top.equalTo(line4.snp.bottom).offset(76.auto())
+                make.left.equalTo(edge)
+                make.right.equalToSuperview()
+                make.height.equalTo(1)
+            }
+            
+            fxUSDRewardsTLabel.snp.makeConstraints { (make) in
+                make.top.equalTo(line5.snp.bottom).offset(16.auto())
+                make.left.equalTo(edge)
+                make.right.equalTo(-16.auto())
+                make.height.equalTo(17.auto())
+            }
+            
+            fxUSDRewardsLabel.snp.makeConstraints { (make) in
+                make.top.equalTo(fxUSDRewardsTLabel.snp.bottom).offset(4.auto())
+                make.left.equalTo(edge)
+                make.right.equalTo(-16.auto())
+                make.height.equalTo(20.auto())
+            }
+            
+//            fxUSDRewardsPerDayLabel.snp.makeConstraints { (make) in
+//                make.top.equalTo(fxUSDRewardsLabel.snp.bottom).offset(8.auto())
+//                make.left.right.equalTo(fxUSDRewardsLabel)
+//                make.height.equalTo(17.auto())
+//            }
+        }
     }
 }
 

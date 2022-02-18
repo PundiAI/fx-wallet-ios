@@ -1,14 +1,9 @@
-//
-//  Python3
-//  MakeSwiftFiles
-//
-//  Created by HeiHuaBaiHua 
-//  Copyright © 2017年 HeiHuaBaiHua. All rights reserved.
-//
+
 
 import WKKit
 import RxSwift
 import RxCocoa
+import SwiftyJSON
 
 extension CryptoBankViewController {
     
@@ -19,15 +14,29 @@ extension CryptoBankViewController {
             self.wallet = wallet
         }
         
+        lazy var fxStakingVM = FxStakingCellViewModel(wallet: wallet)
+        lazy var npxsSwapVM = NPXSSwapCellViewModel(wallet: wallet)
         lazy var delegateVM = DelegateCellViewModel(wallet: wallet)
         lazy var depositVM = DepositCellViewModel(wallet: wallet)
         lazy var purchaseVM = PurchaseCellViewModel(wallet: wallet)
         
+        lazy var checkDisplayItems = APIAction(checkDisplayItemsQ)
+        
         func refresh() {
             
+            fxStakingVM.refresh()
+            npxsSwapVM.refresh()
             delegateVM.refresh()
             depositVM.refresh()
             purchaseVM.refresh()
+            
+            if NodeManager.shared.currentEthereumNode.isMainnet {
+                checkDisplayItems.execute()
+            }
+        }
+        
+        private var checkDisplayItemsQ: Observable<JSON> {
+            return APIManager.fx.searchClientSwitch() 
         }
     }
 }

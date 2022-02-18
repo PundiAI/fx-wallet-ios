@@ -1,10 +1,4 @@
-//
-//  Python3
-//  MakeSwiftFiles
-//
-//  Created by HeiHuaBaiHua 
-//  Copyright © 2017年 HeiHuaBaiHua. All rights reserved.
-//
+
 
 import Web3
 import WKKit
@@ -107,12 +101,14 @@ class CryptoBankWithdrawViewController: WKViewController {
             .distinctUntilChanged()
             .subscribe(onNext: { v in
                 guard let this = welf else { return }
+                welf?.inputCell.percentButtons.forEach{ $0.isSelected = false }
             
                 let text = this.inputCell.inputVIew.decimalText
                 if text.isGreaterThan(decimal: this.decimalBalance) {
-                    welf?.inputCell.inputTF.text = this.decimalBalance
+                    DispatchQueue.main.async {
+                        welf?.onClick(this.inputCell.maxButton)
+                    }
                 }
-                welf?.inputCell.percentButtons.forEach{ $0.isSelected = false }
                 welf?.confirmCell?.enable(text.f > 0)
         }).disposed(by: defaultBag)
     }
@@ -126,7 +122,7 @@ class CryptoBankWithdrawViewController: WKViewController {
         } else if percent == inputCell.p75Button {
             inputCell.inputTF.reactiveText = decimalBalance.mul("0.75")
         } else {
-            inputCell.inputTF.reactiveText = decimalBalance
+            inputCell.inputTF.reactiveText = decimalBalance.mul("1")
         }
         percent.isSelected = true
     }
@@ -138,8 +134,15 @@ class CryptoBankWithdrawViewController: WKViewController {
         listBinder.pop(approveCell, refresh: false)
         confirmCell = listBinder.push(CryptoBankConfirmTxCell.self)
         confirmCell?.checkBox.action { welf?.confirmCell.checkBox.isSelected = !(welf?.confirmCell.checkBox.isSelected ?? true) }
-        confirmCell.tipButton.isEnabled = false
-        confirmCell?.tipButton.action { Router.showWebViewController(url: ThisAPP.WebURL.termServiceURL) }
+ 
+        let checkBox = confirmCell.checkBox
+        confirmCell.tipButton.action {
+            Router.showAgreementAlert(doneHandler: { ( state ) in
+                checkBox.isSelected = state
+                return true
+            }, state: checkBox.isSelected)
+        }
+         
         confirmCell?.submitButton.bind(self, action: #selector(doConfirm), forControlEvents: .touchUpInside)
         listBinder.refresh()
     }
@@ -250,7 +253,7 @@ class CryptoBankWithdrawViewController: WKViewController {
         
         listBinder.pop(confirmCell, refresh: false)
         approveCell = listBinder.push(CryptoBankEnableTokenCell.self)
-        approveCell.view.approveButton.interactor.title = TR("CryptoBank.Deposit.Enable$", token.token)
+//        approveCell.view.approveButton.interactor.title = TR("CryptoBank.Deposit.Enable$", token.token)
 //        approveCell.tipLabel.text = TR("CryptoBank.Deposit.Approve$", coin.token)
         approveCell.view.approveButton.interactor.bind(self, action: #selector(doApprove), forControlEvents: .touchUpInside)
         listBinder.refresh()
@@ -262,6 +265,7 @@ class CryptoBankWithdrawViewController: WKViewController {
         sender.inactiveAWhile(1)
         self.view.endEditing(true)
         listBinder.view.isUserInteractionEnabled = false
+        allowanceIsEnough?.cancel()
         
         let actionView = approveCell.view
         actionView.state = .refresh
@@ -271,13 +275,8 @@ class CryptoBankWithdrawViewController: WKViewController {
             
             Router.pushToSendTokenFee(tx: tx, account: this.account) { (error, result) in
                 
-                if result["hash"].string != nil {  actionView.state = .completed }
-                if error != nil,  actionView.state != .completed { actionView.state = .normal }
-                
-                if result["hash"].stringValue.length > 0 {
-                    welf?.bindConfirm()
-                    AAve.current.update(allowance: String(AAve.current.maxApproveAmount), owner: this.account.address, spender: this.approveSpender, tokenContract: this.approveToken)
-                }
+                if error != nil, result.isEmpty { actionView.state = .normal }
+                if result["hash"].string != nil { this.pollingCheckAllowance() }
                 
                 if WKError.canceled.isEqual(to: error) {
                     Router.pop(to: "CryptoBankWithdrawViewController")
@@ -325,6 +324,18 @@ class CryptoBankWithdrawViewController: WKViewController {
             }.take(1)
     }
     
+    var allowanceIsEnough: PollingTask<String>?
+    private func pollingCheckAllowance() {
+        
+        weak var welf = self
+        let task = PollingTask<String>(workFactory: { return welf?.fetchAllowance() ?? .error(WKError.timeout) },
+                                       takeUtil: { $0.isGreaterThan(decimal: "10000".wei) })
+        task.run().subscribe(onNext: { (value, e) in
+            if value != nil { welf?.bindConfirm() }
+        }).disposed(by: defaultBag)
+        self.allowanceIsEnough = task
+    }
+    
     private func checkAllowance() {
         
         weak var welf = self
@@ -334,10 +345,6 @@ class CryptoBankWithdrawViewController: WKViewController {
             
             if (BigUInt(value) ?? 0) < BigUInt("10000".wei)! {
                 welf?.bindApprove()
-            } else {
-                DispatchQueue.main.async {
-                    welf?.inputCell?.inputTF.becomeFirstResponder()
-                }
             }
         }, onError: { (e) in
             welf?.hud?.hide()

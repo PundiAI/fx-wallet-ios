@@ -35,7 +35,7 @@ class FxCloudWalletConnectViewController: WalletConnectViewController {
     
     override func bind() {
         
-        let view = wk.view
+        _ = wk.view
 //        view.connectingView.startAnimation()
         
 //        view.addressLabel.text = ""

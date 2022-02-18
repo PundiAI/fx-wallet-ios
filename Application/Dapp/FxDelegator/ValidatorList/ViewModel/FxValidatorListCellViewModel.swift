@@ -25,7 +25,8 @@ extension FxValidatorListViewController {
         lazy var size = CGSize(width: ScreenWidth - 24.auto() * 2, height: 74.auto())
         
         var rewardsFormatter: NSMutableAttributedString {
-            let vm = self.rawValue.rewards + "% APY"
+            
+            let vm = String(format: "%.2f%@", self.rawValue.rewards.f, "% APY")
             let attr = NSMutableAttributedString(string: vm, attributes: [.font: XWallet.Font(ofSize: 16),
                                                                           .foregroundColor: HDA(0x71A800)])
             

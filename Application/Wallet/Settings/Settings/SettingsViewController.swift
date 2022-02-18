@@ -20,6 +20,7 @@ class SettingsViewController: WKViewController {
     required init?(coder aDecoder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+        logWhenDeinit(tag: "Settings")
     }
 
     private var wallet: WKWallet? { XWallet.sharedKeyStore.currentWallet?.wk }
@@ -40,7 +41,6 @@ class SettingsViewController: WKViewController {
     override func bindNavBar() {
         navigationBar.isHidden = true
         wk.view.backButton.action { [weak self] in
-//            self?.navigationController?.popViewController(animated: true)
             Router.pop(self) 
         }
         wk.view.backButton.tintColor = .black
@@ -59,26 +59,23 @@ class SettingsViewController: WKViewController {
             
             let isBackupedValue = this.wallet?.isBackuped ?? false
             let tip = isBackupedValue ? "" : TR("Settings.BackUp.Tip")
-            section.push(VariableCell.self, m: tip) { this.bind(mnemonicCell: $0) }
+            section.push(VariableCell.self, m: tip) { welf?.bind(mnemonicCell: $0) }
             
             section.push(SectionHeaderCell.self) { $0.titleLabel.text = TR("Settings.SectionHeader.Asset") } 
             let value = this.needUpdateAssetsCount > 0 ? TR("Settings.Asset.SubTitle$", this.needUpdateAssetsCount.s) : ""
-            section.push(AssetCell.self, m: value) { this.bind(assetCell: $0) }
-            
+            section.push(AssetCell.self, m: value) { welf?.bind(assetCell: $0) }
+   
             section.push(SectionHeaderCell.self) { $0.titleLabel.text = TR("Settings.SectionHeader.General") }
             section.push(LanguageCell.self) {
                 $0.type = .language
                 $0.subTitleLabel.text = WKLocale.Shared.language.title
             }
-             
-            section.push(BottomCell.self) { $0.type = .message_set }
-            section.push(SectionHeaderCell.self) { $0.titleLabel.text = TR("Setting.Newtrok.SectionHeader") }
-            section.push(SingleCell.self) { $0.type = .newtrok }
+            section.push(Cell.self) { $0.type = .message_set }
+            section.push(BottomCell.self) { $0.type = .newtrok }
             
-            ///暂时屏蔽
-//          listBinder.push(BottomCell.self) { $0.type = .currency }
-//          listBinder.push(SectionHeaderCell.self) { $0.titleLabel.text = TR("Settings.SectionHeader.Collection") }
-//          listBinder.push(SingleCell.self) { $0.type = .merchantOption }
+            
+            section.push(SectionHeaderCell.self) { $0.titleLabel.text = TR("BTC") }
+            section.push(SingleCell.self) { $0.type = .btcAddress }
             section.push(WKSpacingCell.self, m: WKSpacing(32.auto(), 0, .clear))
             
             return section
@@ -101,13 +98,15 @@ class SettingsViewController: WKViewController {
 //                    guard let language = item else { return }
                 }
             case .currency:
-                welf?.hud?.text(m: "Coming soon!")
+                welf?.hud?.text(m: TR("Coming soon!"))
             case .merchantOption:
-                welf?.hud?.text(m: "Coming soon!")
+                welf?.hud?.text(m: TR("Coming soon!"))
             case .message_set:
                 welf?.setMessage()
             case .newtrok:
                 Router.showSettingNewtrok()
+            case .btcAddress:
+                welf?.pushToBTCAddressType()
             default: break
             }
         }
@@ -130,8 +129,8 @@ class SettingsViewController: WKViewController {
         cell.dataType = needUpdateAssetsCount > 0 ? .update : .updated
         cell.stateButton.rx.tap.subscribe(onNext: { [weak self](_) in
             guard cell.dataType == .update else { return }
+            cell.dataType = .updating
             if let value = self?.assetsValue {
-                cell.dataType = .updating
                 CoinService.current.sync(batchNum: value.0, items: value.1)
                 DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.5) {
                     self?.wk.view.tableView.reloadData()
@@ -142,13 +141,14 @@ class SettingsViewController: WKViewController {
     
     private func fetchAssetsChangeStatus() {
         
-        CoinService.current.fetchLatestItems().subscribe(onNext: { [weak self] value in
+        let service = CoinService.current
+        service.fetchLatestItems.elements.take(1).subscribe(onNext: { [weak self] value in
+            guard value.coinList.count > 0 else { return }
             
-            if value.coinList.count > 0 {
-                self?.assetsValue = value
-                self?.wk.view.tableView.reloadData()
-            }
+            self?.assetsValue = value
+            self?.wk.view.tableView.reloadData()
         }).disposed(by: defaultBag)
+        service.fetchLatestItems.execute()
     }
     
     private func bind(bioCell cell: BioCell) {
@@ -202,5 +202,10 @@ class SettingsViewController: WKViewController {
     private func setMessage() {
         guard let _wallet = wallet else { return }
         Router.pushToMessageSet(wallet: _wallet)
+    }
+    
+    private func pushToBTCAddressType() {
+        guard let wallet = self.wallet else { return }
+        Router.pushToBTCAddressType(wallet: wallet)
     }
 }

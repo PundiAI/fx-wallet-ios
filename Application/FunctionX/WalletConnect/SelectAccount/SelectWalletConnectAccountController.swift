@@ -32,7 +32,6 @@ class SelectWalletConnectAccountController: WKViewController {
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     init(wallet: WKWallet, filter: ((Coin, [String: Any]?) -> Bool)? = nil) {
         
-        let filter = filter ?? { coin, _ in coin.isETH }
         self.viewModel = ListViewModel(wallet: wallet, filter: filter)
         super.init(nibName: nil, bundle: nil)
         super.modalPresentationStyle = .overFullScreen
@@ -76,7 +75,7 @@ extension SelectWalletConnectAccountController: UITableViewDataSource, UITableVi
         
         weak var welf = self
         wk.view.closeButton.action {
-            Router.dismiss(welf) {
+            Router.pop(welf) {
                 welf?.cancelHandler?()
             }
         }

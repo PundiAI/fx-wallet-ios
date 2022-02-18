@@ -70,7 +70,7 @@ class CashBuyTxInputCell: FxTableViewCell, UITextFieldDelegate {
             .disposed(by: reuseBag)
     }
     
-    override class func height(model: Any?) -> CGFloat { (8 + 205 + 32).auto() }
+    override class func height(model: Any?) -> CGFloat { (16 + 115 + 32).auto() }
     
     func textFieldDidEndEditing(_ textField: UITextField) {
         view.inputVIew.textFieldProxy.endEditing?(textField)
@@ -144,13 +144,10 @@ class CashBuyConfirmTxCell: FxTableViewCell {
         self.viewModel = vm
           
         view.submitButton.isEnabled = false
-        Observable.combineLatest(vm.addressOb, vm.agreeOb, vm.inputTxOb)
-            .flatMap { (userAddress, isAgree, swapAmount) -> Observable<Bool> in
-            if let _ = userAddress, let amountString = swapAmount {
-                let numberDecimal = NSDecimalNumber(string: amountString)
-                if isAgree && numberDecimal.doubleValue > 0 {
-                    return .just(true)
-                }
+        Observable.combineLatest(vm.addressOb, vm.agreeOb)
+            .flatMap { (userAddress, isAgree) -> Observable<Bool> in
+            if let _ = userAddress {
+                return .just(isAgree)
             }
             return .just(false)
         }
@@ -164,14 +161,18 @@ class CashBuyConfirmTxCell: FxTableViewCell {
         view.checkBox.action {
             vm.agreeOb.accept(!checkBoxView.isSelected)
         }
-        view.tipButton.isEnabled = false
+     
         view.tipButton.action {
-            Router.showWebViewController(url: ThisAPP.WebURL.termServiceURL)
+            Router.showAgreementAlert(doneHandler: { ( state ) in
+                vm.agreeOb.accept(state)
+                return true
+            }, state: vm.agreeOb.value)
         } 
     }
     
     override public class func height(model:Any? = nil) -> CGFloat { 
-        let tipHeight = TR("AgreeToTerms").height(ofWidth: ScreenWidth - 24.auto() * 2, attributes: [.font: XWallet.Font(ofSize: 14)])
+        let tipHeight = TR("AgreeToTerms").height(ofWidth: ScreenWidth - 24.auto() * 2,
+                                                  attributes: [.font: XWallet.Font(ofSize: 14)])
         return (56 + 20).auto() + tipHeight
     }
 }

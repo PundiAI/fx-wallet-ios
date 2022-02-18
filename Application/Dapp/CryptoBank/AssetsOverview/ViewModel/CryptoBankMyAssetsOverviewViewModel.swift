@@ -1,10 +1,4 @@
-//
-//  Python3
-//  MakeSwiftFiles
-//
-//  Created by HeiHuaBaiHua 
-//  Copyright © 2017年 HeiHuaBaiHua. All rights reserved.
-//
+
 
 import WKKit
 import RxSwift
@@ -67,7 +61,7 @@ extension CryptoBankAssetsOverviewViewController {
         }
         
         var assetPrice: String {
-            return "$\(exchangeRate.value.value.value.thousandth(ThisAPP.CurrencyDecimal))"
+            return "$\(exchangeRate.value.value.value.thousandth(ThisAPP.CurrencyDecimal, isLegal: true))"
         }
         
         var availableLiquidity: String {

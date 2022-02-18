@@ -1,14 +1,9 @@
-//
-//  Python3
-//  MakeSwiftFiles
-//
-//  Created by HeiHuaBaiHua 
-//  Copyright © 2017年 HeiHuaBaiHua. All rights reserved.
-//
+
 
 import WKKit
 import RxSwift
 import RxCocoa
+import SwiftyJSON
 
 extension WKWrapper where Base == CryptoBankViewController {
     var view: Base.View { return base.view as! Base.View }
@@ -26,6 +21,10 @@ open class CryptoBankViewController: WKViewController {
     
     let viewModel: ViewModel
     lazy var listBinder = WKStaticTableViewBinder(view: wk.view.listView)
+    
+    private var depositCell: DepositCell?
+    private var swapCell: NPXSSwapCell?
+    private var stakingCell: FxStakingCell?
 
     open override func loadView() { view = View(frame: ScreenBounds) }
     open override func viewDidLoad() {
@@ -47,37 +46,62 @@ open class CryptoBankViewController: WKViewController {
         navigationBar.action(.title, title: TR("CryptoBank"))
     }
     
-    private func bindListView() { 
-        
+    private func bindListView() {  
         listBinder.push(DelegateCell.self, vm: viewModel.delegateVM)
         self.pushDepositCell()
         listBinder.push(PurchaseCell.self, vm: viewModel.purchaseVM)
+        
+        let block:()->Void = {[weak self] in
+            guard let this = self else { return }
+
+            let count = this.listBinder.itemCount
+            if !this.viewModel.fxStakingVM.display {
+                this.listBinder.pop(this.stakingCell, refresh: false)
+                this.stakingCell = nil
+            } else if this.stakingCell == nil {
+                this.stakingCell = this.listBinder.push(FxStakingCell.self, vm: this.viewModel.fxStakingVM, at: this.swapCell == nil ? 0 : 1)
+            }
+
+            if !this.viewModel.npxsSwapVM.display {
+                this.listBinder.pop(this.swapCell, refresh: false)
+                this.swapCell = nil
+            } else if this.swapCell == nil {
+                this.swapCell = this.listBinder.push(NPXSSwapCell.self, vm: this.viewModel.npxsSwapVM, at: 0)
+            }
+
+            if count != this.listBinder.itemCount {
+                this.listBinder.refresh()
+            }
+        }
+
+        block()
+        viewModel.checkDisplayItems.elements
+            .observeOn(MainScheduler.instance)
+            .subscribe(onNext: { _ in
+                block()
+        }).disposed(by: defaultBag)
     }
     
-    lazy var depositCell = DepositCell(style: .default, reuseIdentifier: "x")
     private func pushDepositCell() {
         
-        reloadDepositIfNeed()
-        XWallet.Event.subscribe(.AAveTokensUpdate, { [weak self](_, _) in
-            self?.reloadDepositIfNeed()
-            self?.listBinder.view.reloadData()
-        }, disposedBy: defaultBag)
-    }
-    
-    private func reloadDepositIfNeed() {
-        guard AAve.current.tokens.count >= 3 else { return }
+        depositCell = listBinder.push(DepositCell.self, vm: viewModel.depositVM)
         
-        if depositCell.viewModel == nil {
-            listBinder.push(depositCell, vm: viewModel.depositVM, at: 1)
-        }
-        depositCell.reloadIfNeed()
+        depositCell?.hud?.waiting(.fullScreen)
+        AAve.current.didSync
+            .filter{ $0 }
+            .subscribe(onNext: { [weak self] _ in
+                self?.depositCell?.hud?.hide()
+                self?.depositCell?.reloadIfNeed()
+        }).disposed(by: defaultBag)
     }
     
     open override func router(event: String, context: [String : Any]) {
         if event == "buy", let coin = context["coin"] as? Coin {
             Router.showCashBuyController(coin: coin)
-        }else if event == "all" {
+        } else if event == "all" {
             Router.pushToAllPurchaseController()
+        } else if event == "DelegateDetail" {
+            listBinder.refresh()
         }
     }
 }

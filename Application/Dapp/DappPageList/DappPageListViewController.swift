@@ -1,10 +1,4 @@
-//
-//  Python3
-//  MakeSwiftFiles
-//
-//  Created by HeiHuaBaiHua 
-//  Copyright © 2017年 HeiHuaBaiHua. All rights reserved.
-//
+
 
 import WKKit
 import RxSwift
@@ -123,8 +117,7 @@ class DappPageListViewController: BaseButtonBarPagerTabStripViewController<DappP
         containerView.snp.remakeConstraints { (make) in
             make.edges.equalToSuperview()
         }
-        
-        // Tab滚动效果
+         
         containerView.rx.contentOffset.subscribe(onNext: {[weak self] point in
             self?.tabProgress(offset: point)
         }).disposed(by: defaultBag)

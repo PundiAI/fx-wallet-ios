@@ -48,7 +48,7 @@ extension  FxValidatorListViewController {
             self.searchView.inputTF.delegate = self
 
             listView.viewModels = { [weak self] vm  in
-                guard  let this = self else {
+                guard  self != nil else {
                     return vm
                 }
                 listViewModel.items.each { (idex, item) in
@@ -78,7 +78,7 @@ extension  FxValidatorListViewController {
         
         var nextEventResponder: EventResponder? { nil }
         func router(event: String, context: [String : Any]) {
-            guard event == "add", let coin = (context["eventSender"] as? ValidatorsCell)?.viewModel?.rawValue else { return }
+            guard event == "add", let _ = (context["eventSender"] as? ValidatorsCell)?.viewModel?.rawValue else { return }
 //
 //            let fromReceive = Router.topViewController?.heroIdentity == "SelectOrAddAccountViewController"
 //            Router.showAddCoinAlert(coin: coin, fromReceive: fromReceive) { [weak self] allow in
@@ -142,7 +142,7 @@ extension  FxValidatorListViewController {
             self.searchView.inputTF.delegate = self
     
             listView.viewModels = { [weak self] vm  in
-                guard  let this = self else {
+                guard  self != nil else {
                     return vm
                 }
                 listViewModel.items.each { (idex, item) in
@@ -172,7 +172,7 @@ extension  FxValidatorListViewController {
         
         var nextEventResponder: EventResponder? { nil }
         func router(event: String, context: [String : Any]) {
-            guard event == "add", let coin = (context["eventSender"] as? ValidatorsCell)?.viewModel?.rawValue else { return }
+            guard event == "add", let _ = (context["eventSender"] as? ValidatorsCell)?.viewModel?.rawValue else { return }
 //
 //            let fromReceive = Router.topViewController?.heroIdentity == "SelectOrAddAccountViewController"
 //            Router.showAddCoinAlert(coin: coin, fromReceive: fromReceive) { [weak self] allow in

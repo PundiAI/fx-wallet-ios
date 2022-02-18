@@ -11,6 +11,7 @@ import RxSwift
 import RxCocoa
 import TrustWalletCore
 import Hero
+import Macaw
 
 extension OxToastViewController {
     class override func instance(with context: [String : Any]) -> UIViewController? {
@@ -25,25 +26,16 @@ class OxToastViewController: FxRegularPopViewController  {
     
     override func getView() -> FxPopViewController.BaseView {
         return BaseView(frame: ScreenBounds).then {
-            $0.contentBGView.backgroundColor = .clear
-            $0.contentBGView.isHidden = true
-            $0.listView.backgroundColor = .clear
-            $0.contentView.backgroundColor = HDA(0xF0F3F5)
-            $0.contentView.autoCornerRadius = 16
-            $0.contentView.layer.masksToBounds = false
-            $0.contentView.layer.shadowOffset = CGSize(width: 0, height: 2)
-            $0.contentView.layer.shadowColor = HDA(0x0A0E1D).cgColor
-            $0.contentView.layer.shadowOpacity = 0.08
-            $0.contentView.layer.shadowRadius = $0.contentView.layer.cornerRadius
-            
-            $0.contentView.layer.borderWidth = 1
-            $0.contentView.layer.borderColor = UIColor.white.cgColor
-            
-            $0.contentView.snp.remakeConstraints { (make) in
-                make.centerY.equalToSuperview()
-                make.left.right.equalToSuperview().inset(24.auto())
-                make.height.equalTo(320.auto())
-            }
+            $0.mainView.border(Color.white, 1)
+                .backgroundColor(Color(0xF0F3F5))
+                .cornerRadius(16.auto())
+                .borderShaow(x: 0, y: 2, radius: 16.auto(), color: HDA(0x0A0E1D), opacity: 0.08)
+                .shadow(x: 0, y: 6, radius: 16.auto(), color: HDA(0x0A0E1D), opacity: 0.08)
+                .snp.remakeConstraints { (make) in
+                    make.centerY.equalToSuperview().offset(-20.auto())
+                    make.left.right.equalToSuperview().inset(24.auto())
+                    make.height.equalTo(320.auto())
+                }
         }
     }
     
@@ -51,10 +43,8 @@ class OxToastViewController: FxRegularPopViewController  {
     
     init(amountsModel: OxAmountsModel) {
         self.amountsModel = amountsModel
-        super.init(nibName: nil, bundle: nil)
-        self.modalPresentationStyle = .fullScreen
+        super.init(nibName: nil, bundle: nil) 
         logWhenDeinit()
-        bindHero()
     }
     
     let amountsModel: OxAmountsModel
@@ -113,34 +103,8 @@ class OxToastViewController: FxRegularPopViewController  {
     override func layoutUI() {
         hideNavBar()
     }
-}
-
-extension OxToastViewController {
-    override func heroAnimator(from: String, to: String) -> WKHeroAnimator? {
-        switch (from, to) {
-        case (_, "OxToastViewController"): return animators["0"]
-        default: return nil
-        }
-    }
     
-    private func bindHero() {
-        weak var welf = self
-        let animator = WKHeroAnimator({ (_) in
-            welf?.setBackgoundOverlayViewImage(for: Router.currentNavigator?.view)
-            welf?.wk.view.backgroundButton.hero.modifiers = [.fade, .useGlobalCoordinateSpace]
-            welf?.wk.view.backgroundBlur.hero.modifiers = [.fade, .useOptimizedSnapshot,
-                                                           .useGlobalCoordinateSpace]
-            let modifiers:[HeroModifier] = [.useGlobalCoordinateSpace,
-                                            .useOptimizedSnapshot, .scale(0), .fade]
-            
-            welf?.wk.view.contentBGView.hero.modifiers = modifiers
-            welf?.wk.view.contentView.hero.modifiers = modifiers
-        }, onSuspend: { (_) in
-            welf?.wk.view.backgroundButton.hero.modifiers = nil
-            welf?.wk.view.backgroundBlur.hero.modifiers = nil
-            welf?.wk.view.contentBGView.hero.modifiers = nil
-            welf?.wk.view.contentView.hero.modifiers = nil
-        })
-        animators["0"] = animator
+    override func dismiss(animated flag: Bool, completion: (() -> Void)? = nil) {
+        Router.pop(self)
     }
 }

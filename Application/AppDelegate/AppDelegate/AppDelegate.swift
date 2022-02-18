@@ -28,11 +28,12 @@ class AppDelegate: PluggableApplicationDelegate {
     override var services: [ApplicationService] {
         let window = self.window ?? UIWindow(frame: UIScreen.main.bounds)
         return [
-            XLoggerAppDelegate(nativeWindow: window),       //打印调试配置
-            XConfigAppDelegate(nativeWindow: window),       //数据配置 
-            XWalletAppDelegate(nativeWindow: window),       //Wallet入口 设置Windows rootViewController 
-            XSecurityAppDelegate(nativeWindow: window),     //锁屏入口
-            XRemoteAppDelegate(nativeWindow: window),       //推送通知配置
+            XLoggerAppDelegate(nativeWindow: window),
+            XConfigAppDelegate(nativeWindow: window),
+            XWalletAppDelegate(nativeWindow: window),
+            XSecurityAppDelegate(nativeWindow: window),
+            XRemoteAppDelegate(nativeWindow: window),
+            XCallbackAppDelegate(nativeWindow: window),     
         ]
     }
 }

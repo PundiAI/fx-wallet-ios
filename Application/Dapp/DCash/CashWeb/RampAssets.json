@@ -5,89 +5,34 @@
             "address":"0x6b175474e89094c44da98b954eedeac495271d0f",
             "name":"multi-collateral Dai",
             "decimals":18,
-            "priceEur":0.822726218053975,
-            "priceUpdateTs":"2020-12-29T09:18:54.235Z",
-            "logoUrl":"https://cdn.mytoken.org/Flvq0lM_HJDxgZLJs6Gt_UmVo0r8",
+            "priceEur":0.825339192534916,
+            "priceUpdateTs":"2021-02-25T02:22:04.730Z",
+            "logoUrl":"https://rampnetwork.github.io/assets/crypto-assets/dai.svg",
             "hidden":false,
-            "minPurchaseAmountEur":-1,
+            "minPurchaseAmountEur":15,
             "maxPurchaseAmountEur":-1,
             "minPurchaseCryptoAmount":"-1",
             "type":"ERC20",
             "underlyingAssetSymbol":null,
+            "networkFeeEur":19.42,
+            "extra":null,
             "maxSinglePurchase":{
-                "GBP":"4913487490840312393234",
-                "EUR":"4913487490840312393234",
-                "USD":"-1"
+                "GBP":"-1",
+                "EUR":"-1",
+                "USD":"-1",
+                "PLN":"-1"
             },
             "price":{
-                "GBP":0.7455989260162842,
-                "EUR":0.822726218053975,
-                "USD":1.0076339355616064
+                "GBP":0.7096629526659932,
+                "EUR":0.825339192534916,
+                "USD":1.0038732653072988,
+                "PLN":0.19401033980048796
             },
             "maxFeePercent":{
                 "GBP":1.99,
                 "EUR":1.99,
-                "USD":1.99
-            }
-        },
-        {
-            "symbol":"ETH",
-            "address":null,
-            "name":"Ether",
-            "decimals":18,
-            "priceEur":583.94638778817,
-            "priceUpdateTs":"2020-12-29T09:18:53.669Z",
-            "logoUrl":"https://cdn.mytoken.org/FvKK2xxE7DNqbKHA9Dle2FPheJJe",
-            "hidden":false,
-            "minPurchaseAmountEur":-1,
-            "maxPurchaseAmountEur":-1,
-            "minPurchaseCryptoAmount":"-1",
-            "type":"ETH",
-            "underlyingAssetSymbol":null,
-            "maxSinglePurchase":{
-                "GBP":"9876752879209478452",
-                "EUR":"9876752879209478452",
-                "USD":"-1"
-            },
-            "price":{
-                "GBP":529.2037497185781,
-                "EUR":583.94638778817,
-                "USD":715.1883384435615
-            },
-            "maxFeePercent":{
-                "GBP":1.99,
-                "EUR":1.99,
-                "USD":1.99
-            }
-        },
-        {
-            "symbol":"EC_SORARE",
-            "address":null,
-            "name":"Sorare wallet topup",
-            "decimals":18,
-            "priceEur":584.016567627032,
-            "priceUpdateTs":"2020-12-29T09:18:53.554Z",
-            "logoUrl":"https://rampnetwork.github.io/assets/misc/sorare.png",
-            "hidden":true,
-            "minPurchaseAmountEur":-1,
-            "maxPurchaseAmountEur":-1,
-            "minPurchaseCryptoAmount":"-1",
-            "type":"ETH_CALL",
-            "underlyingAssetSymbol":"ETH",
-            "maxSinglePurchase":{
-                "GBP":"9876752879209478452",
-                "EUR":"9876752879209478452",
-                "USD":"-1"
-            },
-            "price":{
-                "GBP":529.2673504782663,
-                "EUR":584.016567627032,
-                "USD":715.2742912012077
-            },
-            "maxFeePercent":{
-                "GBP":1.99,
-                "EUR":1.99,
-                "USD":1.99
+                "USD":1.99,
+                "PLN":1.99
             }
         },
         {
@@ -95,119 +40,69 @@
             "address":"0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
             "name":"USD Coin",
             "decimals":6,
-            "priceEur":0.820172459603037,
-            "priceUpdateTs":"2020-12-29T09:18:54.359Z",
-            "logoUrl":"https://cdn.mytoken.org/Fr9UFhKnOBmqWFPBXI0N3UpSslSk",
+            "priceEur":0.824765973973137,
+            "priceUpdateTs":"2021-02-25T02:22:04.527Z",
+            "logoUrl":"https://rampnetwork.github.io/assets/crypto-assets/usdc.svg",
             "hidden":false,
-            "minPurchaseAmountEur":-1,
+            "minPurchaseAmountEur":15,
             "maxPurchaseAmountEur":-1,
             "minPurchaseCryptoAmount":"-1",
             "type":"ERC20",
             "underlyingAssetSymbol":null,
-            "maxSinglePurchase":{
-                "GBP":"4925635211",
-                "EUR":"4925635211",
-                "USD":"-1"
-            },
-            "price":{
-                "GBP":0.7432845722050878,
-                "EUR":0.820172459603037,
-                "USD":1.00450621989882
-            },
-            "maxFeePercent":{
-                "GBP":1.99,
-                "EUR":1.99,
-                "USD":1.99
-            }
-        },
-        {
-            "symbol":"CUSD",
-            "address":"0x765de816845861e75a25fca122bb6898b8b1282a",
-            "name":"Celo Dollar",
-            "decimals":18,
-            "priceEur":0.820310333949791,
-            "priceUpdateTs":"2020-12-29T09:18:53.349Z",
-            "logoUrl":"https://rampnetwork.github.io/assets/crypto-assets/cusd.png",
-            "hidden":true,
-            "minPurchaseAmountEur":-1,
-            "maxPurchaseAmountEur":-1,
-            "minPurchaseCryptoAmount":"21000000000000000",
-            "type":"CELO",
-            "underlyingAssetSymbol":null,
+            "networkFeeEur":19.42,
+            "extra":null,
             "maxSinglePurchase":{
                 "GBP":"-1",
                 "EUR":"-1",
-                "USD":"-1"
+                "USD":"-1",
+                "PLN":"-1"
             },
             "price":{
-                "GBP":0.743409521383331,
-                "EUR":0.820310333949791,
-                "USD":1.004675081505007
+                "GBP":0.7091700741249589,
+                "EUR":0.824765973973137,
+                "USD":1.00317605039911,
+                "PLN":0.19387559480236286
             },
             "maxFeePercent":{
                 "GBP":1.99,
                 "EUR":1.99,
-                "USD":1.99
+                "USD":1.99,
+                "PLN":1.99
             }
         },
         {
-            "symbol":"DOT",
-            "address":null,
-            "name":"Polkadot DOT",
-            "decimals":18,
-            "priceEur":5.20335461886848,
-            "priceUpdateTs":"2020-12-29T09:18:53.288Z",
-            "logoUrl":"https://rampnetwork.github.io/assets/crypto-assets/polkadot.png",
+            "symbol":"USDT",
+            "address":"0xdac17f958d2ee523a2206206994597c13d831ec7",
+            "name":"Tether (ERC20)",
+            "decimals":6,
+            "priceEur":0.825797691282507,
+            "priceUpdateTs":"2021-02-25T02:22:03.573Z",
+            "logoUrl":"https://rampnetwork.github.io/assets/crypto-assets/usdt.svg",
             "hidden":false,
-            "minPurchaseAmountEur":-1,
+            "minPurchaseAmountEur":15,
             "maxPurchaseAmountEur":-1,
-            "minPurchaseCryptoAmount":"1100000000000000000",
-            "type":"POLKADOT",
+            "minPurchaseCryptoAmount":"60000000",
+            "type":"ERC20",
             "underlyingAssetSymbol":null,
+            "networkFeeEur":19.42,
+            "extra":null,
             "maxSinglePurchase":{
                 "GBP":"-1",
                 "EUR":"-1",
-                "USD":"-1"
+                "USD":"-1",
+                "PLN":"-1"
             },
             "price":{
-                "GBP":4.715560936768018,
-                "EUR":5.20335461886848,
-                "USD":6.372808569459173
+                "GBP":0.710057190063117,
+                "EUR":0.825797691282507,
+                "USD":1.0044309446699737,
+                "PLN":0.19411811790992806
             },
             "maxFeePercent":{
                 "GBP":1.99,
                 "EUR":1.99,
-                "USD":1.99
-            }
-        },
-        {
-            "symbol":"BTC",
-            "address":null,
-            "name":"Bitcoin",
-            "decimals":8,
-            "priceEur":21751.7999248612,
-            "priceUpdateTs":"2020-12-29T09:18:53.556Z",
-            "logoUrl":"https://rampnetwork.github.io/assets/btc.svg",
-            "hidden":false,
-            "minPurchaseAmountEur":-1,
-            "maxPurchaseAmountEur":-1,
-            "minPurchaseCryptoAmount":"110000",
-            "type":"BTC",
-            "underlyingAssetSymbol":null,
-            "maxSinglePurchase":{
-                "GBP":"-1",
-                "EUR":"-1",
-                "USD":"-1"
-            },
-            "price":{
-                "GBP":19712.655689105086,
-                "EUR":21751.7999248612,
-                "USD":26640.516957973767
-            },
-            "maxFeePercent":{
-                "GBP":1.99,
-                "EUR":1.99,
-                "USD":1.99
+                "USD":1.99,
+                "PLN":1.99
             }
         },
         {
@@ -215,29 +110,351 @@
             "address":null,
             "name":"xDai native stable coin",
             "decimals":18,
-            "priceEur":0.82282509492798,
-            "priceUpdateTs":"2020-12-29T09:18:54.044Z",
-            "logoUrl":"https://gblobscdn.gitbook.com/spaces%2F-Lpi9AHj62wscNlQjI-l%2Favatar.png",
+            "priceEur":0.824251217356836,
+            "priceUpdateTs":"2021-02-25T02:22:04.713Z",
+            "logoUrl":"https://rampnetwork.github.io/assets/crypto-assets/xdai.svg",
             "hidden":false,
             "minPurchaseAmountEur":-1,
             "maxPurchaseAmountEur":-1,
             "minPurchaseCryptoAmount":"-1",
             "type":"XDAI",
             "underlyingAssetSymbol":"DAI",
+            "networkFeeEur":0,
+            "extra":null,
             "maxSinglePurchase":{
                 "GBP":"-1",
                 "EUR":"-1",
-                "USD":"-1"
+                "USD":"-1",
+                "PLN":"-1"
             },
             "price":{
-                "GBP":0.7456885335788587,
-                "EUR":0.82282509492798,
-                "USD":1.007755035013044
+                "GBP":0.7087274637369723,
+                "EUR":0.824251217356836,
+                "USD":1.0025499436905974,
+                "PLN":0.19375459230188014
             },
             "maxFeePercent":{
                 "GBP":1.99,
                 "EUR":1.99,
-                "USD":1.99
+                "USD":1.99,
+                "PLN":1.99
+            }
+        },
+        {
+            "symbol":"BTC",
+            "address":null,
+            "name":"Bitcoin",
+            "decimals":8,
+            "priceEur":41856.7798023692,
+            "priceUpdateTs":"2021-02-25T02:22:04.669Z",
+            "logoUrl":"https://rampnetwork.github.io/assets/crypto-assets/btc.svg",
+            "hidden":false,
+            "minPurchaseAmountEur":-1,
+            "maxPurchaseAmountEur":-1,
+            "minPurchaseCryptoAmount":"120000",
+            "type":"BTC",
+            "underlyingAssetSymbol":null,
+            "networkFeeEur":20.42,
+            "extra":null,
+            "maxSinglePurchase":{
+                "GBP":"-1",
+                "EUR":"-1",
+                "USD":"-1",
+                "PLN":"-1"
+            },
+            "price":{
+                "GBP":35990.30097238839,
+                "EUR":41856.7798023692,
+                "USD":50911.0709820985,
+                "PLN":9839.164486385765
+            },
+            "maxFeePercent":{
+                "GBP":1.99,
+                "EUR":1.99,
+                "USD":1.99,
+                "PLN":1.99
+            }
+        },
+        {
+            "symbol":"MATIC",
+            "address":null,
+            "name":"Polygon (Matic chain)",
+            "decimals":18,
+            "priceEur":0.142265174596487,
+            "priceUpdateTs":"2021-02-25T02:22:03.608Z",
+            "logoUrl":"https://rampnetwork.github.io/assets/crypto-assets/matic.svg",
+            "hidden":false,
+            "minPurchaseAmountEur":-1,
+            "maxPurchaseAmountEur":-1,
+            "minPurchaseCryptoAmount":"-1",
+            "type":"MATIC",
+            "underlyingAssetSymbol":null,
+            "networkFeeEur":0,
+            "extra":null,
+            "maxSinglePurchase":{
+                "GBP":"-1",
+                "EUR":"-1",
+                "USD":"-1",
+                "PLN":"-1"
+            },
+            "price":{
+                "GBP":0.12232585678574194,
+                "EUR":0.142265174596487,
+                "USD":0.1730394081045007,
+                "PLN":0.03344190499480313
+            },
+            "maxFeePercent":{
+                "GBP":1.99,
+                "EUR":1.99,
+                "USD":1.99,
+                "PLN":1.99
+            }
+        },
+        {
+            "symbol":"DOT",
+            "address":null,
+            "name":"Polkadot DOT",
+            "decimals":18,
+            "priceEur":28.3738861869112,
+            "priceUpdateTs":"2021-02-25T02:22:03.594Z",
+            "logoUrl":"https://rampnetwork.github.io/assets/crypto-assets/polkadot.png",
+            "hidden":true,
+            "minPurchaseAmountEur":-1,
+            "maxPurchaseAmountEur":-1,
+            "minPurchaseCryptoAmount":"3500000000000000000",
+            "type":"POLKADOT",
+            "underlyingAssetSymbol":null,
+            "networkFeeEur":2.52,
+            "extra":null,
+            "maxSinglePurchase":{
+                "GBP":"-1",
+                "EUR":"-1",
+                "USD":"-1",
+                "PLN":"-1"
+            },
+            "price":{
+                "GBP":24.397115794498507,
+                "EUR":28.3738861869112,
+                "USD":34.51161175131908,
+                "PLN":6.66977571206293
+            },
+            "maxFeePercent":{
+                "GBP":1.99,
+                "EUR":1.99,
+                "USD":1.99,
+                "PLN":1.99
+            }
+        },
+        {
+            "symbol":"CELO",
+            "address":null,
+            "name":"Celo Gold",
+            "decimals":18,
+            "priceEur":3.62260622848306,
+            "priceUpdateTs":"2021-02-25T02:22:03.583Z",
+            "logoUrl":"https://rampnetwork.github.io/assets/crypto-assets/celo.svg",
+            "hidden":false,
+            "minPurchaseAmountEur":-1,
+            "maxPurchaseAmountEur":-1,
+            "minPurchaseCryptoAmount":"30000000000000000",
+            "type":"CELO",
+            "underlyingAssetSymbol":null,
+            "networkFeeEur":0,
+            "extra":null,
+            "maxSinglePurchase":{
+                "GBP":"-1",
+                "EUR":"-1",
+                "USD":"-1",
+                "PLN":"-1"
+            },
+            "price":{
+                "GBP":3.1148762299237926,
+                "EUR":3.62260622848306,
+                "USD":4.406233917403601,
+                "PLN":0.8515566347851943
+            },
+            "maxFeePercent":{
+                "GBP":1.99,
+                "EUR":1.99,
+                "USD":1.99,
+                "PLN":1.99
+            }
+        },
+        {
+            "symbol":"EC_SORARE",
+            "address":null,
+            "name":"Sorare wallet topup",
+            "decimals":18,
+            "priceEur":1351.9945442939,
+            "priceUpdateTs":"2021-02-25T02:22:03.907Z",
+            "logoUrl":"https://rampnetwork.github.io/assets/crypto-assets/sorare.png",
+            "hidden":true,
+            "minPurchaseAmountEur":-1,
+            "maxPurchaseAmountEur":-1,
+            "minPurchaseCryptoAmount":"-1",
+            "type":"ETH_CALL",
+            "underlyingAssetSymbol":"ETH",
+            "networkFeeEur":0,
+            "extra":null,
+            "maxSinglePurchase":{
+                "GBP":"-1",
+                "EUR":"-1",
+                "USD":"-1",
+                "PLN":"-1"
+            },
+            "price":{
+                "GBP":1162.5043969438457,
+                "EUR":1351.9945442939,
+                "USD":1644.4525961373793,
+                "PLN":317.80984511500554
+            },
+            "maxFeePercent":{
+                "GBP":1.99,
+                "EUR":1.99,
+                "USD":1.99,
+                "PLN":1.99
+            }
+        },
+        {
+            "symbol":"XLM",
+            "address":null,
+            "name":"Stellar Lumens",
+            "decimals":7,
+            "priceEur":0.339668357733348,
+            "priceUpdateTs":"2021-02-25T02:22:03.581Z",
+            "logoUrl":"https://rampnetwork.github.io/assets/crypto-assets/xlm.svg",
+            "hidden":false,
+            "minPurchaseAmountEur":-1,
+            "maxPurchaseAmountEur":-1,
+            "minPurchaseCryptoAmount":"300000000",
+            "type":"XLM",
+            "underlyingAssetSymbol":null,
+            "networkFeeEur":0,
+            "extra":{
+                "ADDRESS_WARNING":"We currently don't support passing a memo with the XLM address. Make sure your wallet doesn't require one."
+            },
+            "maxSinglePurchase":{
+                "GBP":"-1",
+                "EUR":"-1",
+                "USD":"-1",
+                "PLN":"-1"
+            },
+            "price":{
+                "GBP":0.29206179938687327,
+                "EUR":0.339668357733348,
+                "USD":0.4131440582047949,
+                "PLN":0.0798449584114869
+            },
+            "maxFeePercent":{
+                "GBP":1.99,
+                "EUR":1.99,
+                "USD":1.99,
+                "PLN":1.99
+            }
+        },
+        {
+            "symbol":"LTC",
+            "address":null,
+            "name":"Litecoin",
+            "decimals":8,
+            "priceEur":151.658324689245,
+            "priceUpdateTs":"2021-02-25T02:22:03.576Z",
+            "logoUrl":"https://rampnetwork.github.io/assets/crypto-assets/ltc.svg",
+            "hidden":false,
+            "minPurchaseAmountEur":-1,
+            "maxPurchaseAmountEur":-1,
+            "minPurchaseCryptoAmount":"4000000",
+            "type":"LTC",
+            "underlyingAssetSymbol":null,
+            "networkFeeEur":0,
+            "extra":null,
+            "maxSinglePurchase":{
+                "GBP":"-1",
+                "EUR":"-1",
+                "USD":"-1",
+                "PLN":"-1"
+            },
+            "price":{
+                "GBP":130.40250053409935,
+                "EUR":151.658324689245,
+                "USD":184.4644468527237,
+                "PLN":35.64992838418782
+            },
+            "maxFeePercent":{
+                "GBP":1.99,
+                "EUR":1.99,
+                "USD":1.99,
+                "PLN":1.99
+            }
+        },
+        {
+            "symbol":"KSM",
+            "address":null,
+            "name":"Kusama KSM",
+            "decimals":18,
+            "priceEur":200.64325411315,
+            "priceUpdateTs":"2021-02-25T02:22:03.611Z",
+            "logoUrl":"https://rampnetwork.github.io/assets/crypto-assets/kusama.png",
+            "hidden":false,
+            "minPurchaseAmountEur":-1,
+            "maxPurchaseAmountEur":-1,
+            "minPurchaseCryptoAmount":"220000000000000000",
+            "type":"KUSAMA",
+            "underlyingAssetSymbol":null,
+            "networkFeeEur":1.52,
+            "extra":null,
+            "maxSinglePurchase":{
+                "GBP":"-1",
+                "EUR":"-1",
+                "USD":"-1",
+                "PLN":"-1"
+            },
+            "price":{
+                "GBP":172.52189818966758,
+                "EUR":200.64325411315,
+                "USD":244.04560026989014,
+                "PLN":47.16468848354258
+            },
+            "maxFeePercent":{
+                "GBP":1.99,
+                "EUR":1.99,
+                "USD":1.99,
+                "PLN":1.99
+            }
+        },
+        {
+            "symbol":"BCH",
+            "address":null,
+            "name":"Bitcoin Cash",
+            "decimals":8,
+            "priceEur":444.044841694582,
+            "priceUpdateTs":"2021-02-25T02:22:03.606Z",
+            "logoUrl":"https://rampnetwork.github.io/assets/crypto-assets/bch.svg",
+            "hidden":false,
+            "minPurchaseAmountEur":-1,
+            "maxPurchaseAmountEur":-1,
+            "minPurchaseCryptoAmount":"300000",
+            "type":"BCH",
+            "underlyingAssetSymbol":null,
+            "networkFeeEur":0,
+            "extra":null,
+            "maxSinglePurchase":{
+                "GBP":"-1",
+                "EUR":"-1",
+                "USD":"-1",
+                "PLN":"-1"
+            },
+            "price":{
+                "GBP":381.80929286203667,
+                "EUR":444.044841694582,
+                "USD":540.0988456705873,
+                "PLN":104.38046733152707
+            },
+            "maxFeePercent":{
+                "GBP":1.99,
+                "EUR":1.99,
+                "USD":1.99,
+                "PLN":1.99
             }
         },
         {
@@ -245,30 +462,214 @@
             "address":"0xe3818504c1b32bf1557b16c238b2e01fd3149c17",
             "name":"Pillar",
             "decimals":18,
-            "priceEur":0.0140102615511318,
-            "priceUpdateTs":"2020-12-29T09:18:53.290Z",
-            "logoUrl":"https://cdn.mytoken.org/FnEpAN2d4lMJfVWi5cUMUiRkU_nM",
-            "hidden":false,
-            "minPurchaseAmountEur":-1,
+            "priceEur":0.0208496497506022,
+            "priceUpdateTs":"2021-02-25T02:22:03.609Z",
+            "logoUrl":"https://rampnetwork.github.io/assets/crypto-assets/plr.png",
+            "hidden":true,
+            "minPurchaseAmountEur":15,
             "maxPurchaseAmountEur":-1,
             "minPurchaseCryptoAmount":"-1",
             "type":"ERC20",
             "underlyingAssetSymbol":null,
+            "networkFeeEur":19.42,
+            "extra":null,
             "maxSinglePurchase":{
-                "GBP":"50462149221725877895731",
-                "EUR":"50462149221725877895731",
+                "GBP":"415489009846141019215",
+                "EUR":"415489009846141019215",
                 "USD":"-1"
             },
             "price":{
-                "GBP":0.01269685557175935,
-                "EUR":0.0140102615511318,
-                "USD":0.01715906783474868
+                "GBP":0.01792744624015682,
+                "EUR":0.0208496497506022,
+                "USD":0.025359762586053467,
+                "PLN":0.004901073000558332
             },
             "maxFeePercent":{
                 "GBP":1.99,
                 "EUR":1.99,
-                "USD":1.99
+                "USD":1.99,
+                "PLN":1.99
+            }
+        },
+        {
+            "symbol":"EGLD",
+            "address":null,
+            "name":"Elrond eGLD",
+            "decimals":18,
+            "priceEur":96.1856283030833,
+            "priceUpdateTs":"2021-02-25T02:22:03.613Z",
+            "logoUrl":"https://rampnetwork.github.io/assets/crypto-assets/egld.svg",
+            "hidden":false,
+            "minPurchaseAmountEur":-1,
+            "maxPurchaseAmountEur":-1,
+            "minPurchaseCryptoAmount":"15000000000000000",
+            "type":"ELROND",
+            "underlyingAssetSymbol":null,
+            "networkFeeEur":0,
+            "extra":null,
+            "maxSinglePurchase":{
+                "GBP":"-1",
+                "EUR":"-1",
+                "USD":"-1",
+                "PLN":"-1"
+            },
+            "price":{
+                "GBP":82.70463538263647,
+                "EUR":96.1856283030833,
+                "USD":116.99211867509307,
+                "PLN":22.61010575989964
+            },
+            "maxFeePercent":{
+                "GBP":1.99,
+                "EUR":1.99,
+                "USD":1.99,
+                "PLN":1.99
+            }
+        },
+        {
+            "symbol":"ETH",
+            "address":null,
+            "name":"Ether",
+            "decimals":18,
+            "priceEur":1351.9945442939,
+            "priceUpdateTs":"2021-02-25T02:22:03.902Z",
+            "logoUrl":"https://rampnetwork.github.io/assets/crypto-assets/eth.svg",
+            "hidden":false,
+            "minPurchaseAmountEur":15,
+            "maxPurchaseAmountEur":-1,
+            "minPurchaseCryptoAmount":"-1",
+            "type":"ETH",
+            "underlyingAssetSymbol":null,
+            "networkFeeEur":5.62,
+            "extra":null,
+            "maxSinglePurchase":{
+                "GBP":"-1",
+                "EUR":"-1",
+                "USD":"-1",
+                "PLN":"-1"
+            },
+            "price":{
+                "GBP":1162.5043969438457,
+                "EUR":1351.9945442939,
+                "USD":1644.4525961373793,
+                "PLN":317.80984511500554
+            },
+            "maxFeePercent":{
+                "GBP":1.99,
+                "EUR":1.99,
+                "USD":1.99,
+                "PLN":1.99
+            }
+        },
+        {
+            "symbol":"XRP",
+            "address":null,
+            "name":"Ripple",
+            "decimals":6,
+            "priceEur":0.393665964749823,
+            "priceUpdateTs":"2021-02-25T02:22:03.610Z",
+            "logoUrl":"https://rampnetwork.github.io/assets/crypto-assets/xrp.svg",
+            "hidden":true,
+            "minPurchaseAmountEur":-1,
+            "maxPurchaseAmountEur":-1,
+            "minPurchaseCryptoAmount":"-1",
+            "type":"XRP",
+            "underlyingAssetSymbol":null,
+            "networkFeeEur":0,
+            "extra":null,
+            "maxSinglePurchase":{
+                "GBP":"-1",
+                "EUR":"-1",
+                "USD":"-1",
+                "PLN":"-1"
+            },
+            "price":{
+                "GBP":0.33849131779434727,
+                "EUR":0.393665964749823,
+                "USD":0.4788222115806457,
+                "PLN":0.092538035609849
+            },
+            "maxFeePercent":{
+                "GBP":1.99,
+                "EUR":1.99,
+                "USD":1.99,
+                "PLN":1.99
+            }
+        },
+        {
+            "symbol":"DOGE",
+            "address":null,
+            "name":"DogeCoin",
+            "decimals":8,
+            "priceEur":0.0467496126026265,
+            "priceUpdateTs":"2021-02-25T02:22:03.615Z",
+            "logoUrl":"https://rampnetwork.github.io/assets/crypto-assets/doge.svg",
+            "hidden":false,
+            "minPurchaseAmountEur":-1,
+            "maxPurchaseAmountEur":-1,
+            "minPurchaseCryptoAmount":"-1",
+            "type":"DOGE",
+            "underlyingAssetSymbol":null,
+            "networkFeeEur":0.09,
+            "extra":null,
+            "maxSinglePurchase":{
+                "GBP":"-1",
+                "EUR":"-1",
+                "USD":"-1",
+                "PLN":"-1"
+            },
+            "price":{
+                "GBP":0.04019737389869284,
+                "EUR":0.0467496126026265,
+                "USD":0.05686230180237625,
+                "PLN":0.010989309981414749
+            },
+            "maxFeePercent":{
+                "GBP":1.99,
+                "EUR":1.99,
+                "USD":1.99,
+                "PLN":1.99
+            }
+        },
+        {
+            "symbol":"CUSD",
+            "address":"0x765de816845861e75a25fca122bb6898b8b1282a",
+            "name":"Celo Dollar",
+            "decimals":18,
+            "priceEur":0.826424558086683,
+            "priceUpdateTs":"2021-02-25T02:22:03.614Z",
+            "logoUrl":"https://rampnetwork.github.io/assets/crypto-assets/cusd.png",
+            "hidden":false,
+            "minPurchaseAmountEur":-1,
+            "maxPurchaseAmountEur":-1,
+            "minPurchaseCryptoAmount":"21000000000000000",
+            "type":"CELO",
+            "underlyingAssetSymbol":null,
+            "networkFeeEur":0,
+            "extra":null,
+            "maxSinglePurchase":{
+                "GBP":"-1",
+                "EUR":"-1",
+                "USD":"-1",
+                "PLN":"-1"
+            },
+            "price":{
+                "GBP":0.7105961977234868,
+                "EUR":0.826424558086683,
+                "USD":1.0051934127937618,
+                "PLN":0.19426547386101806
+            },
+            "maxFeePercent":{
+                "GBP":1.99,
+                "EUR":1.99,
+                "USD":1.99,
+                "PLN":1.99
             }
         }
-    ]
+    ],
+    "minPurchaseAmountEur":10,
+    "maxPurchaseAmountEur":20000,
+    "minFeePercent":0.5525,
+    "maxFeePercent":2.9,
+    "minFeeAmountEur":2.49
 }

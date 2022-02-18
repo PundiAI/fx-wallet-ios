@@ -22,10 +22,14 @@ extension Router {
     
     static var createWalletController: UIViewController { return viewController("CreateWalletViewController") }
     
+    static func showAgreementAlert(doneHandler: @escaping (Bool) -> Bool, state:Bool = false) {
+        pushViewController("AgreementViewController", context: ["handler": doneHandler, "state": state])
+    }
+    
     static var welcomeCreateWalletController: UIViewController { return viewController("WelcomeCreateWalletViewController") }
     
-    static func pushToSetNickName(wallet: WKWallet, ticket: String = "") {
-        pushViewController("SetNickNameViewController", context: ["wallet": wallet, "ticket": ticket])
+    static func pushToSetNickName(wallet: WKWallet, ticket: String = "", completion:((UIViewController) -> Void)? = nil) {
+        pushViewController("SetNickNameViewController", context: ["wallet": wallet, "ticket": ticket], completion: completion)
     }
     
     static func setNickNameController(wallet: WKWallet, ticket: String = "") -> UIViewController {
@@ -69,7 +73,9 @@ extension Router {
         return viewController("BackUpNowViewController", context: ["wallet": wallet])
     }
     
-    static func pushToImportWallet() { pushViewController("ImportWalletViewController") }
+    static func pushToImportWallet(completion: ((UIViewController) -> Void)? = nil) {
+        pushViewController("ImportWalletViewController", completion: completion)
+    }
     
     static func pushToImportNamed(wallet: WKWallet) {
         pushViewController("ImportNamedViewController", context: ["wallet": wallet])
@@ -82,7 +88,7 @@ extension Router {
     
     static func showBackAlert() {
         Haptic.impactMedium.generate()
-        presentViewController("BackAlertViewController")
+        pushViewController("BackAlertViewController")
     }
     
     static func pushToBackUpNotice(wallet: WKWallet, completion:((UIViewController) -> Void)? = nil) {
@@ -123,7 +129,12 @@ extension Router {
         Haptic.impactMedium.generate()
         presentViewController("RemoveTokenViewController", context: ["wallet": wallet, "coin": coin])
     }
-
+    
+    
+    static func showCrossChainWeb(_ eth: (Coin?, String), fx: (Coin?, String), ethTofx: Bool = true) {
+        pushViewController("SheetWebViewController", context: ["eth": eth, "fx": fx, "ethTofx": ethTofx])
+    }
+    
     static func showRemoveAddress(completionHandler: @escaping (WKError?) -> Void, presenCompletion:((UIViewController)->Void)? = nil) {
         Haptic.impactMedium.generate()
         pushViewController("RemoveAddressViewController", context:  ["handler": completionHandler], completion: presenCompletion)
@@ -141,24 +152,81 @@ extension Router {
         showSelectAccount(wallet: wallet, current: current, filter: filter, cancelHandler: cancelHandler, confirmHandler: confirmHandler)
     }
     
-    static func showSelectAccount(wallet: WKWallet, current: (Coin, Keypair)?, filter: ((Coin, [String: Any]?) -> Bool)? = nil, cancelHandler: (() -> Void)? = nil, confirmHandler: @escaping (UIViewController?, Coin, Keypair) -> Void) {
-        presentViewController("SelectAccountViewController", context: ["wallet": wallet, "currentCoin": current?.0, "currentAccount": current?.1, "filter": filter, "handler": confirmHandler, "cancelHandler": cancelHandler])
+    static func showSelectAccount(wallet: WKWallet, current: (Coin, Keypair)?, push: Bool = false, filter: ((Coin, [String: Any]?) -> Bool)? = nil, cancelHandler: (() -> Void)? = nil, confirmHandler: @escaping (UIViewController?, Coin, Keypair) -> Void) {
+        
+        let context: [String: Any?] = ["wallet": wallet, "currentCoin": current?.0, "currentAccount": current?.1, "push": push, "filter": filter, "handler": confirmHandler, "cancelHandler": cancelHandler]
+        if push {
+            pushViewController("SelectAccountViewController", context: context)
+        } else {
+            presentViewController("SelectAccountViewController", context: context)
+        }
     }
     
-    static func showSelectWalletConnectAccount(wallet: WKWallet, filter: ((Coin, [String: Any]?) -> Bool)? = nil, cancelHandler: (() -> Void)? = nil, confirmHandler: @escaping (UIViewController?, Keypair) -> Void) {
+    static func showSelectErc20Account(wallet: WKWallet, current: (Coin, Keypair)?, push: Bool = false, filter: ((Coin, [String: Any]?) -> Bool)? = nil, cancelHandler: (() -> Void)? = nil, confirmHandler: @escaping (UIViewController?, Coin, Keypair) -> Void) {
+        
+        let context: [String: Any?] = ["wallet": wallet, "currentCoin": current?.0, "currentAccount": current?.1, "showDisabledSection": false, "showMainBalance": true, "push": push, "filter": filter, "handler": confirmHandler, "cancelHandler": cancelHandler]
+        if push {
+            pushViewController("SelectAccountViewController", context: context)
+        } else {
+            presentViewController("SelectAccountViewController", context: context)
+        }
+    }
+    
+    static func showSelectErc20AccountToJump(wallet: WKWallet, current: (Coin, Keypair)?, push: Bool = false, filter: ((Coin, [String: Any]?) -> Bool)? = nil, cancelHandler: (() -> Void)? = nil, confirmHandler: @escaping (UIViewController?, Coin, Keypair) -> Void) {
+        
+        let context: [String: Any?] = ["wallet": wallet, "currentCoin": current?.0, "currentAccount": current?.1, "showDisabledSection": false, "showMainBalance": false, "push": push, "filter": filter, "handler": confirmHandler, "cancelHandler": cancelHandler]
+        if push {
+            pushViewController("SelectAccountViewController", context: context)
+        } else {
+            presentViewController("SelectAccountViewController", context: context)
+        }
+    }
+    
+    static func pushToSelectWalletConnectAccount(wallet: WKWallet, filter: ((Coin, [String: Any]?) -> Bool)? = nil, cancelHandler: (() -> Void)? = nil, confirmHandler: @escaping (UIViewController?, Keypair) -> Void) {
         pushViewController("SelectWalletConnectAccountController", context: ["wallet": wallet, "filter": filter, "handler": confirmHandler, "cancelHandler": cancelHandler])
     }
     
-    static func pushToSelectOrAddAccount(wallet: WKWallet, confirmHandler: @escaping (UIViewController?, Coin, Keypair) -> Void) {
-        pushViewController("SelectOrAddAccountViewController", context: ["wallet": wallet, "handler": confirmHandler])
+    static func pushToSelectOrAddAccount(wallet: WKWallet, confirmHandler: @escaping (UIViewController?, Coin, Keypair) -> Void, completion:((UIViewController)->Void)? = nil) {
+        pushViewController("SelectOrAddAccountViewController", context: ["wallet": wallet, "handler": confirmHandler], completion: completion)
     }
     
     static func pushToSendTokenInput(wallet: WKWallet, coin: Coin, amount: String? = nil, account: Keypair? = nil, receiver: User? = nil, completion:((UIViewController)->Void)? = nil) {
         pushViewController("SendTokenInputViewController", context: ["wallet": wallet, "coin": coin, "amount": amount, "account": account, "receiver": receiver], completion: completion)
     }
     
+    static func showPendingTxAlert(confirmHandler: ((WKError?, UIViewController?) -> Void)? = nil) {
+        pushViewController("PendingTxAlertController", context: ["handler": confirmHandler])
+    }
+    
     static func pushToSendTokenFee(tx: FxTransaction,  account: Keypair, type:Int = 0,completionHandler: ((WKError?, JSON) -> Void)? = nil) {
-        pushViewController("SendTokenFeeViewController", context: ["tx": tx, "account": account, "type":type, "handler": completionHandler])
+
+        if let server = ChainTransactionServer.shared, tx.coin.chainType.isEthereumNet {
+
+            _ = server.selectPendingTransaction(symbol: tx.coin.symbol, chainId: tx.coin.chainType.rawValue, address: tx.from)
+                .observeOn(MainScheduler.instance)
+                .subscribe(onNext: { (item) in
+
+                    if let pendingTx = item, pendingTx.fromAddress.lowercased() == tx.from.lowercased() {
+
+                        self.showPendingTxAlert { (error, alert) in
+                            
+                            if error == nil {
+                                pushViewController("SendTokenFeeViewController", context: ["tx": tx, "account": account, "type":type, "handler": completionHandler]) { (_) in
+                                    self.currentNavigator?.remove([alert])
+                                }
+                            } else if let handler = completionHandler {
+                                handler(error, [:])
+                            } else {
+                                Router.pop(alert)
+                            }
+                        }
+                    } else {
+                        pushViewController("SendTokenFeeViewController", context: ["tx": tx, "account": account, "type":type, "handler": completionHandler])
+                    }
+            })
+        } else {
+            pushViewController("SendTokenFeeViewController", context: ["tx": tx, "account": account, "type":type, "handler": completionHandler])
+        }
     }
     
     static func pushToSendTokenFeeOptions(tx: FxTransaction, account: Keypair, contentHeight:CGFloat, completionHandler: ((WKError?, JSON) -> Void)? = nil) {
@@ -171,12 +239,12 @@ extension Router {
         pushViewController("SendTokenCommitViewController", context: ["tx": tx, "wallet": wallet, "account": account], completion:completion)
     }
     
-    static func pushToSendTokenCrossChainCommit(tx: FxTransaction, wallet: WKWallet, account: Keypair, completion:((UIViewController)->Void)? = nil) {
-        pushViewController("SendTokenCrossChainCommitController", context: ["tx": tx, "wallet": wallet, "account": account], completion:completion)
+    static func pushToSendTokenCrossChainCommit(tx: FxTransaction, account: Keypair, completion:((UIViewController)->Void)? = nil) {
+        pushViewController("SendTokenCrossChainCommitController", context: ["tx": tx, "account": account], completion:completion)
     }
     
-    static func pushToSendTokenCrossChainRecommit(tx: FxTransaction, wallet: WKWallet, account: Keypair, completion:((UIViewController)->Void)? = nil) {
-        pushViewController("SendTokenCrossChainRecommitController", context: ["tx": tx, "wallet": wallet, "account": account], completion:completion)
+    static func pushToCrossChainInfo(isE2F: Bool) {
+        pushViewController("CrossChainInfoAlertController", context: ["isE2F": isE2F])
     }
     
     static func pushToSettings() { 
@@ -195,9 +263,9 @@ extension Router {
         presentViewController("NotificationPanelViewController", context: ["wallet": wallet])
     }
     
-    static func showNotificationAlert(completionHandler:  @escaping (Bool) -> Void) {
+    static func showNotificationAlert(toSetting:Bool = false, completionHandler:  @escaping (Bool?) -> Void) {
         Haptic.success.generate()
-        pushViewController("NotificationAlertController", context: ["handler": completionHandler])
+        pushViewController("NotificationAlertController", context: ["toSetting":toSetting, "handler": completionHandler])
     }
     
     static func pushToPreMnemonic(mnemonic: String, completion:((UIViewController) -> Void)? = nil) {
@@ -254,18 +322,6 @@ extension Router {
     static func pushToSetCurrency(wallet: WKWallet) {
         pushViewController("SetCurrencyViewController", context: ["wallet": wallet])
     }
-    
-    static func pushToConfirmSwap(wallet: WKWallet, vm: SwapModel, amountsMdoel: AmountsModel) {
-        pushViewController("SwapConfirmViewController", context: ["wallet": wallet, "vm": vm, "amountsModel": amountsMdoel])
-    }
-
-    static func pushToSwapApprove(wallet: WKWallet, vm: SwapModel , completionHandler: @escaping (WKError?) -> Void) {
-        pushViewController("SwapApproveViewController", context: ["wallet": wallet, "vm": vm, "handler": completionHandler])
-    }
-    
-    static func pushToApproveEditPermission(wallet: WKWallet, vm: ApproveViewModel, completionHandler:((String?) -> Void)? = nil) {
-        pushViewController("EditPermissionViewController", context: ["wallet": wallet, "vm": vm ,"handler": completionHandler])
-    }
 
     static func pushToMessageSet(wallet: WKWallet) {
         pushViewController("MessageSetViewController", context: ["wallet": wallet])
@@ -276,8 +332,7 @@ extension Router {
         if isSecurityVerifying { return }
         let viewController = Router.viewController("SecurityVerificationController")
         viewController.modalPresentationStyle = .fullScreen
-        Router.topViewController?.present(viewController, animated: false, completion: completion)
-        //Router.presentViewController("SecurityVerificationController", animated: false, completion: completion)
+        Router.topViewController?.present(viewController, animated: false, completion: completion) 
     }
     
     static func showResetWalletNoticeAlert(completionHandler: @escaping (WKError?) -> Void) {
@@ -297,29 +352,23 @@ extension Router {
     } 
     
     static func showAddNewtrokNode(completionHandler:@escaping ((String) -> Void)) {
-        pushViewController("AddNodesInputController", context: ["handler": completionHandler])
+        pushViewController("AddNodesInputController", context: ["handler": completionHandler]) 
     }
     
-    static func showNotifAlertIfNeed() ->Observable<Bool> {
-        if WKRemoteServer.didRequestRemoteNotif {
-            return WKRemoteServer.request().map { $0 == 1 }
-        } else {
-            return Observable.create { (observer) -> Disposable in
-                DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1) {
-                    Router.showNotificationAlert(completionHandler: { result in 
-                        WKRemoteServer.didRequestRemoteNotif = result
-                    })
-                }
-                return Disposables.create()
-            }
-        }
-        
+    static func showWalletBackUpAlert(completionHandler: @escaping (WalletBackUpType) -> Void, completion:((UIViewController) -> Void)? = nil) {
+        pushViewController("WalletBackUpAlertController", context: ["handler": completionHandler], completion: completion)
     }
+    
+    static func showWalletBackUpAlertSecond(completionHandler: @escaping (WalletBackUpType) -> Void, topViewController:UIViewController?, completion:((UIViewController) -> Void)? = nil) {
+        pushViewController("WalletBackUpAlertSecondController", context: ["handler": completionHandler, "topViewController":topViewController], completion: completion)
+    }
+    
+    static func pushToBTCAddressType(wallet: WKWallet) {
+        pushViewController("BTCAddressTypeViewController", context: ["wallet": wallet])
+    } 
 }
 
 //MARK: Invocation Router
-
-//TargetWallet: Wallet模块通过TargetWallet给其他模块提供接口(解析到Action:xxx就做xxx操作并返回一个操作结果xxx)
 class TargetWallet: NSObject {
     override class func perform(action: String, parameter: [String : Any] = [:]) -> Any? {
         print("handle action:", action, parameter)
@@ -332,12 +381,17 @@ class TargetWallet: NSObject {
         }
     }
 }
-
-//需要调用TargetWallet接口的模块需要实现类似下面的代码
-//PS: 这部分代码应该在TargetWallet的调用模块而不是TargetWallet所在的模块(这里写在同一个文件只是为了方便展示)
+ 
 extension Router {
     
-    private static let TargetWallet = "TargetWallet"-"xxx": "xxx"]
+    private static let TargetWallet = "TargetWallet"
+    
+    @discardableResult
+    private static func perform(action: String, parameter: [String : Any] = [:]) -> Any? {
+        return dispatch(task: Router.InvocationTask(Router.TargetWallet, action: action).set(parameters: parameter))
+    }
+    
+    static func doNothing() {
         perform(action: "empty", parameter: ["xxx": "xxx"])
     }
 }

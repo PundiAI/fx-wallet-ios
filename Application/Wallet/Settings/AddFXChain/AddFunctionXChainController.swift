@@ -58,55 +58,55 @@ class AddFunctionXChainController: WKViewController {
     
     private func addCoin(_ url: String) {
         
-        weak var welf = self
-        let eth = CoinService.current.ethereum
-        let node = FxHubNode(endpoints: FxNode.Endpoints(rpc: url), wallet: nil)
-        self.hud?.waiting()
-        node.genesisBlock().flatMap{ value -> Observable<[Coin]> in
-
-            let chainId = value["result", "genesis", "chain_id"].stringValue
-            let account = value["result", "genesis", "app_state", "auth", "accounts", 0, "value", "address"].stringValue
-            guard chainId.isNotEmpty,
-               let (hrp, _) = FunctionXAddress.decode(address: account) else {
-                return .error(WKError(.default, "unrecognized url"))
-            }
-
-            return FunctionX.shared.ethereum.manager.bridgeRecords(of: hrp).flatMap{ info -> Observable<[Coin]> in
-
-                let bridge = FunctionXEthereumBridge(rpc: eth.node.url, chainId: eth.node.chainId.i, contract: info.bridgeContract)
-                return bridge.allTokens().map{ (objs) in
-                    
-                    var result: [Coin] = []
-                    for i in 0..<objs.count {
-                        
-                        let symbol = objs[i].2
-                        let contract = objs[i].0
-                        let suffix = contract.substring(from: contract.count - 3)
-                        result.append(Coin.cloud(rpc: url, hrp: hrp, chainId: chainId, name: "\(symbol.uppercased())-ETH", symbol: "eth-\(symbol)-\(suffix)".lowercased(), decimals: objs[i].3))
-                    }
-                    return result
-                }
-            }
-        }.subscribe(onNext: { items in
-            welf?.hud?.hide()
-            
-            var count = 0
-            let wallet = XWallet.currentWallet!.wk
-            for coin in items {
-                if !wallet.coinManager.has(coin) {
-                    wallet.coinManager.add(coin)
-                    count += 1
-                }
-            }
-
-            Router.popToRoot()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                Router.topViewController?.hud?.text(m: "add \(count) coin success")
-            }
-        }, onError: { (e) in
-            welf?.hud?.hide()
-            welf?.hud?.text(m: e.asWKError().msg)
-        }).disposed(by: defaultBag)
+//        weak var welf = self
+//        let eth = CoinService.current.ethereum
+//        let node = FxHubNode(endpoints: FxNode.Endpoints(rpc: url), wallet: nil)
+//        self.hud?.waiting()
+//        node.genesisBlock().flatMap{ value -> Observable<[Coin]> in
+//
+//            let chainId = value["result", "genesis", "chain_id"].stringValue
+//            let account = value["result", "genesis", "app_state", "auth", "accounts", 0, "value", "address"].stringValue
+//            guard chainId.isNotEmpty,
+//               let (hrp, _) = FunctionXAddress.decode(address: account) else {
+//                return .error(WKError(.default, "unrecognized url"))
+//            }
+//
+//            return FunctionX.shared.ethereum.manager.bridgeRecords(of: hrp).flatMap{ info -> Observable<[Coin]> in
+//
+//                let bridge = FunctionXEthereumBridge(rpc: eth.node.url, chainId: eth.node.chainId.i, contract: info.bridgeContract)
+//                return bridge.allTokens().map{ (objs) in
+//                    
+//                    var result: [Coin] = []
+//                    for i in 0..<objs.count {
+//                        
+//                        let symbol = objs[i].2
+//                        let contract = objs[i].0
+//                        let suffix = contract.substring(from: contract.count - 3)
+//                        result.append(Coin.cloud(rpc: url, hrp: hrp, chainId: chainId, name: "\(symbol.uppercased())-ETH", symbol: "eth-\(symbol)-\(suffix)".lowercased(), decimals: objs[i].3))
+//                    }
+//                    return result
+//                }
+//            }
+//        }.subscribe(onNext: { items in
+//            welf?.hud?.hide()
+//            
+//            var count = 0
+//            let wallet = XWallet.currentWallet!.wk
+//            for coin in items {
+//                if !wallet.coinManager.has(coin) {
+//                    wallet.coinManager.add(coin)
+//                    count += 1
+//                }
+//            }
+//
+//            Router.popToRoot()
+//            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+//                Router.topViewController?.hud?.text(m: "add \(count) coin success")
+//            }
+//        }, onError: { (e) in
+//            welf?.hud?.hide()
+//            welf?.hud?.text(m: e.asWKError().msg)
+//        }).disposed(by: defaultBag)
     }
 }
 

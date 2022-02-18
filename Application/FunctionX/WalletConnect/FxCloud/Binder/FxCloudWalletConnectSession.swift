@@ -141,59 +141,59 @@ class FxCloudWalletConnectSession: WalletConnectSession {
             return
         }
         
-        let hrp = parameter["prefix"].string ?? "fx"
-        let chainName = parameter["chainId"].string ?? "--"
+        _ = parameter["prefix"].string ?? "fx"
+        _ = parameter["chainId"].string ?? "--"
         let hdWallet = wallet.key.wallet(password: Data())
-        guard let privateKey = hdWallet?.getKey(derivationPath: derivationPath) else {
+        guard (hdWallet?.getKey(derivationPath: derivationPath)) != nil else {
             error(.canceled, msg: "derivationPath is invalid", data: [:])
             return
         }
         
-        Router.pushToCreateValidator(hrp: hrp, chainName: chainName, txParams: parameter.dictionaryValue) {
-            
-            Router.showAuthorizeDappAlert(dapp: .fxCloudWidget, types: [1]) { [weak self] (authVC, allow) in
-                Router.dismiss(authVC, animated: false) {
-                    guard allow else {
-                        self?.error(.canceled, msg: "user denied", data: [:])
-                        return
-                    }
-                    
-                    let signer = CreateValidatorSigner(FxWallet(privateKey: privateKey))
-                    let input = signer.input
-                    input.fee = "0"
-                    input.gas = 250000
-                    input.denom = parameter["denom"].stringValue
-                    input.amount = parameter["delegatorAmount"].stringValue
-                    input.chainId = parameter["chainId"].stringValue
-                    
-                    input.commissionRate = parameter["commissionRate"].stringValue.formattedDecimal()
-                    input.commissionMaxRate = parameter["maxCommissionRate"].stringValue.formattedDecimal()
-                    input.commissionMaxChangeRate = parameter["maxChangeRate"].stringValue.formattedDecimal()
-                    
-                    input.details = parameter["description"].stringValue
-                    input.moniker = parameter["name"].stringValue
-                    input.website = parameter["website"].stringValue
-                    input.identity = parameter["identity"].stringValue
-                    input.securityContact = parameter["securityContact"].stringValue
-                    
-                    input.minSelfDelegation = parameter["minSelfDelegation"].stringValue
-                    
-                    input.validatorPublicKey = parameter["validatorPublicKey"].stringValue
-                    input.delegatorAddress = parameter["delegatorAddress"].stringValue
-                    input.validatorAddress = parameter["validatorAddress"].stringValue
-                    
-                    guard let signature = try? signer.sign() else {
-                        self?.error(.canceled, msg: "sign failed", data: [:])
-                        return
-                    }
-                    
-                    self?.response(data: ["signature": signature.signature.base64EncodedString(),
-                                          "publicKey": privateKey.getPublicKeySecp256k1(compressed: true).data.base64EncodedString()])
-                    Router.currentNavigator?.popViewController(animated: true)
-                }
-            }
-        }
-        Router.currentNavigator?.remove([viewController])
+//        Router.pushToCreateValidator(hrp: hrp, chainName: chainName, txParams: parameter.dictionaryValue) {
+//
+//            Router.showAuthorizeDappAlert(dapp: .fxCloudWidget, types: [1]) { [weak self] (authVC, allow) in
+//                Router.dismiss(authVC, animated: false) {
+//                    guard allow else {
+//                        self?.error(.canceled, msg: "user denied", data: [:])
+//                        return
+//                    }
+//
+//                    let signer = CreateValidatorSigner(FxWallet(privateKey: privateKey))
+//                    let input = signer.input
+//                    input.fee = "0"
+//                    input.gas = 250000
+//                    input.denom = parameter["denom"].stringValue
+//                    input.amount = parameter["delegatorAmount"].stringValue
+//                    input.chainId = parameter["chainId"].stringValue
+//
+//                    input.commissionRate = parameter["commissionRate"].stringValue.formattedDecimal()
+//                    input.commissionMaxRate = parameter["maxCommissionRate"].stringValue.formattedDecimal()
+//                    input.commissionMaxChangeRate = parameter["maxChangeRate"].stringValue.formattedDecimal()
+//
+//                    input.details = parameter["description"].stringValue
+//                    input.moniker = parameter["name"].stringValue
+//                    input.website = parameter["website"].stringValue
+//                    input.identity = parameter["identity"].stringValue
+//                    input.securityContact = parameter["securityContact"].stringValue
+//
+//                    input.minSelfDelegation = parameter["minSelfDelegation"].stringValue
+//
+//                    input.validatorPublicKey = parameter["validatorPublicKey"].stringValue
+//                    input.delegatorAddress = parameter["delegatorAddress"].stringValue
+//                    input.validatorAddress = parameter["validatorAddress"].stringValue
+//
+//                    guard let signature = try? signer.sign() else {
+//                        self?.error(.canceled, msg: "sign failed", data: [:])
+//                        return
+//                    }
+//
+//                    self?.response(data: ["signature": signature.signature.base64EncodedString(),
+//                                          "publicKey": privateKey.getPublicKeySecp256k1(compressed: true).data.base64EncodedString()])
+//                    Router.currentNavigator?.popViewController(animated: true)
+//                }
+//            }
+//        }
+//        Router.currentNavigator?.remove([viewController])
     }
     
     private func createValidator(_ request: JSON, parameter: JSON) {

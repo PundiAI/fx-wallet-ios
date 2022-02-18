@@ -74,7 +74,6 @@ class CheckBackUpViewController: WKViewController {
         wk.view.copyClosure = { [weak self](idx, selectTag) in
             guard let weakself = self else { return }
             weakself.viewModel.selected.append((idx, selectTag))
-            // 验证完成三部曲
             if weakself.viewModel.currentPage == 3 {
                 if weakself.viewModel.check() {
                     Router.showBackUpSuccess(completionHandler: { (_) in
@@ -96,8 +95,7 @@ class CheckBackUpViewController: WKViewController {
                 }
                 return
             }
-            
-            // 验证下一个单词
+             
             DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.25) {
                 weakself.viewModel.currentPage += 1
                 if let vc: CheckBackUpViewController = Router.checkBackUpController(mnemonic: weakself.mnemonic) as? CheckBackUpViewController {
@@ -121,7 +119,7 @@ class CheckBackUpViewController: WKViewController {
 extension CheckBackUpViewController {
     override func heroAnimator(from: String, to: String) -> WKHeroAnimator? {
         switch (from, to) {
-        case (_, "CheckBackUpViewController"):  return animators["0"]
+        //case (_, "CheckBackUpViewController"):  return animators["0"]
         default: return nil
             
         }

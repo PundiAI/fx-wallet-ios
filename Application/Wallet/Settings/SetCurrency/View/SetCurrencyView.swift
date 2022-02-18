@@ -12,9 +12,7 @@ extension SetCurrencyViewController {
     class View: UIView {
         
         
-        lazy var listView = WKMTableView(frame: ScreenBounds, style: .plain)
-        
-        /// oc代码
+        lazy var listView = WKMTableView(frame: ScreenBounds, style: .plain) 
         lazy var indexBar = TTIndexBar(frame: CGRect(x: ScreenWidth - 30, y: 0, width: 30, height: ScreenHeight))
         
         required init?(coder aDecoder: NSCoder) { fatalError("init(coder:) has not been implemented") }

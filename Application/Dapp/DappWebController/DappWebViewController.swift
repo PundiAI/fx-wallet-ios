@@ -66,39 +66,28 @@ class DappWebViewController: FxWebViewController {
             return
         }
         
-        js.loadPlugin(key: "wc", plugin: DappJSWalletConnect(dapp: dapp, webViewController: self))
-        js.loadPlugin(key: "store", plugin: DappJSStorage(project: dapp.url.md5()))
-        js.loadPlugin(key: "system", plugin: DappJSSystem(dapp: dapp, webViewController: self))
-        js.loadPlugin(key: "navigation", plugin: DappJSNavigation(dapp: dapp, webViewController: self))
-        if let wallet = self.wallet {
-//            js.loadPlugin(key: "del", plugin: DappJSDelegate(dapp: dapp, wallet: wallet, webViewController: self))
-//            js.loadPlugin(key: "eth", plugin: DappJSEthereum(dapp: dapp, wallet: wallet, webViewController: self))
-            js.loadPlugin(key: "account", plugin: DappJSAccount(dapp: dapp, wallet: wallet, webViewController: self))
-            js.loadPlugin(key: "functionx", plugin: DappJSFunctionX(dapp: dapp, wallet: wallet, webViewController: self))
-        }
-        
-        if let wallet = self.wallet {
-            wallet.dappManager.addOrUpdate(dapp)
-        }
+//        js.loadPlugin(key: "wc", plugin: DappJSWalletConnect(dapp: dapp, webViewController: self))
+//        js.loadPlugin(key: "store", plugin: DappJSStorage(project: dapp.url.md5()))
+//        js.loadPlugin(key: "system", plugin: DappJSSystem(dapp: dapp, webViewController: self))
+//        js.loadPlugin(key: "navigation", plugin: DappJSNavigation(dapp: dapp, webViewController: self))
+//        if let wallet = self.wallet {
+//            js.loadPlugin(key: "account", plugin: DappJSAccount(dapp: dapp, wallet: wallet, webViewController: self))
+//            js.loadPlugin(key: "functionx", plugin: DappJSFunctionX(dapp: dapp, wallet: wallet, webViewController: self))
+//        }
+//
+//        if let wallet = self.wallet {
+//            wallet.dappManager.addOrUpdate(dapp)
+//        }
 
         self.webView.startHttp(project: "dapp", url: url, jsCore: js)
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-//        self.navigationController?.interactivePopGestureRecognizer?.isEnabled = false
-    }
-    
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-//        self.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
-    }
-    
     //MARK: WebViewDelegate
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        titleView.set(title: webView.title ?? dapp.name)
-        navigationBar.action(.title, view: titleView)
-    }
+//    override func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+//        titleView.set(title: webView.title ?? dapp.name)
+//        navigationBar.action(.title, view: titleView)
+//        super.webView(webView, didFinish: navigation)
+//    }
     
     func webView(_ webView: WKWebView, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
         if challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
@@ -107,29 +96,11 @@ class DappWebViewController: FxWebViewController {
             completionHandler(.useCredential, URLCredential(trust: serverTrust))
         }
     }
-    
-    override func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo,
-                 completionHandler: @escaping () -> Void) {
-        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.5) {
-            self.hud?.text(m: message)
-        }
-        completionHandler()
-    }
-
-    override func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo,
-                 completionHandler: @escaping (Bool) -> Void) {
-        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.5) {
-            self.hud?.text(m: message)
-        }
-        completionHandler(true)
-    }
-    
-    override func heroAnimator(from: String, to: String) -> WKHeroAnimator? {
-        self.setNeedsStatusBarAppearanceUpdate()
-        return nil
-    }
 }
 
+ 
+
+ 
 //MARK: JSCore
 class DappJSCore: WKJSCore {
     
@@ -138,8 +109,8 @@ class DappJSCore: WKJSCore {
         if let debug = object["debug"] as? Bool {
             XWVScriptObject.dappDebug = debug
         }
-        let nodeInfoJS = String(format: "pundixCommonJs.nodeInfo = %@", NodeManager.shared.currentJsonString)
-        callback.evaluateExpression(nodeInfoJS) { (_, _) in }
+//        let nodeInfoJS = String(format: "pundixCommonJs.nodeInfo = %@", NodeManager.shared.currentJsonString)
+//        callback.evaluateExpression(nodeInfoJS) { (_, _) in }
         
         callback.success(data: ["version": "1.0.0"])
     }

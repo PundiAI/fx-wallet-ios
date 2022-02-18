@@ -1,11 +1,3 @@
-//
-//
-//  XWallet
-//
-//  Created by May on 2020/12/14.
-//  Copyright © 2020 May All rights reserved.
-//
-
 import WKKit
 
 extension MessageSetViewController {

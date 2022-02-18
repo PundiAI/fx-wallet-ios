@@ -34,7 +34,7 @@ public class DappJSDelegate: TransactionDappJSAction {
         send(tx: .withdrawDelegatorReward, params, callback)
     }
     
-    private func send(tx txType: MessageType, _ params: [String: Any], _ callback: XWVScriptObject) {
+    private func send(tx txType: FxTransaction.TxType, _ params: [String: Any], _ callback: XWVScriptObject) {
         guard let account = dappManager.account(for: dapp) else {
             callback.error(code: .internalError)
             showSelectAddressAlert(.hub)

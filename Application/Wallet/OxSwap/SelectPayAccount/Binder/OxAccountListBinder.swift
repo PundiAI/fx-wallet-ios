@@ -53,8 +53,7 @@ extension SelectPayAccountViewController {
             view.dataSource = self
             
 //            [weak self] (offset) in
-            view.rx.didScroll.subscribe(onNext: { [weak self] (offset) in
-                print("\(offset)")
+            view.rx.didScroll.subscribe(onNext: { [weak self] (offset) in 
                 self?.view.superview?.endEditing(true)
             
             }).disposed(by: defaultBag)

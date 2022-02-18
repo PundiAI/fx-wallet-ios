@@ -23,8 +23,7 @@ extension SelectReceiveCoinViewController {
             view.tokenLabel.text = coin.symbol
             view.contractLabel.text = coin.name
             view.tokenIV.setImage(urlString: coin.icon,
-                                  placeHolderImage: coin.imgPlaceholder)
-//            view.tokenIV.bind(coin)
+                                  placeHolderImage: coin.imgPlaceholder) 
         }
         
         override class func height(model: Any?) -> CGFloat { (80 + 16).auto() }

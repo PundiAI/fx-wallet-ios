@@ -60,7 +60,7 @@ extension SelectReceiveCoinViewController {
                     let text = (v ?? "").lowercased()
                     
                     if text.length == 42 {
-                        guard let _ = EthereumAddress(hexString: text) else {
+                        guard let _ = EthereumAddress(hex: text) else {
                             return .just([])
                         }
                         this.isloading.accept(1)

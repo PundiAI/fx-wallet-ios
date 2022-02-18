@@ -1,10 +1,4 @@
-//
-//  Python3
-//  MakeSwiftFiles
-//
-//  Created by HeiHuaBaiHua 
-//  Copyright © 2017年 HeiHuaBaiHua. All rights reserved.
-//
+
 
 import WKKit
 
@@ -78,6 +72,7 @@ extension CryptoBankMyDepositsViewController {
             v.setAttributedTitle(NSAttributedString(string: text, attributes: [.font: XWallet.Font(ofSize: 16, weight: .medium), .foregroundColor: UIColor.white]), for: .normal)
             v.titleColor = .white
             v.backgroundColor = COLOR.title
+            v.titleLabel?.adjustsFontSizeToFitWidth = true
             v.autoCornerRadius = 18
             return v
         }()

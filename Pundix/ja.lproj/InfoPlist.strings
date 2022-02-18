@@ -1,0 +1,13 @@
+/* 
+  InfoPlist.strings
+  Pundix
+
+  Created by Andy.Chan on 2020/3/25.
+  Copyright © 2020 Andy.Chan 6K. All rights reserved.
+*/
+
+CFBundleDisplayName = "f(x)Wallet";
+NSCameraUsageDescription = "Allows f(x)Wallet to use the camera to take photos and scan QR codes.";
+NSPhotoLibraryUsageDescription = "Gives permission to f(x)Wallet to save QR code image in your gallery.";
+NSPhotoLibraryAddUsageDescription = "Gives permission to f(x)Wallet to save QR code image in your gallery.";
+NSLocationWhenInUseUsageDescription = "f(x)Wallet will gain access to your current location and will be able to help you to enter your current address, and search for nearby stores.";

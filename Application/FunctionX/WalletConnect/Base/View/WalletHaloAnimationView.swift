@@ -55,14 +55,7 @@ class WalletHaloAnimationView: UIView {
         animation.repeatCount = 10000
         animation.path = path
         layer.removeAnimation(forKey: "tag")
-        layer.add(animation, forKey: "tag")
-        
-//        let track = CAShapeLayer()
-//        track.path = path
-//        track.fillColor = UIColor.clear.cgColor
-//        track.strokeColor = UIColor.red.cgColor
-//        track.lineWidth = 1
-//        self.layer.addSublayer(track)
+        layer.add(animation, forKey: "tag") 
     }
     
     //MARK: Utils
@@ -138,29 +131,7 @@ class WalletLaunchHaloAnimationView: WalletHaloAnimationView {
         startScaleAnimation(circleLayer1)
         startScaleAnimation(circleLayer2)
         startScaleAnimation(circleLayer3)
-        startScaleAnimation(circleLayer4)
-        
-        //法1
-//        let circle = CAGradientLayer()
-//        circle.type = .radial
-//        circle.colors = [HDA(0xA3FF54).withAlphaComponent(0.7).cgColor, HDA(0xA3FF54).withAlphaComponent(0).cgColor]
-//        circle.bounds = ///
-//        circle.position = ///
-//        circle.startPoint = CGPoint(x: 0.5, y: 0.5)
-//        circle.endPoint = CGPoint(x: 1, y: 1)
-        
-        //法2
-//        let inputImage =  CIImage(image: originalImage)
-//        //使用高斯模糊滤镜
-//        let filter = CIFilter(name: "CIGaussianBlur")!
-//        filter.setValue(inputImage, forKey:kCIInputImageKey)
-//        //设置模糊半径值（越大越模糊）
-//        filter.setValue(slider.value, forKey: kCIInputRadiusKey)
-//        let outputCIImage = filter.outputImage!
-//        let rect = CGRect(origin: CGPoint.zero, size: originalImage.size)
-//        let cgImage = context.createCGImage(outputCIImage, from: rect)
-//        //显示生成的模糊图片
-//        imageView.image = UIImage(cgImage: cgImage!)
+        startScaleAnimation(circleLayer4) 
         
     }
     

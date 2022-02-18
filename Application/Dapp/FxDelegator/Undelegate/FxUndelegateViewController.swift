@@ -47,7 +47,6 @@ class FxUndelegateViewController: WKViewController {
     let validator: Validator
         
     lazy var listBinder = WKStaticTableViewBinder(view: wk.view.listView)
-    private var validatorCell = FxValidatorTitleCell()
     private var inputCell = FxDelegateTxInputCell()
     private var confirmCell = FxDelegateConfirmTxCell()
     
@@ -81,41 +80,39 @@ class FxUndelegateViewController: WKViewController {
     private func bindListView() {
         
         inputCell.type = .undelegate
-        listBinder.push(WKSpacingCell.self, vm: WKSpacing(height: 8.auto()))
-        listBinder.push(validatorCell)
-        listBinder.push(WKSpacingCell.self, vm: WKSpacing(height: 24.auto()))
         listBinder.push(inputCell, vm: inputCell)
         listBinder.push(WKSpacingCell.self, vm: WKSpacing(height: 32.auto()))
         listBinder.push(confirmCell)
         
-        validatorCell.validatorIV.setImage(urlString: validator.imageURL, placeHolderImage: IMG("Dapp.Placeholder"))
-        validatorCell.validatorNameLabel.text = validator.validatorName
-        validatorCell.validatorAddressLabel.text = validator.validatorAddress
+        inputCell.statusButton.isActive = validator.isActive
+        inputCell.validatorIV.setImage(urlString: validator.imageURL, placeHolderImage: IMG("Dapp.Placeholder"))
+        inputCell.validatorNameLabel.text = validator.validatorName
+        inputCell.validatorAddressLabel.text = validator.validatorAddress
     }
     
     private func bindInput() {
         
         weak var welf = self
-        inputCell.addressLabel.text = account.address
         inputCell.inputTokenLabel.text = coin.token
-        inputCell.tokenIV.setImage(urlString: coin.imgUrl, placeHolderImage: coin.imgPlaceholder)
         inputCell.inputVIew.decimalLimit = coin.decimal
         inputCell.percentButtons.forEach{ $0.bind(welf, action: #selector(onClick), forControlEvents: .touchUpInside) }
         
         self.decimalBalance = validator.delegateAmount.div10(coin.decimal)
-        inputCell.balanceLabel.text = validator.delegateAmount.div10(coin.decimal).thousandth() + " \(coin.token)"
+        inputCell.maximumLabel.text = validator.delegateAmount.div10(coin.decimal).thousandth() + " \(coin.token)"
         inputCell.percentEnable(validator.delegateAmount.isGreaterThan(decimal: "0"))
         
         inputCell.inputTF.rx.text
             .distinctUntilChanged()
             .subscribe(onNext: { v in
                 guard let this = welf else { return }
+                welf?.inputCell.percentButtons.forEach{ $0.isSelected = false }
             
                 let text = this.inputCell.inputVIew.decimalText
                 if text.isGreaterThan(decimal: this.decimalBalance) {
-                    welf?.inputCell.inputTF.text = this.decimalBalance
+                    DispatchQueue.main.async {
+                        welf?.onClick(this.inputCell.maxButton)
+                    }
                 }
-                welf?.inputCell.percentButtons.forEach{ $0.isSelected = false }
                 welf?.confirmCell.enable(text.f > 0)
         }).disposed(by: defaultBag)
     }
@@ -138,9 +135,13 @@ class FxUndelegateViewController: WKViewController {
         
         weak var welf = self
         confirmCell.checkBox.action { welf?.confirmCell.checkBox.isSelected = !(welf?.confirmCell.checkBox.isSelected ?? true) }
-        confirmCell.tipButton.isEnabled = false
+ 
+        let checkBox = confirmCell.checkBox
         confirmCell.tipButton.action {
-            Router.showWebViewController(url: ThisAPP.WebURL.termServiceURL)
+            Router.showAgreementAlert(doneHandler: { ( state ) in
+                checkBox.isSelected = state
+                return true
+            }, state: checkBox.isSelected)
         }
         confirmCell.submitButton.bind(self, action: #selector(doConfirm), forControlEvents: .touchUpInside)
     }
@@ -161,7 +162,7 @@ class FxUndelegateViewController: WKViewController {
             guard let this = welf else { return }
             
             if !tx.balance.isGreaterThan(decimal: tx.fee) {
-                welf?.hud?.text(m: "no enough \(this.coin.token) to pay fee")
+                welf?.hud?.text(m: TR("Alert.Tip$", this.coin.token))
                 return
             }
             
@@ -192,15 +193,18 @@ class FxUndelegateViewController: WKViewController {
         tx.txType = .undelegate
         tx.coin = coin
         
-        let hub = FxHubNode(endpoints: FxNode.Endpoints(rpc: coin.node.url), wallet: nil)
-        let txMsg = TransactionMessage.undelegateTx(delegator: tx.delegator, validator: tx.validator, amount: amount, fee: "0", denom: coin.symbol, gas: 90000)
-        return hub.estimatedFee(ofTx: txMsg).map { [weak self](gas: UInt64, gasPrice: String, fee: String) -> FxTransaction in
-            guard let this = self else { return tx }
+        let wallet = FxWallet(privateKey: account.privateKey)
+        let hub = FxHubNode(endpoints: FxNode.Endpoints(rpc: coin.node.url), wallet: wallet)
+        return hub.buildUndelegateTx(fromValidator: tx.validator, amount: amount.sub("10"), fee: "1", denom: coin.symbol, gas: 0).flatMap{ txMsg in
             
-            tx.gasLimit = String(gas)
-            tx.gasPrice = gasPrice
-            tx.set(fee: fee, denom: this.coin.symbol)
-            return tx
+            return hub.estimatedFee(ofTx: txMsg).map { [weak self](gas: UInt64, gasPrice: String, fee: String) -> FxTransaction in
+                guard let this = self else { return tx }
+
+                tx.gasLimit = String(gas)
+                tx.gasPrice = gasPrice
+                tx.set(fee: fee, denom: this.coin.symbol)
+                return tx
+            }
         }
     }
     

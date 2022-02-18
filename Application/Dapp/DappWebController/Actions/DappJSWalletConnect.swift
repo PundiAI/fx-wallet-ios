@@ -24,8 +24,8 @@ public class DappJSWalletConnect: DappJSAction {
         
         DispatchQueue.main.async {
             
-            let currentNavigator = Router.currentNavigator
-            let viewControllers = self.webViewController != nil ? [ self.webViewController! ] : []
+            _ = Router.currentNavigator
+            _ = self.webViewController != nil ? [ self.webViewController! ] : []
             Router.showFxWalletConnect(url: url, wallet: XWallet.currentWallet!.wk, completion: { _ in  })
         }
     }

@@ -13,13 +13,6 @@ import RxSwift
 import RxCocoa
 import PluggableApplicationDelegate
 
-fileprivate let kIdentifier:String = {
-    if AppInfo.bundleIdentifier == "com.pundi.fx.connect" { 
-        return  "TVXUZ59U4P"
-    }
-    return "C6MW44CL2W"
-}()
-
 class XSecurityAppDelegate: XApplicationService {
     var snapshotView:UIView?
     weak var lastFirstResponder:UIResponder?
@@ -117,6 +110,7 @@ class XSecurityAppDelegate: XApplicationService {
         let wallet = XWallet.sharedKeyStore.currentWallet?.wk
         wallet?.verificationInBackgroundTime = nil
         
+        WKServer.addServer(aClass: FxNotificatioinAlertServer.self) 
         XEvent.App.ApplicationDidEnterBackground.on { (_) in
             let _wallet = XWallet.sharedKeyStore.currentWallet?.wk
             if _wallet?.verificationIsRequired ?? false {
@@ -146,7 +140,6 @@ class XSecurityAppDelegate: XApplicationService {
 
 
 extension XSecurityAppDelegate {
-    //用户开启5分钟内免授权功能  true 不需要密码 / false 需要认证
     private func checkIsInlimitTime(_ wallet: WKWallet) ->Bool {
         let limitTime:Int = 5 * 60
         if let bDate = wallet.verificationInBackgroundTime {
@@ -160,7 +153,22 @@ extension XSecurityAppDelegate {
         return false
     }
     
+    private func checkBiometrics() {
+        guard XWallet.currentWallet != nil else { return }
+        
+        let authInfoChanged = LocalAuthManager.shared.checkAuthInfo()
+        if authInfoChanged {
+            
+            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.5) {
+                let authId = TR(LocalAuthManager.shared.isAuthFace ? "FaceId" : "TouchId")
+                WKRouter.window?.rootViewController?.hud?.error(m: TR("Settings.$BiometricsChanged", authId), d: 2)
+            }
+        }
+    }
+    
     private func checkSecurityVerification() {
+        checkBiometrics()
+        
         guard let wallet = XWallet.currentWallet?.wk else { return }
         guard wallet.hasSecurity, wallet.verificationIsRequired else { return }
          
@@ -208,58 +216,4 @@ extension XSecurityAppDelegate {
     }
 }
 
-
-extension XSecurityAppDelegate {
-    /// 是否是 testflight包
-    public static var isTestFlight: Bool {
-        return isAppStoreReceiptSandbox && !hasEmbeddedMobileProvision
-     }
-    
-    /// 是否是 Appstore 包
-     public static var isAppStore: Bool {
-         if isAppStoreReceiptSandbox || hasEmbeddedMobileProvision {
-          return false
-         }
-         return true
-     }
-    
-     fileprivate static var isAppStoreReceiptSandbox: Bool {
-        let b = Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt"
-        WKLog.Info("isAppStoreReceiptSandbox: \(b)")
-        return b
-     }
-    
-     fileprivate static var hasEmbeddedMobileProvision: Bool {
-        let b = Bundle.main.path(forResource: "embedded", ofType: "mobileprovision") != nil
-        WKLog.Info("hasEmbeddedMobileProvision: \(b)")
-        return b
-     }
-    
-    
-    ///防止APP重新签名
-    ///10010 证书不匹配
-    ///10011 调试模式
-    ///10100  证书不匹配 + 调试模式
-    fileprivate func appSecurityCheck() {
-        #if !DEBUG 
-        let codeSign = XSecurityAppDelegate.isAppStore == false ? true : AppSecurityCheckCodesign(kIdentifier)
-        let debugger = AppSecurityCheckDebugger()
-        if codeSign == false || debugger {
-            var code:Int = (codeSign == false) ? 10010 : (debugger ? 10011 : 0)
-            code = ((codeSign == false) && debugger) ? 10100 : code 
-            let alertController = UIAlertController(title: TR("-"),
-                                                    message: TR("-", code),
-                                                    preferredStyle: .alert)
-            let okAction = UIAlertAction(title: TR("-"), style: .default, handler: { action in
-                AppSecurityExit()
-            })
-            alertController.addAction(okAction)
-            if let rootViewController = Router.window?.rootViewController {
-                rootViewController.present(alertController, animated: true, completion: nil)
-            }else {
-                AppSecurityExit()
-            }
-        }
-        #endif
-    }
-}
+ 

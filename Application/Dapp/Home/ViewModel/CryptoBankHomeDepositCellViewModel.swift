@@ -22,6 +22,7 @@ extension CryptoBankViewController {
         lazy var items: [CryptoBankAssetCellViewModel] = []
         
         func reloadIfNeed() -> Bool {
+            guard AAve.current.tokens.count >= 3 else { return false }
             
             let needReload = items.isEmpty || items.first?.coin.isETH == false
             if needReload {
@@ -39,14 +40,15 @@ extension CryptoBankViewController {
             items.forEach{ $0.reserveData.refreshIfNeed() }
         }
         
-        var height: CGFloat {
+        lazy var height: CGFloat = {
            
+            let itemCount = 3//items.count
             let descHeight = TR("CryptoBank.DepositDesc").height(ofWidth: ScreenWidth - 24.auto() * 4, attributes: [.font: XWallet.Font(ofSize: 14)])
             let titleHeight = 64.auto() + descHeight
-            let listHeight = 58.auto() + CGFloat(items.count * 80.auto())
+            let listHeight = 58.auto() + CGFloat(itemCount * 80.auto())
             let actionHeight: CGFloat = 68.auto()
             return 24.auto() + titleHeight + listHeight + actionHeight
-        }
+        }()
     }
     
 }

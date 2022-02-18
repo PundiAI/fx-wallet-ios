@@ -42,6 +42,7 @@ extension BackUpNoticeViewController {
             v.numberOfLines = 2
             v.autoFont = true
             v.backgroundColor = .clear
+            v.textAlignment = .center
             return v
         }()
         
@@ -62,7 +63,8 @@ extension BackUpNoticeViewController {
             startButton.autoCornerRadius = 28
             
             TR("BackUpNotice.Warnning").lineSpacingLabel(titleLabel)
-            titleLabel.autoFont = true 
+            titleLabel.autoFont = true
+            titleLabel.textAlignment = .center
         }
         
         private func layoutUI() {
@@ -85,7 +87,6 @@ extension BackUpNoticeViewController {
             
             
             let offset = 16.auto().ifull(-8.auto())
-            
             titleLabel.snp.makeConstraints { (make) in
                 make.left.right.equalToSuperview().inset(24.auto())
                 make.bottom.equalTo(self.safeAreaLayout.bottom).offset(-offset)

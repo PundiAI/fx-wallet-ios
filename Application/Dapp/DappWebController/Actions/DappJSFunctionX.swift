@@ -28,10 +28,8 @@ public class DappJSFunctionX: TransactionDappJSAction {
         }
         
         var coin: Coin?
-        if address.hasPrefix(FxChain.hub.hrp.string) {
+        if address.hasPrefix(FxChain.core.hrp) {
             coin = .hub
-        } else if address.hasPrefix(FxChain.order.hrp.string) {
-            coin = .order
         } else {
             for c in wallet.coins {
                 guard c.isCloud, c.hrp.isNotEmpty else { continue }

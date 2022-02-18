@@ -46,8 +46,7 @@ extension SelectPayAccountViewController {
                 
                 let item = AccountSectionViewModel(wallet: wallet, coin: coin, current: current, filter: filter)
                 
-                let bool = filter?(coin, nil) ?? true
-                print("\(bool)", coin.symbol)
+                let bool = filter?(coin, nil) ?? true  
                 if item.isEnabled && bool {
                     if item.coin.isETH || item.coin.isERC20 {
                         items.append(item)

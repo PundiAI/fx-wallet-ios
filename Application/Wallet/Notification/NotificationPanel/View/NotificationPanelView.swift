@@ -1,10 +1,4 @@
-//
-//  Python3
-//  MakeSwiftFiles
-//
-//  Created by HeiHuaBaiHua 
-//  Copyright © 2017年 HeiHuaBaiHua. All rights reserved.
-//
+
 
 import WKKit
 import pop
@@ -15,6 +9,59 @@ import RxCocoa
 
 
 extension NotificationPanelViewController {
+    class FxTimer {
+        var timer: Observable<Int>!
+        let begin:TimeInterval
+        
+        init(begin:TimeInterval) {
+            self.begin = begin
+            timer = Observable<Int>.interval(.milliseconds(100), scheduler: MainScheduler.instance)
+        }
+        
+        func start() ->Observable<String> {
+            return timer.map {[weak self] (input) -> Int in
+                guard let this = self else { return 0}
+                let now =  NSDate().timeIntervalSince1970
+                var tagIndx = Int(now - this.begin)
+                if tagIndx <= 0 { tagIndx = 0 }
+                return tagIndx
+            }.map(self.stringFromTimeInterval).share(replay: 1, scope: .forever)
+        }
+ 
+        func stringFromTimeInterval(ms: NSInteger) -> String {
+            let h = ms / 3600
+            let m = (ms % 3600) / 60
+            let s = (ms % 3600) % 60
+            return h > 0 ? String(format: "%02d:%02d:%02d", h, m, s) : String(format: "%02d:%02d", m, s)
+        }
+    }
+    
+    class TimerLabel: UILabel {
+        override init(frame: CGRect) {
+            super.init(frame: frame)
+            self.font = XWallet.Font(ofSize: 14)
+            self.textColor = COLOR.title
+            self.text = text
+        }
+        var time: TimeInterval = 0
+        var timer:FxTimer?
+        var bag = DisposeBag()
+        
+        deinit {
+            bag = DisposeBag()
+        }
+        
+        func bind(time: TimeInterval, content: String) {
+            bag = DisposeBag()
+            timer = FxTimer(begin: time)
+            timer?.start().map { content + " ... " + $0 }.bind(to: rx.text).disposed(by: bag)
+        }
+ 
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+    }
+     
     class View: UIView {
         var rootView:TokenRootViewController.View? {
             return self.superview as? TokenRootViewController.View
@@ -39,6 +86,7 @@ extension NotificationPanelViewController {
             v.alwaysBounceVertical = true
             v.showsVerticalScrollIndicator = false
             v.showsHorizontalScrollIndicator = false
+        
             return v
         }()
         
@@ -60,7 +108,7 @@ extension NotificationPanelViewController {
         private func configuration() {
             backgroundColor = .clear
             blurView.alpha = 0 
-            blurView.layer.masksToBounds = false
+            blurView.layer.masksToBounds = false 
         }
         
         private func layoutUI() {
@@ -75,12 +123,13 @@ extension NotificationPanelViewController {
             listView.snp.makeConstraints { (make) in
                 make.edges.equalToSuperview()
             } 
-            
-            listView.insertSubview(headerView, at: 0)
-            
-            headerView.frame = CGRect(x: 0, y: -1 * headHeight,
-                                  width:bounds.width, height: headHeight)
-            headerView.headerBlurView.isHidden = true
+             
+            addSubview(headerView)
+            headerView.snp.makeConstraints { (make) in
+                make.left.right.equalToSuperview()
+                make.top.equalToSuperview().offset(0)
+                make.height.equalTo(headHeight)
+            }
             headerView.fold(animated: false)
         
             addSubview(expandButton)
@@ -88,7 +137,7 @@ extension NotificationPanelViewController {
                 make.edges.equalToSuperview()
             }
             
-        }
+        } 
     }
 }
 
@@ -101,20 +150,21 @@ extension NotificationPanelViewController.View {
         }
     }
     
-    func expand(animated:Bool = true) ->Observable<Void> {
+    func expand(animated:Bool = true, duration:TimeInterval = 0.25, curve: UIView.AnimationCurve = .easeIn) ->Observable<Void> {
         let _headHeight = headHeight
         let headerView = self.headerView
         let listView = self.listView
         let expandButton = self.expandButton
-         
+        let blurView = self.blurView
+        
         isAnimating = true
         return Observable.create { [weak self] (observer) -> Disposable in
             guard let this = self else { return Disposables.create() }
-            
             expandButton.isEnabled = false
             expandButton.isHidden = false
             headerView.headerBlurView.isHidden = true
-            this.blurView.snp.updateConstraints({ (make) in
+            
+            blurView.snp.updateConstraints({ (make) in
                 make.top.equalToSuperview()
             })
             this.snp.remakeConstraints({ (make) in
@@ -122,13 +172,10 @@ extension NotificationPanelViewController.View {
             })
             this.layoutIfNeeded()
             this.setNeedsLayout()
-            headerView.fold(animated: false)
             listView.collectionViewLayout.invalidateLayout()
-            
-            
+             
             let completion:(Bool)->Void = { (_) in
                 listView.sendSubviewToBack(headerView)
-                headerView.expand()
                 listView.contentInset = UIEdgeInsets(top: _headHeight, left: 0, bottom: 0, right: 0)
                 this.isAnimating = false
                 observer.onNext(())
@@ -138,16 +185,39 @@ extension NotificationPanelViewController.View {
             
             let layout = this.expandLayout
             let aBlock:()->Void = {
-                this.showBlurView(show: true)
                 listView.contentInset = UIEdgeInsets(top: _headHeight, left: 0, bottom: 0, right: 0)
                 listView.setCollectionViewLayout(layout, animated: true)
-                listView.layoutIfNeeded() 
+                listView.layoutIfNeeded()
                 listView.setContentOffset(CGPoint(x: 0, y: _headHeight * -1), animated: true)
-                (Router.tabBarController as? FxTabBarController)?.tabBar.alpha = 0
             }
+            
             if animated {
-                UIView.animate(withDuration: 0.25, delay: 0, options: UIView.AnimationOptions.curveEaseOut,
-                               animations: aBlock, completion: completion )
+                var runningAnimators:[UIViewPropertyAnimator] = []
+                let basicAnimator = UIViewPropertyAnimator(duration: duration, curve: curve, animations: nil)
+                basicAnimator.addAnimations {
+                     aBlock()
+                }
+                
+                let headAnimator = UIViewPropertyAnimator(duration: duration, curve: curve) {
+                    headerView.contentView.transform = CGAffineTransform.identity
+                    headerView.contentView.alpha = 1
+                }
+                
+                let blurAnimator = UIViewPropertyAnimator(duration: duration, controlPoint1: CGPoint(x: 0.8, y: 0.2),
+                                                          controlPoint2: CGPoint(x: 0.8, y: 0.2)) {
+                    blurView.alpha = 1
+                    headerView.headerBlurView.alpha = 1
+                    Router.fxTabBarController?.setAlpha(alpha: 0)
+                }
+                
+                basicAnimator.addCompletion { position in
+                    completion(true)
+                }
+                
+                runningAnimators.append(headAnimator)
+                runningAnimators.append(basicAnimator)
+                runningAnimators.append(blurAnimator)
+                runningAnimators.forEach { $0.startAnimation() }
             }else {
                 aBlock()
                 completion(true)
@@ -155,7 +225,7 @@ extension NotificationPanelViewController.View {
             expandButton.isHidden = true
             expandButton.isEnabled = true
             return Disposables.create { }
-        }
+        }.subscribeOn(MainScheduler.instance)
     }
     
     @discardableResult
@@ -164,13 +234,11 @@ extension NotificationPanelViewController.View {
         let headerView = self.headerView
         let listView = self.listView
         let expandButton = self.expandButton
-        
-        listView.sendSubviewToBack(headerView)
         isAnimating = true
         
         return Observable.create { [weak self] (observer) -> Disposable in
             guard let this = self else { return Disposables.create() }
-             
+            listView.sendSubviewToBack(headerView)
             expandButton.isEnabled = false
             expandButton.isHidden = false
             headerView.fold(animated: animated)
@@ -199,7 +267,7 @@ extension NotificationPanelViewController.View {
                 listView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
                 listView.setCollectionViewLayout(layout, animated: animated, completion: completion)
                 listView.setContentOffset(CGPoint.zero, animated: true)
-                (Router.tabBarController as? FxTabBarController)?.tabBar.alpha = 1
+                Router.fxTabBarController?.setAlpha(alpha: 1)
                 listView.sendSubviewToBack(headerView)
             }
             if animated {
@@ -210,24 +278,23 @@ extension NotificationPanelViewController.View {
                 completion(true)
             }
             return Disposables.create { }
-        }
+        }.subscribeOn(MainScheduler.instance)
     }
     
     @discardableResult
-    func hide(animated:Bool = true) ->Observable<Void> {
+    func hide(animated:Bool = true, duration:TimeInterval = 0.25, curve: UIView.AnimationCurve = .easeIn) ->Observable<Void> {
         let headerView = self.headerView
         let listView = self.listView
         let expandButton = self.expandButton
+        let blurView = self.blurView
         
-        listView.sendSubviewToBack(headerView)
         isAnimating = true
-        
         return Observable.create { [weak self] (observer) -> Disposable in
             guard let this = self else { return Disposables.create() }
+            listView.bringSubviewToFront(headerView)
             expandButton.isEnabled = false
             expandButton.isHidden = false
-            headerView.fold(animated: true)
-            this.blurView.snp.updateConstraints({ (make) in
+            blurView.snp.updateConstraints({ (make) in
                 make.top.equalToSuperview()
             })
             this.snp.remakeConstraints({ (make) in
@@ -236,7 +303,6 @@ extension NotificationPanelViewController.View {
             })
             headerView.top = -1 * this.headHeight
             headerView.headerBlurView.isHidden = true
-            this.showBlurView(show: false)
             
             let completion:(Bool)->Void = { (_) in
                 this.layoutIfNeeded()
@@ -252,18 +318,42 @@ extension NotificationPanelViewController.View {
                 listView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
                 listView.setCollectionViewLayout(layout, animated: true, completion: completion)
                 listView.setContentOffset(CGPoint.zero, animated: true)
-                (Router.tabBarController as? FxTabBarController)?.tabBar.alpha = 1
-                listView.sendSubviewToBack(headerView)
+                listView.bringSubviewToFront(headerView)
             }
             if animated {
-                UIView.animate(withDuration: 0.25, delay: 0, options: UIView.AnimationOptions.curveEaseOut,
-                               animations: aBlock, completion: completion )
+                var runningAnimators:[UIViewPropertyAnimator] = []
+                let basicAnimator = UIViewPropertyAnimator(duration: duration, curve: curve, animations: nil)
+                basicAnimator.addAnimations {
+                     aBlock()
+                }
+                
+                let headAnimator = UIViewPropertyAnimator(duration: duration, curve: .linear) {
+                    headerView.contentView.transform = CGAffineTransform.identity.translatedBy(x: 0, y: -100.auto())
+                    headerView.contentView.alpha = 0
+                }
+                
+                let blurAnimator = UIViewPropertyAnimator(duration: duration, controlPoint1: CGPoint(x: 0.8, y: 0.2),
+                                                          controlPoint2: CGPoint(x: 0.8, y: 0.2)) {
+                    blurView.alpha = 0
+                    headerView.headerBlurView.alpha = 0
+                    Router.fxTabBarController?.setAlpha(alpha: 1)
+                }
+                
+                basicAnimator.addCompletion { position in
+                    completion(true)
+                }
+                
+                runningAnimators.append(headAnimator)
+                runningAnimators.append(basicAnimator)
+                runningAnimators.append(blurAnimator)
+                runningAnimators.forEach { $0.startAnimation() }
             }else {
                 aBlock()
                 completion(true)
             }
+            
             return Disposables.create { }
-        }
+        }.subscribeOn(MainScheduler.instance)
          
     }
 }

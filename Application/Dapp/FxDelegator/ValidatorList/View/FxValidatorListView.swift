@@ -180,39 +180,9 @@ extension FxValidatorListViewController {
             leftListView.frame = CGRect(x: 24.auto(), y: 0, width: ScreenWidth - 24.auto() * 2, height: ScreenHeight)
             leftListView.tableHeaderView = UIView(frame: CGRect(x: 0, y: 0, width: ScreenWidth, height: normalHeaderHeight), .clear)
             
-            leftListView.addCorner()
-            
-//            rightListTitleView.frame = CGRect(x: ScreenWidth + 24.auto(), y: reducedHeaderHeight, width: ScreenWidth - 24 * 2.auto(), height: 40.auto())
-//            rightListTitleLabel.snp.makeConstraints { (make) in
-//                make.left.equalTo(rightListTitleView).offset(16.auto())
-//                make.centerY.equalTo(rightListTitleView)
-//            }
-            
-//            leftListView.addSubviews([rightListTitleView, rightListTitleLabel])
-//            rightListTitleView.frame = CGRect(x: 24.auto(), y: 0, width: ScreenWidth - 24 * 2.auto(), height: 40.auto())
-            
-//            leftListView.addSubviews([rightListTitleLabel, rightListView])
-            
-            
-//            rightListTitleView.snp.makeConstraints { (make) in
-//                make.left.right.equalToSuperview().inset(24.auto())
-//                make.top.equalToSuperview()
-//                make.height.equalTo(40.auto())
-//            }
-//
-//            rightListTitleLabel.snp.makeConstraints { (make) in
-//                make.left.equalTo(rightListTitleView).offset(16.auto())
-//                make.centerY.equalTo(rightListTitleView)
-//            }
-            
-//            leftListView.setContentOffset(CGPoint(x: 0, y: 40.auto() + normalHeaderHeight ), animated: false)
-            
-            
-            
             rightListView.frame = CGRect(x: ScreenWidth + 24.auto(), y: 0, width: ScreenWidth - 24.auto() * 2, height: ScreenHeight)
             rightListView.tableHeaderView = UIView(frame: CGRect(x: 0, y: 0, width: ScreenWidth, height: normalHeaderHeight), .clear)
             rightListView.tableFooterView = UIView(frame: CGRect(x: 0, y: 0, width: ScreenWidth, height: 20), .clear)
-            rightListView.addCorner()
             //contentView...e
         }
     
@@ -247,7 +217,7 @@ extension FxValidatorListViewController {
             v.font = XWallet.Font(ofSize:16, weight: .medium)
             v.textColor = HDA(0x080A32)
             v.tintColor = HDA(0x0552DC)
-            v.attributedPlaceholder = NSAttributedString(string: TR("SelectOrAddAccount.Placeholder"), attributes: [.font: XWallet.Font(ofSize:16), .foregroundColor: HDA(0x080A32).withAlphaComponent(0.5)])
+            v.attributedPlaceholder = NSAttributedString(string: TR("FXDelegator.SearchValidator"), attributes: [.font: XWallet.Font(ofSize:16), .foregroundColor: HDA(0x080A32).withAlphaComponent(0.5)])
             v.keyboardType = .asciiCapable
             v.backgroundColor = .clear
             return v

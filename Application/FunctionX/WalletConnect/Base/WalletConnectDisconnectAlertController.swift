@@ -40,8 +40,14 @@ class WalletConnectDisconnectAlertController: FxRegularPopViewController {
     override func dismiss(userCanceled: Bool = false, animated: Bool = true, completion: (() -> Void)? = nil) {
         
         let handler = completionHandler
-        Router.dismiss(self, animated: true) {
-            handler?(!userCanceled)
+        if self.navigationController != nil {
+            Router.pop(self, animated: animated) {
+                handler?(!userCanceled)
+            }
+        } else {
+            Router.dismiss(self, animated: animated) {
+                handler?(!userCanceled)
+            }
         }
     }
     

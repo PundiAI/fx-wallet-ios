@@ -55,7 +55,7 @@ class FxWalletConnectSession: WalletConnectSession {
         if viewController == nil {
             Router.showDisconnectWalletConnect()
         } else {
-            Router.pop(viewController) {
+            Router.dismiss(viewController) {
                 Router.showDisconnectWalletConnect()
             }
         }
@@ -68,8 +68,8 @@ class FxWalletConnectSession: WalletConnectSession {
         let icon = (peer.icons.first ?? "").replacingOccurrences(of: "./", with: "")
         let dapp = Dapp(url: peer.url, icon: icon, name: peer.name, detail: "")
         if !peerParam.isFunctionX {
-            
-            Router.showSelectWalletConnectAccount(wallet: wallet, cancelHandler: {
+
+            Router.pushToSelectWalletConnectAccount(wallet: wallet, cancelHandler: {
                 welf?.approveSession(false, id, peerParam)
             }, confirmHandler: { (vc, account) in
                 Router.pushToAuthorizeWalletConnect(dapp: dapp, account: account) { (authVC, allow) in
@@ -79,7 +79,10 @@ class FxWalletConnectSession: WalletConnectSession {
                         welf?.account = account
                     }
                     welf?.approveSession(allow, id, peerParam)
-                    Router.popToRoot(animated: true, completion: nil)
+                    
+                    if allow {
+                        Router.popToRoot(animated: true, completion: nil)
+                    }// approve(false) will dismiss the navigationController
                 }
             })
         } else {
@@ -91,24 +94,21 @@ class FxWalletConnectSession: WalletConnectSession {
                 filter = { (coin, _) in coin.id == peerParam.coin.id }
             }
             
-            Router.showSelectAccount(wallet: wallet, current: nil, filter: filter, cancelHandler: {
+            Router.showSelectAccount(wallet: wallet, current: nil, push: true, filter: filter, cancelHandler: {
                 welf?.approveSession(false, id, peerParam)
             }, confirmHandler: { (vc, coin, account) in
-                Router.dismiss(vc, animated: false) {
+                Router.pushToAuthorizeWalletConnect(dapp: dapp, account: account) { (authVC, allow) in
+                    if allow {
+                        welf?.coin = coin
+                        welf?.dapp = dapp
+                        welf?.account = account
+                    }
+                    welf?.approveSession(allow, id, peerParam)
                     
-                    Router.pushToAuthorizeWalletConnect(dapp: dapp, account: account) { (authVC, allow) in
-                        Router.pop(authVC, animated: false) {
-                            
-                            if allow {
-                                welf?.coin = coin
-                                welf?.dapp = dapp
-                                welf?.account = account
-                            }
-                            welf?.approveSession(allow, id, peerParam)
-                        }
-                   }
-                    
-                }
+                    if allow {
+                        Router.popToRoot(animated: true, completion: nil)
+                    }// approve(false) will dismiss the navigationController
+               }
             })
         }
     }
@@ -168,7 +168,7 @@ class FxWalletConnectSession: WalletConnectSession {
     func signTypedMessage(_ datas: [EthTypedData]) {
         let schemas = datas.map { $0.schemaData }.reduce(Data(), { $0 + $1 }).sha3(.keccak256)
         let values = datas.map { $0.typedData }.reduce(Data(), { $0 + $1 }).sha3(.keccak256)
-        let combined = (schemas + values).sha3(.keccak256)
+        _ = (schemas + values).sha3(.keccak256)
 //        return signHash(combined, for: account)
     }
     
@@ -283,13 +283,8 @@ class FxWalletConnectSession: WalletConnectSession {
         self.authSign(id, txHex, { [weak self] in
           
             if let data = try? ECC.ecdsaCompactsign(data: Data(hex: txHex), privateKey: privateKey.data) {
-                if self?.peerMeta?.isCloud == true || self?.peerMeta?.isFxHub == true {
-                    
-                    let response: JSON = ["sign": data.hexString, "publicKey": privateKey.getPublicKeySecp256k1(compressed: true).data.hexString ?? ""]
-                    self?.interactor?.approveRequest(id: id, result: response.rawString() ?? "").cauterize()
-                } else {
-                    self?.interactor?.approveRequest(id: id, result: data.hexString).cauterize()
-                }
+                let response: JSON = ["sign": data.hexString, "publicKey": privateKey.getPublicKeySecp256k1(compressed: true).data.hexString]
+                self?.interactor?.approveRequest(id: id, result: response.rawString() ?? "").cauterize()
             } else {
                 self?.interactor?.approveRequest(id: id, result: "0x0").cauterize()
             }
@@ -299,7 +294,7 @@ class FxWalletConnectSession: WalletConnectSession {
     private func getFxAccounts(_ request: JSON, parameter: JSON) {
   
         let args = JSON(parseJSON: parameter.arrayValue.last?.stringValue ?? "")
-        guard let address = parameter.arrayValue.first?.stringValue,
+        guard let _ = parameter.arrayValue.first?.stringValue,
               let hrp = args["hrp"].string else {
             interactor?.rejectRequest(id: currentRequestId, message: "miss args \(parameter.rawString() ?? "")").cauterize()
             return
@@ -341,7 +336,6 @@ class FxWalletConnectSession: WalletConnectSession {
         if let chain = parameter["chain"].string?.lowercased() {
             if chain == "ethereum" { c = .ethereum }
             else if chain == "hud" { c = .hub }
-            else if chain == "order" { c = .order }
         }
         
         guard let coin = c else {
@@ -354,7 +348,7 @@ class FxWalletConnectSession: WalletConnectSession {
             Router.dismiss(vc)
             
             var response: JSON = ["address": account.address, "publicKey": account.publicKey().data.hexString]
-            if coin.isHub || coin.isETH { response["privateKey"].string = "391313a35f9a4b54d789c7d9b2dc4d6309e5e0d1986033f4714edf3411642905" }
+            if coin.isFxCore || coin.isETH { response["privateKey"].string = "391313a35f9a4b54d789c7d9b2dc4d6309e5e0d1986033f4714edf3411642905" }
             self?.interactor?.approveRequest(id: id, result: response.rawString() ?? "").cauterize()
         }
     }
@@ -405,10 +399,11 @@ class FxWalletConnectSession: WalletConnectSession {
             
             let data = Data(hex: transaction.data)
             if data.isEmpty {
-                fetchGasLimit = .just(21000)
+                fetchGasLimit = node.estimatedGasOfTx(from: transaction.from, to: transaction.to ?? "", value: transaction.value?.bigInt() ?? 0)
+                    .map{ EthereumQuantity(quantity: $0 < 21000 ? 21000 : $0) }
             } else {
                 fetchGasLimit = node.estimatedGasOfTx(from: transaction.from, to: transaction.to ?? "", value: transaction.value?.bigInt() ?? 0, data: data)
-                    .map{ EthereumQuantity(quantity: $0 < 60000 ? 60000 : $0) }
+                    .map{ EthereumQuantity(quantity: $0) }
             }
         }
         
@@ -470,7 +465,6 @@ class FxWalletConnectSession: WalletConnectSession {
         let chain = chain.lowercased()
         if chain == "ethereum" { return .ethereum }
         if chain == "hud" { return .hub }
-        if chain == "order" { return .order }
         return nil
     }
 }
@@ -483,7 +477,7 @@ extension WCSessionRequestParam {
     var isFunctionX: Bool { isFxDex || isFxHub || isCloud }
     
     var coin: Coin {
-        if isFxDex { return .order }
+        if isFxDex { return .hub /*.order*/ }
         if isFxHub { return .hub }
         return .ethereum
     }

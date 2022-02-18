@@ -36,7 +36,7 @@ class WalletConnectViewController: WKViewController {
     override func bindNavBar() {
         
         navigationBar.action(.title, title: TR("WalletConnect.Title"))
-        navigationBar.action(.back, imageName: "ic_arrow_down_black") {  [weak self] in
+        navigationBar.action(.back, imageName: "ic_back_black") {  [weak self] in
             self?.onClickBack()
         }
         navigationBar.hideLine()
@@ -56,7 +56,7 @@ class WalletConnectViewController: WKViewController {
     
     func onClickDisconnect() {
         
-        Router.showDisconnectWalletConnect() { [weak self] allow in
+        Router.pushToDisconnectWalletConnect() { [weak self] allow in
             if allow {
                 self?.disconnect()
             }

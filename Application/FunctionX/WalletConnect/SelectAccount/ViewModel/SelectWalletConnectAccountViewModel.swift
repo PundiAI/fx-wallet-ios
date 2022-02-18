@@ -13,23 +13,21 @@ extension SelectWalletConnectAccountController {
     
     class ListViewModel {
         
-        init(wallet: WKWallet, filter: (Coin, [String: Any]?) -> Bool) {
+        init(wallet: WKWallet, filter: ((Coin, [String: Any]?) -> Bool)? ) {
             self.wallet = wallet
-            for coin in wallet.coins {
-                guard filter(coin, [:]) else { continue }
-                
-                loadAccounts(coin)
-            }
+            
+            let filter = filter ?? { (_,_) in true }
+            loadAccounts(filter)
         }
         
         let wallet: WKWallet
         var items: [SectionViewModel] = []
         
-        func loadAccounts(_ coin: Coin) {
-            if coin.isETH { loadEthereumAccounts() }
+        func loadAccounts(_ filter: (Coin, [String: Any]?) -> Bool) {
+            loadEthereumAccounts(filter)
         }
         
-        func loadEthereumAccounts() {
+        func loadEthereumAccounts(_ filter: (Coin, [String: Any]?) -> Bool) {
             
             var map: [String: Any] = [:]
             for coin in wallet.coins {
@@ -40,7 +38,7 @@ extension SelectWalletConnectAccountController {
                     if map[account.address] == nil {
                         map[account.address] = 1
                         
-                        items.append(SectionViewModel(wallet: wallet, coin: coin, account: account, num: map.count))
+                        items.append(SectionViewModel(wallet: wallet, coin: CoinService.current.ethereum, account: account, num: map.count, filter: filter))
                     }
                 }
             }
@@ -56,12 +54,12 @@ extension SelectWalletConnectAccountController {
         let footer: FooterViewModel
         var wallet: WKWallet { header.wallet }
         
-        init(wallet: WKWallet, coin: Coin, account: Keypair, num: Int) {
+        init(wallet: WKWallet, coin: Coin, account: Keypair, num: Int, filter: (Coin, [String: Any]?) -> Bool) {
             
             self.header = HeaderViewModel(wallet: wallet, coin: coin, account: account, num: num)
             let address = account.address
             for c in wallet.coins {
-                if c.id == coin.id { continue }
+                if c.id == coin.id || !filter(c, nil) { continue }
                 
                 let addressList = wallet.accounts(forCoin: c)
                 if addressList.account(for: address) != nil {

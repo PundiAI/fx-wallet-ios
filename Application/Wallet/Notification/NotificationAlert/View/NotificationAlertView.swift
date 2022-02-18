@@ -24,15 +24,15 @@ extension NotificationAlertController {
         }()
         
         override class func height(model: Any?) -> CGFloat {
-            
+            let message = model as? String ?? TR("Notif.Alert.Notice")
             let width = ScreenWidth - 24.auto() * 2 * 2
             
             let font:UIFont = UILabel().then {
                 $0.font = XWallet.Font(ofSize: 20, weight: .medium)
-                $0.text = TR("Notif.Alert.Notice")
+                $0.text = message
                 $0.autoFont = true }.font
             
-            let noticeHeight1 = TR("Notif.Alert.Notice").height(ofWidth: width, attributes: [.font:font])
+            let noticeHeight1 = message.height(ofWidth: width, attributes: [.font:font])
             return (32 + 56).auto() + (16.auto() + noticeHeight1)
         }
         
@@ -54,6 +54,11 @@ extension NotificationAlertController {
                 make.top.equalTo(tipBackground.snp.bottom).offset(16.auto())
                 make.left.right.equalToSuperview().inset(24.auto())
             }
+        }
+        
+        override func update(model: Any?) {
+            let message = model as? String ?? TR("Notif.Alert.Notice")
+            noticeLabel.text = message
         }
     }
 }

@@ -16,7 +16,7 @@ import TrustWalletCore
 class CryptoRootViewController: CryptoBankViewController {
     override init(wallet: WKWallet) {
         super.init(wallet: wallet)
-        bindHero()
+//        bindHero()
         self.edgesForExtendedLayout = .bottom
         self.modalPresentationCapturesStatusBarAppearance = true
     }

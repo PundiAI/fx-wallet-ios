@@ -13,21 +13,24 @@ import TrustWalletCore
 
 extension NotificationAlertController {
     class override func instance(with context: [String : Any]) -> UIViewController? {
-        guard let completionHandler = context["handler"] as? ((Bool) -> Void) else {
+        guard let completionHandler = context["handler"] as? ((Bool?) -> Void) else {
             return nil
         }
-        return NotificationAlertController(completionHandler: completionHandler)
+        let toSetting = context["toSetting"] as? Bool ?? false
+        return NotificationAlertController(toSetting: toSetting ,completionHandler: completionHandler)
     }
 }
 
 
 class NotificationAlertController: FxRegularPopViewController {
-    let completionHandler:(Bool) -> Void
+    let completionHandler:(Bool?) -> Void
+    let toSetting:Bool
     override var dismissWhenTouch: Bool { false }
     override var interactivePopIsEnabled: Bool { false }
     
-    init(completionHandler:@escaping (Bool) -> Void) {
+    init(toSetting:Bool, completionHandler:@escaping (Bool?) -> Void) {
         self.completionHandler = completionHandler
+        self.toSetting = toSetting
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -35,8 +38,9 @@ class NotificationAlertController: FxRegularPopViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func bindListView() {
-        listBinder.push(ContentCell.self)
+    override func bindListView() { 
+        let message = toSetting ? TR("Notif.Alert.Notice.Setting") : TR("Notif.Alert.Notice")
+        listBinder.push(ContentCell.self, vm: message)
         listBinder.push(ActionCell.self) { self.bindAction($0) }
     }
     
@@ -49,10 +53,10 @@ class NotificationAlertController: FxRegularPopViewController {
         weak var welf = self
         cell.cancelButton.rx.tap.subscribe(onNext: { (_) in
             Router.dismiss(welf)
-            welf?.completionHandler(false)
+            welf?.completionHandler(nil)
         }).disposed(by: cell.defaultBag)
-        
-        cell.confirmButton.rx.tap.asObservable().flatMap { (_) -> Observable<Bool> in
+         
+        cell.confirmButton.rx.tap.asObservable().flatMap { (_) -> Observable<Bool> in 
             return WKRemoteServer.request().map {  $0 == 1 }
         }.subscribe(onNext: { result in 
             Router.dismiss(welf)

@@ -38,7 +38,11 @@ extension FxValidatorListViewController {
     class ValidatorItemView: UIView {
         
         lazy var indexLabel = UILabel(font: XWallet.Font(ofSize: 12, weight: .medium), textColor: COLOR.subtitle)
-        lazy var tokenIV = CoinImageView(size: CGSize(width: 32, height: 32).auto())
+        lazy var tokenIV = CoinImageView(size: CGSize(width: 32, height: 32).auto()).then {
+            $0.relayout(cornerRadius: 4.auto())
+            $0.layer.shadowRadius = 8
+            $0.layer.shadowOpacity = 0.02
+        }
         lazy var nameLabel = UILabel(font: XWallet.Font(ofSize: 16, weight: .medium), textColor: COLOR.title)
         lazy var apyLabel = UILabel(font: XWallet.Font(ofSize: 16), textColor: HDA(0x71A800))
         

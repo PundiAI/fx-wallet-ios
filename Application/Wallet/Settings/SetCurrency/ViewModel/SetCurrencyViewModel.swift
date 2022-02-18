@@ -94,9 +94,7 @@ extension SetCurrencyViewController {
             }
             return false
         }
-        
-        
-        //首字母相同的放在一起
+         
         class func groupItmes(items: [CellViewModel]) -> Currencys {
             var datas =  Currencys()
 

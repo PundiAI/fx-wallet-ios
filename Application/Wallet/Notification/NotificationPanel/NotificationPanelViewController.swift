@@ -1,16 +1,11 @@
-//
-//  Python3
-//  MakeSwiftFiles
-//
-//  Created by HeiHuaBaiHua 
-//  Copyright © 2017年 HeiHuaBaiHua. All rights reserved.
-//
+
 
 import WKKit
 import RxSwift
 import RxCocoa
 import SwipeCellKit
 import XChains
+import SwiftyJSON
 
 extension WKWrapper where Base == NotificationPanelViewController {
     var view: NotificationPanelViewController.View { return base.view as! NotificationPanelViewController.View }
@@ -25,7 +20,8 @@ extension NotificationPanelViewController {
 
 class NotificationPanelViewController: WKViewController {
     var actionDag:DisposeBag = DisposeBag()
-    public static var minContentHeight:CGFloat = 140.auto()
+    public static var minContentHeight:CGFloat = (100 + 22.ifull(44)).auto()
+    public static var minFoldContentHeight:CGFloat = (82 + 22.ifull(44)).auto()
     
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     init(wallet: WKWallet) {
@@ -51,7 +47,7 @@ class NotificationPanelViewController: WKViewController {
         bindListView()
         bindNotifUpdate() 
         fetchData()
-        bindScroll()
+        bindScroll() 
     }
      
     func show(in superView:UIView) {
@@ -64,7 +60,10 @@ class NotificationPanelViewController: WKViewController {
     }
     
     private func fetchData() {
-        viewModel.refreshItems.execute((false, self.viewModel.layoutType))
+        viewModel.refreshItems.execute((false, self.viewModel.layoutType)).subscribe(onNext: { [weak self]_ in
+            self?.viewModel.reloadData()
+            self?.wk.view.listView.reloadData()
+        }).disposed(by: defaultBag)
     }
     
     override func bindNavBar() {
@@ -93,8 +92,7 @@ class NotificationPanelViewController: WKViewController {
             .tap.throttle(.milliseconds(30), scheduler: MainScheduler.instance)
             .subscribe( onNext: { (_) in
                 welf?.toHideAction()
-            }).disposed(by: defaultBag)
-        
+            }).disposed(by: defaultBag) 
     }
     
     private func toHideAction() {
@@ -109,10 +107,13 @@ class NotificationPanelViewController: WKViewController {
     
     func toExpandAction() {
         let view = wk.view
+        let value = viewModel.itemCount.value 
         viewModel.refreshItems.execute((true, .expand))
             .flatMap { (_) -> Observable<Void> in
+                if value.0 != 0 && value.1 != .hide { view.listView.reloadData() }
                 return view.expand()
-            }.subscribe().disposed(by: defaultBag)
+            }
+         .subscribe().disposed(by: defaultBag)
     }
     
     private func bindExpand() { 
@@ -126,15 +127,19 @@ class NotificationPanelViewController: WKViewController {
     
     private func bindNotifUpdate() { 
         weak var welf = self
-        wallet.notifManager.didReceive.subscribe(onNext: { (notif) in
-            welf?.insert(notif)
+        
+        wallet.notifManager
+            .didReceive
+            .throttle(.milliseconds(300), scheduler:MainScheduler.instance)
+            .subscribe(onNext: { (notif) in
+                welf?.insert(notif)
         }).disposed(by: defaultBag)
         
-        viewModel.didRemove.subscribe(onNext: { (_, indexs) in
-            welf?.remove(indexs)
+        viewModel.didRemove.subscribe(onNext: { (model) in
+            welf?.remove(model.indexPath, model.update, model.complated)
         }).disposed(by: defaultBag)
         
-        viewModel.didUpdate.subscribe(onNext: { (_, _) in
+        viewModel.didUpdate.subscribe(onNext: { (_) in
             welf?.listView.reloadData()
         }).disposed(by: defaultBag)
         
@@ -142,9 +147,11 @@ class NotificationPanelViewController: WKViewController {
             welf?.fetchData()
         }).disposed(by: defaultBag)
         
+        viewModel.wallet.notifManager.updateRaw.subscribe(onNext: { (_) in
+            welf?.fetchData()
+        }).disposed(by: defaultBag)
     }
-
-    // 校验ERC20币种信息
+ 
     private func tokenMetadata(_ coin:Coin, _ waitting:()->Void) -> Observable<Coin> {
         guard coin.isOther, coin.isERC20, coin.contract.isNotEmpty else {
             return Observable.just(coin)
@@ -162,12 +169,12 @@ class NotificationPanelViewController: WKViewController {
     
     override func router(event: String, context: [String : Any]) {
         weak var welf = self
+        let wallet  = self.wallet
         if event == "addToken",
-            let cell = context[eventSender] as? TransactionCell,
+            let cell = context[eventSender] as? TransactionAddTokenCell,
+            let fxNotification = cell.viewModel?.rawValue,
             let coin = cell.viewModel?.coin {
             let hub = Router.topViewController?.hud
-            
-            
             self.tokenMetadata(coin, {
                 hub?.waiting()
             })
@@ -178,7 +185,24 @@ class NotificationPanelViewController: WKViewController {
                         hub?.hide()
                         return
                     }
+                    
+                    var account: Keypair?
+                    for c in wallet.coins {
+                        guard c.chainType == _coin.chainType else { continue }
+                        for keypair in wallet.accountManager.accounts(forCoin: c).accounts {
+                            if keypair.address.lowercased() == fxNotification.address.lowercased() {
+                                account = keypair
+                                break
+                            }
+                        }
+                    }
+                    
                     welf?.viewModel.add(coin: _coin)
+                    
+                    if let account = account {
+                        wallet.accountManager.accounts(forCoin: _coin).add(account)
+                    }
+                    
                     welf?.foldAndHaveRead(cid: _coin.id)
                     hub?.hide()
                 }
@@ -187,10 +211,14 @@ class NotificationPanelViewController: WKViewController {
                 hub?.error(m: TR("Notif.AddToken.Error$", coin.symbol))
             }.disposed(by: defaultBag)
         }
+        
+        if event == "Help" {
+            Router.showRevWebViewController(url: ThisAPP.WebURL.helpTxFailURL)
+        }
     }
      
     //MARK: Animations
-    private func insert(_ item: FxNotification) {
+    private func insert(_ item: FxNotification, _ complated:(()->Void)? = nil) {
         self.listView.performBatchUpdates ({ [weak self] in
             self?.viewModel.insert(item, self?.viewModel.layoutType ?? .fold)
             self?.listView.insertItems(at: [IndexPath(row: 0, section: 0)])
@@ -199,52 +227,55 @@ class NotificationPanelViewController: WKViewController {
             self?.viewModel.reloadData()
             self?.listView.reloadData()
             self?.listView.collectionViewLayout.invalidateLayout()
+            complated?()
         })
     }
     
-    private func remove(_ indexs: [IndexPath]) {
-        if indexs.count == 0 {
-            self.viewModel.reloadData()
-            self.listView.reloadData()
-            self.listView.collectionViewLayout.invalidateLayout()
-        } else {
-            self.listView.performBatchUpdates({
-                self.listView.deleteItems(at: indexs)
-            }, completion: { [weak self] _ in
+    private func remove(_ indexs: [IndexPath], _ update:(()->Void)? = nil, _ complate:(()->Void)? = nil) { 
+        DispatchQueue.main.async { [weak self] in
+            if indexs.count == 0 {
+                update?()
                 self?.viewModel.reloadData()
                 self?.listView.reloadData()
                 self?.listView.collectionViewLayout.invalidateLayout()
-            })
+                complate?()
+            } else {
+                self?.listView.performBatchUpdates({
+                    update?()
+                    self?.listView.deleteItems(at: indexs)
+                }, completion: { _ in
+                    self?.viewModel.reloadData()
+                    self?.listView.reloadData()
+                    self?.listView.collectionViewLayout.invalidateLayout()
+                    complate?()
+                })
+            }
         }
     }
-    
-    //MARK: 绑定滚动
+     
     private func bindScroll() {
-        let minDistance:CGFloat = 100.auto()
+        let minDistance:CGFloat = wk.view.headHeight - 100.auto()
         let headView = wk.view.headerView
-        let blurView = wk.view.blurView
-        let initHeadTop = headView.top
         let scrollView = listView
-
-        scrollView.rx.contentOffset.filter({[weak self] (point) -> Bool in
+ 
+        scrollView.rx.contentOffset 
+            .filter { (_) -> Bool in
             return scrollView.contentInset.top > 0
-                && ((self?.wk.view.isAnimating ?? true) == false)
-        }).subscribe(onNext: {  (point) in
-            if point.y >= -1 * minDistance {
-                headView.top = (point.y - scrollView.contentInset.top) - (-1 * minDistance)
-                scrollView.bringSubviewToFront(headView)
-                headView.clipsToBounds = false
-                headView.headerBlurView.isHidden = false
-                blurView.snp.updateConstraints { (make) in
-                    make.top.equalToSuperview().inset(minDistance)
+        }.subscribe(onNext: {  (point) in
+            let distance = point.y - (-1) * scrollView.contentInset.top
+            if distance > 0 {
+                let offsetY = min(minDistance, distance)
+                headView.snp.updateConstraints { (make) in
+                    make.top.equalToSuperview().offset(-1 * offsetY)
                 }
+                let isBlurShadow = offsetY == minDistance
+                headView.headerBlurView.isHidden = !isBlurShadow
+                headView.headerBlurView.clipsToBounds = !isBlurShadow
             }else {
-                headView.top = initHeadTop
-                headView.layer.zPosition = 0
-                scrollView.sendSubviewToBack(headView)
-                headView.clipsToBounds = true
                 headView.headerBlurView.isHidden = true
-                blurView.snp.updateConstraints { (make) in
+                headView.headerBlurView.clipsToBounds = true
+                headView.headerBlurView.clipsToBounds = true
+                headView.snp.updateConstraints { (make) in
                     make.top.equalToSuperview()
                 }
             }
@@ -253,7 +284,6 @@ class NotificationPanelViewController: WKViewController {
 }
 
 extension NotificationPanelViewController: UIGestureRecognizerDelegate {
-    
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
         let point = touch.location(in: wk.view.listView)
         return wk.view.listView.indexPathForItem(at: point) == nil
@@ -263,17 +293,20 @@ extension NotificationPanelViewController: UIGestureRecognizerDelegate {
 //MARK: CollectionView
 extension NotificationPanelViewController: UICollectionViewDelegate, UICollectionViewDataSource, NotificationLayoutDelegate {
     private func bindListView() {
-        
-        listView.register(FoldCell.self, forCellWithReuseIdentifier: FoldCell.description())
-        listView.register(ExpandCell.self, forCellWithReuseIdentifier: ExpandCell.description())
-        listView.register(TransactionCell.self, forCellWithReuseIdentifier: TransactionCell.description())
+        for aClass in CellViewModel.viewCellClass() {
+            listView.register(aClass, forCellWithReuseIdentifier: aClass.description())
+        } 
         
         listView.delegate = self
         listView.dataSource = self
-        viewModel.refreshItems.elements.subscribe(onNext: { [weak self](_) in
-            self?.viewModel.reloadData()
-            self?.listView.reloadData()
-        }).disposed(by: defaultBag)
+//        viewModel.refreshItems.elements.observeOn(MainScheduler.instance)
+//            .subscribe(onNext: { [weak self](items) in
+//                print("----",items.first?.rawValue.isActive)
+//                if items.count == 1, (items.first?.rawValue.isActive ?? true) == false {
+//                    self?.viewModel.reloadData()
+//                    self?.listView.reloadData()
+//                }
+//        }).disposed(by: defaultBag)
     }
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
@@ -286,11 +319,11 @@ extension NotificationPanelViewController: UICollectionViewDelegate, UICollectio
     }
     
     func itemSize(layout: UICollectionViewLayout, indexPath: IndexPath) -> CGSize {
-        if (layout is NotificationExpandLayout) || (layout is NotificationHideLayout){
-            return viewModel.items.get(indexPath.row)?.size ?? .zero
+        if (layout is NotificationExpandLayout)   {
+            return viewModel.items.get(indexPath.row)?.contentSize() ?? .zero
         } else {
             return CGSize(width: ScreenBounds.width,
-                          height: NotificationPanelViewController.minContentHeight - 20.0.auto())
+                          height: NotificationPanelViewController.minFoldContentHeight)
         }
     }
     
@@ -303,37 +336,32 @@ extension NotificationPanelViewController: UICollectionViewDelegate, UICollectio
         return (headunRead, viewModel.layoutType)
     }
     
+    private func getCollectionCell(_ collectionView: UICollectionView, _ indexPath: IndexPath, _ vm:CellViewModel) ->fxNotificationViewCell {
+        let aClass = vm.viewCellClass()
+        let identifier = indexPath.section == 0 ? aClass.0.description() : aClass.1.description()
+        return collectionView.dequeueReusableCell(withReuseIdentifier: identifier, for: indexPath) as! fxNotificationViewCell
+    }
+    
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let items = indexPath.section == 0 ? viewModel.foldItems : viewModel.items
         guard let cellVM = items.get(indexPath.row) else {
-            return collectionView.dequeueReusableCell(withReuseIdentifier: ExpandCell.description(), for: indexPath)
+            return collectionView.dequeueReusableCell(withReuseIdentifier: ExpandNormalCell.description(), for: indexPath)
         }
+        let unReadCount = viewModel.items.filter { (cell) -> Bool in
+            return cell.rawValue.isRead == false && cell.rawValue.notiType != .backup
+        }.count
         
-        if indexPath.section == 0 {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FoldCell.description(), for: indexPath) as! FoldCell
-            let unReadCount = viewModel.items.filter { (cell) -> Bool in
-                return cell.rawValue.isRead == false
-            }.count
-            let content = viewModel.foldItems[indexPath.row].rawValue.title + " " + viewModel.foldItems[indexPath.row].rawValue.message
-            cell.textLabel.text = content
-            cell.alertNumRelay.accept(unReadCount)
+        let cell = getCollectionCell(collectionView, indexPath, cellVM)
+        cell.update(model: cellVM, unReadCount, indexPath.row)
+        cell.delegate = indexPath.section == 0 ? nil : self
+        cell.isHidden = false
+        if self.viewModel.itemCount.value.1 == .fold {
             cell.isHidden = unReadCount <= 0
-            cell.contentBoxVie.isHidden = indexPath.row > 0
-            return cell
-        } else {
-            let cell: ExpandCell
-            if cellVM.rawValue.coin == nil {
-                cell = collectionView.dequeueReusableCell(withReuseIdentifier: ExpandCell.description(), for: indexPath) as! ExpandCell
-            } else {
-                cell = collectionView.dequeueReusableCell(withReuseIdentifier: TransactionCell.description(), for: indexPath) as! TransactionCell
-            }
-            cell.bind(cellVM)
-            cell.delegate = self 
-            return cell
         }
+        return cell
     }
 
-    private func setReadItems(coin cid:String) -> Observable<[CellViewModel]> {
+    private func setReadItems(coin cid:String) -> Observable<[CellViewModel]> { 
         return self.wk.view.fold().flatMap {[weak self]  (_) -> Observable<[CellViewModel]> in
             guard let this = self else { return .empty() }
             return this.wallet.notifManager.markAllRead(coin: cid).flatMap { (_) -> Observable<[CellViewModel]> in
@@ -344,16 +372,20 @@ extension NotificationPanelViewController: UICollectionViewDelegate, UICollectio
     }
  
     fileprivate func foldAndHaveRead(cid: String?) {
-        wk.view.fold().subscribe(onNext: { [weak self] in
+        self.wk.view.hide().subscribe(onNext: { [weak self] in
             guard let this = self else { return }
             if let _cid = cid  {
-                this.wallet.notifManager.markAllRead(coin: _cid).subscribe(onNext: { _ in
-                    this.viewModel.refreshItems.execute((false, this.viewModel.layoutType))
+                this.wallet.notifManager.markAllRead(coin: _cid)
+                    .observeOn(MainScheduler.instance)
+                    .flatMap { (_) -> Observable<Void> in
+                        return this.wk.view.fold(animated: false)
+                    }.subscribe(onNext: { _ in
+                        this.viewModel.refreshItems.execute((false, this.viewModel.layoutType))
                 }).disposed(by: this.defaultBag)
             }else {
                 this.viewModel.refreshItems.execute((false, this.viewModel.layoutType))
             }
-        }).disposed(by: defaultBag)
+        }).disposed(by: self.defaultBag)
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
@@ -366,11 +398,32 @@ extension NotificationPanelViewController: UICollectionViewDelegate, UICollectio
                                 self?.foldAndHaveRead(cid: nil)
                             })
                         } 
-                    }else {
+                    }else { 
                         if let cid = item.coin?.id {
                             Router.showWebViewController(url: item.rawValue.url, completion: { [weak self] _ in
                                 self?.foldAndHaveRead(cid: cid)
                             })
+                        } else {
+                            if  item.rawValue.notiType == .system && item.rawValue.url.length > 0 {
+                                Router.showWebViewController(url: item.rawValue.url, completion: nil)
+                            }
+                        }
+                    }
+                }
+            } else {
+                if item.rawValue.notiType == .failureTransfer || item.rawValue.notiType == .crossFailureTransfer {
+                    if let chain = Node.ChainType(rawValue: Int(item.rawValue.chain)) {
+                        if chain.isEthereumNet {
+                            let coin = Coin.unknownErc20(chain: chain, symbol: item.rawValue.symbol, contract: item.rawValue.contractAddress)
+                            Router.showExplorer(coin , path: .hash(item.rawValue.txHash))
+                        } else if chain.isFxCoreNet {
+                            let coin = CoinService.current.fxCore
+                            Router.showExplorer(coin , path: .hash(item.rawValue.txHash))
+                        } else if chain == .bitcoin {
+                            guard let coin = CoinService.current.btc else {
+                                return
+                            }
+                            Router.showExplorer(coin , path: .hash(item.rawValue.txHash))
                         }
                     }
                 }
@@ -381,10 +434,8 @@ extension NotificationPanelViewController: UICollectionViewDelegate, UICollectio
 
 extension NotificationPanelViewController: SwipeCollectionViewCellDelegate {
     func collectionView(_ collectionView: UICollectionView, editActionsForItemAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> [SwipeAction]? {
-        
         let item = viewModel.items[indexPath.row]
-        if item.rawValue.mustKnown || orientation == .left { return nil }
-        
+        if item.rawValue.unDeleted || orientation == .left { return nil }
         let trash = SwipeAction(style: .destructive, title: nil) {[weak self] action, indexPath in
             self?.viewModel.remove(at: indexPath, self?.viewModel.layoutType ?? .hide)
         }
@@ -398,7 +449,7 @@ extension NotificationPanelViewController: SwipeCollectionViewCellDelegate {
         return [trash]
     }
     
-    func collectionView(_ collectionView: UICollectionView, editActionsOptionsForItemAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> SwipeOptions {
+    func collectionView(_ collectionView: UICollectionView, editActionsOptionsForItemAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> SwipeOptions { 
         var options = SwipeOptions()
         options.expansionStyle = .none
         options.transitionStyle = .reveal

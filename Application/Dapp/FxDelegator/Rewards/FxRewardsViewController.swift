@@ -47,8 +47,7 @@ class FxRewardsViewController: WKViewController {
     let validator: Validator
         
     lazy var listBinder = WKStaticTableViewBinder(view: wk.view.listView)
-    private var validatorCell = FxValidatorTitleCell()
-    private var inputCell = FxDelegateTxInputCell()
+    private var contentCell = ContentCell()
     private var confirmCell = FxDelegateConfirmTxCell()
     
     private var rewardAmount = ""
@@ -60,7 +59,6 @@ class FxRewardsViewController: WKViewController {
         logWhenDeinit()
         
         bindListView()
-        bindInput()
         bindConfirm()
         
         fetchData()
@@ -81,46 +79,36 @@ class FxRewardsViewController: WKViewController {
     
     private func bindListView() {
         
-        inputCell.type = .rewards
         listBinder.push(WKSpacingCell.self, vm: WKSpacing(height: 8.auto()))
-        listBinder.push(validatorCell)
-        listBinder.push(WKSpacingCell.self, vm: WKSpacing(height: 24.auto()))
-        listBinder.push(inputCell, vm: inputCell)
+        listBinder.push(contentCell, vm: contentCell)
         listBinder.push(WKSpacingCell.self, vm: WKSpacing(height: 32.auto()))
         listBinder.push(confirmCell)
         
-        validatorCell.validatorIV.setImage(urlString: validator.imageURL, placeHolderImage: IMG("Dapp.Placeholder"))
-        validatorCell.validatorNameLabel.text = validator.validatorName
-        validatorCell.validatorAddressLabel.text = validator.validatorAddress
+        contentCell.validatorIV.setImage(urlString: validator.imageURL, placeHolderImage: IMG("Dapp.Placeholder"))
+        contentCell.validatorNameLabel.text = validator.validatorName
+        contentCell.validatorAddressLabel.text = validator.validatorAddress
+        
+        contentCell.fxcRewardsTLabel.text = "\(coin.token) \(TR("FXDelegator.Rewards"))"
+        contentCell.fxUSDRewardsTLabel.text = "\(Coin.FxUSDSymbol) \(TR("FXDelegator.Rewards"))"
+        setRewards(validator: validator)
     }
-    
-    private func bindInput() {
         
-        weak var welf = self
-        inputCell.addressLabel.text = account.address
-        inputCell.inputTokenLabel.text = coin.token
-        inputCell.tokenIV.setImage(urlString: coin.imgUrl, placeHolderImage: coin.imgPlaceholder)
-        inputCell.inputVIew.decimalLimit = coin.decimal
-        
-        inputCell.balanceLabel.text = validator.delegateAmount.div10(coin.decimal).thousandth() + " \(coin.token)"
-        
-        inputCell.inputTF.rx.text
-            .distinctUntilChanged()
-            .subscribe(onNext: { v in
-                guard let this = welf else { return }
-            
-                let text = this.inputCell.inputVIew.decimalText
-                welf?.confirmCell.enable(text.f > 0)
-        }).disposed(by: defaultBag)
+    private func setRewards(validator: Validator) {
+        contentCell.fxcRewardsLabel.text = validator.reward(of: coin.symbol).div10(coin.decimal).thousandth() + " \(coin.token)"
+        contentCell.fxUSDRewardsLabel.text = validator.reward(of: Coin.FxUSDSymbol).div10(coin.decimal).thousandth() + " \(Coin.FxUSDSymbol)"
     }
     
     private func bindConfirm() {
         
         weak var welf = self
         confirmCell.checkBox.action { welf?.confirmCell.checkBox.isSelected = !(welf?.confirmCell.checkBox.isSelected ?? true) }
-        confirmCell.tipButton.isEnabled = false
+ 
+        let checkBox = confirmCell.checkBox
         confirmCell.tipButton.action {
-            Router.showWebViewController(url: ThisAPP.WebURL.termServiceURL)
+            Router.showAgreementAlert(doneHandler: { ( state ) in
+                checkBox.isSelected = state
+                return true
+            }, state: checkBox.isSelected)
         }
         confirmCell.submitButton.bind(self, action: #selector(doConfirm), forControlEvents: .touchUpInside)
         listBinder.refresh()
@@ -167,15 +155,18 @@ class FxRewardsViewController: WKViewController {
         tx.txType = .withdrawDelegatorReward
         tx.coin = coin
         
-        let hub = FxHubNode(endpoints: FxNode.Endpoints(rpc: coin.node.url), wallet: nil)
-        let txMsg = TransactionMessage.withdrawReward(delegator: tx.delegator, validator: tx.validator, fee: "0", denom: coin.symbol, gas: 90000)
-        return hub.estimatedFee(ofTx: txMsg).map { [weak self](gas: UInt64, gasPrice: String, fee: String) -> FxTransaction in
-            guard let this = self else { return tx }
+        let wallet = FxWallet(privateKey: account.privateKey)
+        let hub = FxHubNode(endpoints: FxNode.Endpoints(rpc: coin.node.url), wallet: wallet)
+        return hub.buildWithdrawRewardTx(fromValidator: tx.validator, fee: "1", denom: coin.symbol, gas: 0).flatMap{ txMsg in
             
-            tx.gasLimit = String(gas)
-            tx.gasPrice = gasPrice
-            tx.set(fee: fee, denom: this.coin.symbol)
-            return tx
+            return hub.estimatedFee(ofTx: txMsg).map { [weak self](gas: UInt64, gasPrice: String, fee: String) -> FxTransaction in
+                guard let this = self else { return tx }
+
+                tx.gasLimit = String(gas)
+                tx.gasPrice = gasPrice
+                tx.set(fee: fee, denom: this.coin.symbol)
+                return tx
+            }
         }
     }
     
@@ -189,7 +180,8 @@ class FxRewardsViewController: WKViewController {
                 guard let this = welf else { return }
                 
                 this.rewardAmount = value["rewardAmount"].string ?? "0"
-                welf?.inputCell.inputTF.reactiveText = this.rewardAmount.div10(this.coin.decimal)
+                welf?.setRewards(validator: Validator(json: value))
+                welf?.confirmCell.enable(this.rewardAmount.isGreaterThan(decimal: "0"))
         } onError: { (e) in
             welf?.hud?.hide()
             welf?.hud?.text(m: e.asWKError().msg)

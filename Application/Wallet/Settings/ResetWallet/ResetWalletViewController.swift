@@ -38,7 +38,7 @@ class ResetWalletViewController: WKViewController {
     
     var scrollToTop: CGFloat = 0
     var lastPosition:CGFloat = 0
-    
+    var needPassword:Bool = false
     var isChecking: Bool = false
     
     override func loadView() { view = View(frame: ScreenBounds) }
@@ -110,19 +110,16 @@ class ResetWalletViewController: WKViewController {
         temp.asObservable()
             .bind(to: cell.view.doneButton.rx.isEnabled)
             .disposed(by: cell.defaultBag)
-        
+         
         cell.view.doneButton.rx.tap.subscribe(onNext: { [weak self](_) in
             self?.wk.view.endEditing(true)
-            self?.isChecking = true
-            Router.showVerifyPasswordAlert() { error in
-                self?.isChecking = false
-                if error == nil {
-                    self?.deleteWallet()
-                }
+            Router.showResetWalletNoticeAlert { (error) in
+                guard error == nil else { return }
+                self?.deleteWallet()
             }
         }).disposed(by: cell.defaultBag)
         
-        if ServerENV.current == .dev {
+        if ThisAPP.isDefaultImport {
             cell.view.touchControl.rx.tap.subscribe(onNext: { [weak self](_) in
                 self?.defaultText.accept(ResetWalletViewController.resetWalletMessage)
             }).disposed(by: cell.defaultBag)
@@ -130,12 +127,8 @@ class ResetWalletViewController: WKViewController {
     }
     
     private func deleteWallet() {
-        
         guard let wallet = XWallet.sharedKeyStore.currentWallet else { return }
-        
-        FxAPIManager.fx.userLogOut().subscribe(onNext: { (json) in
-            print("")
-        }, onError: {[weak self] (e) in
+        FxAPIManager.fx.userLogOut().subscribe(onError: {[weak self] (e) in
             self?.hud?.text(m: e.asWKError().msg, p: .topCenter)
         }).disposed(by: defaultBag)
         
@@ -207,12 +200,14 @@ extension ResetWalletViewController {
     override func heroAnimator(from: String, to: String) -> WKHeroAnimator? {
         switch (from, to) {
         case ("SettingsViewController", "ResetWalletViewController"): return animators["0"]
-            
+        case ("SecurityVerificationController", "ResetWalletViewController") : 
+            return animators["1"]
         default: return nil
         }
     }
     
     private func bindHero() { 
         animators["0"] = WKHeroAnimator.Share.push()
+        animators["1"] = WKHeroAnimator.Share.pageIn()
     }
 }

@@ -87,7 +87,7 @@ class SetLanguageViewController: FxRegularPopViewController {
         Observable.just(()).delay(.seconds(1), scheduler: MainScheduler.instance).subscribe(onNext: { [weak self] in
             self?.hud?.hide(animated: false)
             WKLocale.Shared.language = selectmodel
-            WKEvent.Language.Send(event: .LanguageDidChange)
+            XEvent.User.LanguageDidChange.send()
         }).disposed(by: defaultBag)
     }
     

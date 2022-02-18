@@ -1,10 +1,4 @@
-//
-//  Python3
-//  MakeSwiftFiles
-//
-//  Created by HeiHuaBaiHua 
-//  Copyright © 2017年 HeiHuaBaiHua. All rights reserved.
-//
+
 
 import WKKit
 import RxSwift
@@ -21,12 +15,18 @@ extension FxMyDelegatesViewController {
             guard let vm = viewModel as? CellViewModel else { return }
             self.viewModel = vm
             
+            let fxc = vm.coin.token
+            view.fxcRewardsTLabel.text = "\(fxc) \(TR("FXDelegator.Rewards")):"
+            view.fxUSDRewardsTLabel.text = "\(Coin.FxUSDSymbol) \(TR("FXDelegator.Rewards")):"
+            
             view.relayout(isLast: vm.isLast)
             view.validatorIV.setImage(urlString: vm.validator.imageURL, placeHolderImage: IMG("Dapp.Placeholder"))
-            view.validatorNameLabel.text = vm.validator.validatorName
-            view.delegateAmountLabel.text = vm.validator.delegateAmount.div10(vm.coin.decimal).thousandth(4)
-            view.rewardsAmountLabel.text = "+ \(vm.validator.delegateReward.div10(vm.coin.decimal).thousandth(4))"
             view.apyLabel.text = "\(vm.validator.rewards)%"
+            view.validatorNameLabel.text = vm.validator.validatorName
+            view.delegateAmountLabel.text = vm.validator.delegateAmount.div10(vm.coin.decimal).thousandth() + " \(fxc)"
+            
+            view.fxcRewardsLabel.text = vm.validator.reward(of: vm.coin.symbol).div10(vm.coin.decimal).thousandth() + " \(fxc)"
+            view.fxUSDRewardsLabel.text = vm.validator.reward(of: Coin.FxUSDSymbol).div10(vm.coin.decimal).thousandth() + " \(Coin.FxUSDSymbol)"
         }
     }
 }

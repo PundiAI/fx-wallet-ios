@@ -24,6 +24,62 @@ typealias OxSwapModel = OxSwapViewController.OxSwapViewModel
 
 typealias OxLoadState = OxSwapViewController.OxSwapViewModel.LoadState
 
+typealias TokenModel = OxSwapViewController.TokenModel
+typealias ApprovedListModel = OxSwapViewController.ApprovedListModel
+typealias ApprovedModel = OxSwapViewController.ApprovedModel
+
+extension OxSwapViewController {
+    
+    class TokenModel {
+        let account: Keypair?
+        var token: Coin?
+        
+        init(token: Coin?, account: Keypair?) {
+            self.account = account
+            self.token = token
+        }
+    }
+    
+    class ApprovedModel: NSObject {
+        var token: String = ""
+        var amount: String = "0"
+        var txHash: String = ""
+        var coin: Coin
+        init(token: String, amount: String, txHash: String, coin: Coin) {
+            self.amount = amount
+            self.token = token
+            self.txHash = txHash
+            self.coin = coin
+        }
+    }
+    
+    class ApprovedListModel {
+        
+        var items: [ApprovedModel] = []
+        
+        func add(item: ApprovedModel) {
+            if let _item = items.find(condition: { $0.token == item.token}) {
+                _item.amount = item.amount
+                _item.txHash = item.txHash
+            } else {
+                items.append(item)
+            }
+        }
+        
+        func get(_ token: String) -> ApprovedModel? {
+            return items.find(condition: {$0.token == token})
+        }
+        
+        func remove(_ token: String) {
+            if let item = items.find(condition: {$0.token == token}) {
+                items.remove(element: item)
+            }
+        }
+        
+    }
+    
+}
+
 extension OxSwapViewController {
     
     
@@ -121,7 +177,7 @@ extension OxSwapViewController {
                 return to
             }
         }
-         
+        
         var minValue:String {
             let result_mul = inputBigValue.mul(String(1 - 0.005), 0)
             let scl = result_mul.div10(to.token.decimal).isLessThan(decimal: "1") ?  8 : 2
@@ -140,12 +196,9 @@ extension OxSwapViewController {
             return amountsInput.inputValue
         }
         
-        var inputFormatValue:String {
-            
+        var inputFormatValue:String { 
             let scl = inputBigValue.div10(amountsInput.token.decimal).isLessThan(decimal: "1") ?  8 : 2
             let value = inputBigValue.div10(amountsInput.token.decimal, scl)
-            
-            print("\(inputBigValue) \(value) ")
             return value
         }
         
@@ -221,6 +274,7 @@ extension OxSwapViewController {
         lazy var covnertAmount = BehaviorRelay<String>(value: "")
         
         
+        lazy var maxEthAmount = BehaviorRelay<String>(value: "")
         
         lazy var approvedList = BehaviorRelay<ApprovedListModel>(value: ApprovedListModel())
         
@@ -249,11 +303,11 @@ extension OxSwapViewController {
         }
     }
 }
-        
+
 
 
 extension OxSwapViewController.OxSwapViewModel{
-
+    
     func tokensList(from:Coin, to:Coin) -> Observable<[OxToken]> {
         return FxAPIManager.fx.oxTokenList()
     }
@@ -306,7 +360,7 @@ extension OxSwapViewController.OxSwapViewModel {
             let _item = items.find { (item) -> Bool in
                 let expired = Int(currentTime - item.timestamp) < 10
                 if  item.fromAmount == fromAmount && item.fromToken == fromToken && item.toToken == toToken && expired {
-                   return true
+                    return true
                 } else {
                     return false
                 }
@@ -327,7 +381,7 @@ extension OxSwapViewController.OxSwapViewModel {
             }) {
                 _item.timestamp = model.timestamp
             } else {
-                    
+                
                 items.append(model)
             }
         }

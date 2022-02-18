@@ -10,6 +10,7 @@ import WKKit
 import UIKit
 import WKKit
 import RxSwift
+import RxCocoa
 import AloeStackView
 
 extension OxSwapViewController {
@@ -70,12 +71,12 @@ extension OxSwapViewController {
         }()
         
         
-        lazy var inputToView: CoinView = {
-            let view = CoinView(frame: CGRect.zero)
+        lazy var inputToView: OutputCoinView = {
+            let view = OutputCoinView(frame: CGRect.zero)
             view.titleLabel.text = TR("You.Receive")
             view.maxButton.isHidden = true
             view.maxButton.alpha = 0
-            view.height(constant: 117.auto())
+            view.height(constant: 161.auto())
             return view
         }()
        
@@ -253,7 +254,7 @@ extension OxSwapViewController {
             helpBtn.isHidden = true
         }
         
-        func setLayout() {
+        fileprivate func setLayout() {
             isReceived = true
             helpBtn.isHidden = true
             helpBtn.snp.makeConstraints { (make) in
@@ -283,7 +284,7 @@ extension OxSwapViewController {
             }
         }
         
-        private func layoutUI() {
+        fileprivate func layoutUI() {
             addSubview(contentView)
             contentView.snp.makeConstraints { (make) in
                 make.left.right.equalToSuperview().inset(24.auto())
@@ -406,6 +407,35 @@ extension OxSwapViewController {
                     return false
                 }
             }
+        }
+    }
+    
+    class OutputCoinView: CoinView {
+        lazy var usdPriceLabel: UILabel = {
+            let v = UILabel()
+            v.font = XWallet.Font(ofSize: 14)
+            v.autoFont = true
+            v.textColor = COLOR.subtitle
+            v.textAlignment = .right
+            v.adjustsFontSizeToFitWidth = true
+            return v
+        }()
+        
+        override func layoutUI() {
+            super.layoutUI()
+            contentView.addSubview(usdPriceLabel) 
+            usdPriceLabel.snp.makeConstraints { (make) in
+                make.right.equalToSuperview().offset(-16.auto())
+                make.bottom.equalToSuperview().offset(-19.auto())
+                make.height.equalTo(24.auto())
+            }
+            
+            inputContentView.snp.remakeConstraints { (make) in
+                make.left.equalTo(10.auto())
+                make.bottom.equalToSuperview().offset(-58.auto())
+                make.height.equalTo(39.auto())
+                make.width.equalTo(contentView.snp.width).multipliedBy(0.4)
+            } 
         }
     }
 }
@@ -929,7 +959,7 @@ extension OxSwapViewController {
             v.text = TR("Ox.Approve.Tip")
             v.font = XWallet.Font(ofSize: 12)
             v.autoFont = true
-            v.numberOfLines = 2
+            v.numberOfLines = 3
             v.textColor = COLOR.subtitle
             v.textAlignment = .center
             return v

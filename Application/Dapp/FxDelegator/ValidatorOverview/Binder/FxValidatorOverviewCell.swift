@@ -1,14 +1,24 @@
-//
-//  Python3
-//  MakeSwiftFiles
-//
-//  Created by HeiHuaBaiHua 
-//  Copyright © 2017年 HeiHuaBaiHua. All rights reserved.
-//
+
 
 import WKKit
 import RxSwift
 import RxCocoa
+
+extension FxValidatorOverviewViewController {
+    class ListBinder: WKStaticTableViewBinder {
+        
+        private var expand = false
+        func expand(_ v: Bool) {
+            guard expand != v else { return }
+            self.expand = v
+            refresh()
+        }
+        
+        override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+            return expand ? itemCount : 0
+        }
+    }
+}
 
 extension FxValidatorOverviewViewController {
     class Cell: FxTableViewCell {

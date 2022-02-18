@@ -3,7 +3,7 @@
 //  MakeSwiftFiles
 //
 //  Created by MJ
-//  Copyright © 2017年 MJ. All rights reserved.
+//  Copyright © 2017 MJ. All rights reserved.
 //
 
 import WKKit

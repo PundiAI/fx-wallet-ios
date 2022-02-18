@@ -19,27 +19,6 @@ extension RampWebController {
         }
         return RampWebController(wallet: nil, userAddress: userAddress, swapAsset: swapAsset, swapAmount: swapAmount)
     }
-    
-    class RampApi {
-        let host: String = RampConfig.host
-        let userAddress:String
-        let swapAsset:String
-        let swapAmount:String
-        init(userAddress:String, swapAsset:String, swapAmount:String) {
-            self.userAddress = userAddress
-            self.swapAsset = swapAsset
-            self.swapAmount = swapAmount
-        }
-        
-        func urlString() -> String {
-            let params:[String:String] = ["userAddress": userAddress,"swapAsset": swapAsset,
-                                          "swapAmount":swapAmount]
-            let toQuery = params.map { (key, value) -> String in
-                return "\(key)=\(value)"
-            }.joined(separator: "&")
-            return "\(host)?\(toQuery)"
-        }
-    }
 }
 
 class RampWebController: FxWebViewController {
@@ -53,8 +32,7 @@ class RampWebController: FxWebViewController {
     init(wallet: WKWallet?, userAddress:String, swapAsset:String, swapAmount:String) {
         self.wallet = wallet
         self.request = RampApi(userAddress: userAddress, swapAsset: swapAsset, swapAmount: swapAmount)
-        super.init(nibName: nil, bundle: nil)
-        self.urlString = self.request.urlString()
+        super.init(nibName: nil, bundle: nil) 
     }
     
     override func navigationItems(_ navigationBar: WKNavigationBar) {
@@ -92,5 +70,9 @@ class RampWebController: FxWebViewController {
             self.hud?.text(m: message)
         }
         completionHandler(true)
+    }
+    
+    override func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        decisionHandler(WKNavigationActionPolicy.allow)
     }
 }

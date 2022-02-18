@@ -58,7 +58,7 @@ class BackUpNoticeViewController: WKViewController {
                     Router.pushToPreMnemonic(mnemonic: mnemonic) { (_) in
                         if  Router.isExistInNavigator("SettingsViewController") {
                             Router.popAllButTop{ $0?.heroIdentity == "SettingsViewController" }
-                        } 
+                        }
                     }
                 }
             }            

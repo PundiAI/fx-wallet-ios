@@ -1,10 +1,4 @@
-//
-//  Python3
-//  MakeSwiftFiles
-//
-//  Created by HeiHuaBaiHua 
-//  Copyright © 2017年 HeiHuaBaiHua. All rights reserved.
-//
+
 
 import WKKit
 import RxSwift
@@ -26,19 +20,28 @@ extension FxMyDelegatesViewController {
         
         private var map: [String: CellViewModel] = [:]
         var items: [CellViewModel] = []
-        var amount = ""
         
-        lazy var refreshAction = APIAction(request())
-        private func request() -> Observable<[Validator]> {
+        let delegateAmount = BehaviorRelay<String>(value: unknownAmount)
+        var fxcReward = BehaviorRelay<String>(value: unknownAmount)
+        var fxUSDReward = BehaviorRelay<String>(value: unknownAmount)
+        lazy var balance = wallet.balance(of: account.address, coin: coin)
+        
+        lazy var refreshAction = APIAction(workFactory: {[weak self] _ -> Observable<[Validator]> in
+            guard let this = self else { return .empty() }
             
-            return FxAPIManager.fx.fetchValidators(of: account.address)
+            self?.balance.refreshIfNeed()
+            return FxAPIManager.fx.fetchValidators(of: this.account.address)
                 .do(onNext: { [weak self] result in
                     guard let this = self, result.count > 0 else { return }
                 
                     var amount = "0"
+                    var fxcReward = "0"
+                    var fxUSDReward = "0"
                     for validator in result {
                         
                         amount = amount.add(validator.delegateAmount)
+                        fxcReward = fxcReward.add(validator.reward(of: this.coin.symbol))
+                        fxUSDReward = fxUSDReward.add(validator.reward(of: Coin.FxUSDSymbol))
                         if let item = this.map[validator.validatorAddress] {
                             item.validator = validator
                         } else {
@@ -47,12 +50,14 @@ extension FxMyDelegatesViewController {
                             this.items.append(item)
                         }
                     }
-                    this.amount = amount.div10(this.coin.decimal).thousandth()
+                    this.fxcReward.accept(fxcReward)
+                    this.fxUSDReward.accept(fxUSDReward)
+                    this.delegateAmount.accept(amount)
                     this.items.last?.isLast = true
             })
-        }
+        })
         
-        let height: CGFloat = 62.auto()
+        let height: CGFloat = (62 + 16).auto()
     }
 }
 
@@ -73,7 +78,7 @@ extension FxMyDelegatesViewController {
         fileprivate(set) var validator: Validator
         
         var isLast = false
-        let height: CGFloat = 120.auto()
+        let height: CGFloat = (298 + 16).auto()
     }
 }
         

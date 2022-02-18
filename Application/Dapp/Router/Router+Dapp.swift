@@ -11,6 +11,7 @@ import RxSwift
 import FunctionX
 import SwiftyJSON
 import TrustWalletCore
+import SafariServices
 
 //MARK: Scene Router
 extension Router {
@@ -55,20 +56,28 @@ extension Router {
         presentViewController("NewChatViewController", context: ["wallet": wallet, "handler": didAddContactHandler])
     }
     
-    static func presentSendCryptoGift(receiver: SmsUser, wallet: FxWallet) {
-        presentViewController("SendChatGiftViewController", context: ["receiver": receiver, "wallet": wallet])
-    }
-    
-    static func pushToChat(receiver: SmsUser, wallet: FxWallet) {
-        pushViewController("ChatViewController", context: ["receiver": receiver, "wallet": wallet])
-    }
-    
-    static func presentChatMessageInfo(receiver: SmsUser, wallet: FxWallet, sms: SmsMessage) {
-        presentViewController("ChatMessageInfoViewController", context: ["receiver": receiver, "wallet": wallet, "sms": sms])
-    }
-    
     static func showChatMessageEncryptedTipAlert() {
         presentViewController("FxTipAlert", context: ["type": 0])
+    }
+    
+    static func pushToFxStaking(wallet: WKWallet, npxs: Coin, fx: Coin) {
+        pushViewController("FxStakingOverviewViewController", context: ["wallet": wallet, "npxs": npxs, "fx": fx])
+    }
+    
+    static func pushToFxStake(wallet: WKWallet, coin: Coin, account: Keypair) {
+        pushViewController("FxStakeViewController", context: ["wallet": wallet, "coin": coin, "account": account])
+    }
+    
+    static func pushToFxRedeem(wallet: WKWallet, coin: Coin, account: Keypair) {
+        pushViewController("FxRedeemViewController", context: ["wallet": wallet, "coin": coin, "account": account])
+    }
+    
+    static func pushToFxClaim(wallet: WKWallet, coin: Coin, account: Keypair) {
+        pushViewController("FxClaimViewController", context: ["wallet": wallet, "coin": coin, "account": account])
+    }
+    
+    static func pushToNPXSSwap(wallet: WKWallet, coin: Coin) {
+        pushViewController("NPXSSwapViewController", context: ["wallet": wallet, "coin": coin])
     }
     
     static func pushToValidatorList(wallet: WKWallet, coin: Coin) {
@@ -81,6 +90,10 @@ extension Router {
     
     static func pushToFxValidatorOverview(wallet: WKWallet, coin: Coin, validator: Validator, account: Keypair?) {
         pushViewController("FxValidatorOverviewViewController", context: ["wallet": wallet, "coin": coin, "validator": validator, "account": account])
+    }
+    
+    static func pushToERC20ToFxTransferAlert(wallet: WKWallet, coin: Coin, account: Keypair) {
+        pushViewController("ERC20ToFxTransferAlertController", context: ["wallet": wallet, "coin": coin, "account": account])
     }
     
     static func pushToFxDelegate(wallet: WKWallet, coin: Coin, validator: Validator, account: Keypair?) {
@@ -123,8 +136,13 @@ extension Router {
         pushViewController("CashBuyViewController", context: ["coin": coin])
     }
     
-    static func showRampWebController(userAddress:String, swapAsset:String, swapAmount:String) {
-        pushViewController("RampWebController", context: ["userAddress":userAddress, "swapAsset":swapAsset, "swapAmount":swapAmount])
+    static func showRampWebController(userAddress:String, swapAsset:String, swapAmount:String) ->UIViewController {
+        let request = RampApi(userAddress: userAddress, swapAsset: swapAsset, swapAmount: swapAmount) 
+        let config = SFSafariViewController.Configuration()
+        let rampVC = SFSafariViewController(url: request.url(), configuration: config) 
+        rampVC.modalPresentationStyle = .overFullScreen
+        Router.topViewController?.present(rampVC, animated: true)
+        return rampVC
     }
     
     static func pushToAllPurchaseController() {

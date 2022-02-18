@@ -44,9 +44,7 @@ class NotificationFoldLayout: UICollectionViewFlowLayout {
         
         guard let limit0 = collectionView?.numberOfItems(inSection: 0) else {
             return
-        }
-         
-        
+        } 
         for item in 0..<limit0 {
             let indexPath0 = IndexPath(item: item, section: 0)
             let attribute0 = UICollectionViewLayoutAttributes(forCellWith: indexPath0)
@@ -60,11 +58,12 @@ class NotificationFoldLayout: UICollectionViewFlowLayout {
             attribute0.isHidden = attribute0.alpha == 0
             self.attributes0.append(attribute0)
         }
-        
         guard let limit = collectionView?.numberOfItems(inSection: 1) else {
             return
         }
         let _scaleXY = 1 - (width! - 20.auto()) / width!
+        
+        
         for item in 0..<min(limit, 8) {
             let indexPath = IndexPath(item: item, section: 1)
             let attribute = UICollectionViewLayoutAttributes(forCellWith: indexPath)
@@ -95,8 +94,6 @@ class NotificationFoldLayout: UICollectionViewFlowLayout {
             let scale = 1.0 - (CGFloat((item+1)) * _scaleXY)
             attribute.isHidden = attribute.alpha == 0
             attribute.transform = CGAffineTransform.identity.scaledBy(x: scale, y: scale)
-            
-            
             self.attributes1.append(attribute)
         }
         
@@ -227,19 +224,14 @@ class NotificationHideLayout: UICollectionViewFlowLayout {
         guard let count0 = collectionView?.numberOfItems(inSection: 0) else {
             return
         }
-        
-        
-        
         for item in 0..<count0 {
             let indexPath0 = IndexPath(item: item, section: 0)
             let attribute0 = UICollectionViewLayoutAttributes(forCellWith: indexPath0)
             let size = delegate.itemSize(layout: self, indexPath: indexPath0)
-            let frame = CGRect(x: left, y: -1 * 20 - size.height, width: width, height: size.height)
+            let frame = CGRect(x: left, y: -size.height, width: width, height: size.height)
             
             attribute0.frame = frame
             attribute0.zIndex = 9999 - (item+1)
-            attribute0.alpha = 0
-            attribute0.transform = CGAffineTransform.identity
             self.attributes0.append(attribute0)
         }
         
@@ -251,11 +243,9 @@ class NotificationHideLayout: UICollectionViewFlowLayout {
             let indexPath = IndexPath(item: item, section: 1)
             let attribute = UICollectionViewLayoutAttributes(forCellWith: indexPath)
             let size = delegate.itemSize(layout: self, indexPath: indexPath)
-            let frame = CGRect(x: left, y: -1 * 20 - size.height, width: width, height: size.height)
+            let frame = CGRect(x: left, y: -size.height, width: width, height: size.height)
             attribute.frame = frame
-            attribute.zIndex = 999 - (item+1)
-            attribute.alpha = 0
-            attribute.transform = CGAffineTransform.identity
+            attribute.zIndex = 999 - (item+1) 
             self.attributes1.append(attribute)
         }
     }

@@ -61,21 +61,16 @@ class OxSwapViewController: WKViewController {
         contentBinder.bind()
         
         let timer = 3600 * 24
-        FxAPIManager.fx.oxTokenList(expired: timer.d).subscribe { (items) in
-        } onError: { (error) in
-            print(error)
-        }.disposed(by: defaultBag)
-        
-        
+        FxAPIManager.fx.oxTokenList(expired: timer.d).subscribe().disposed(by: defaultBag)
         hudHidding.subscribe(onNext: { [weak self] (b) in
             if b {
                 self?.view.hud?.waiting()
             } else {
                 self?.view.hud?.hide()
-            }
-            
+            } 
         }).disposed(by: defaultBag)
-
+        
+        OxSwapModel.priceModelsCache.items.removeAll()
     }
     
     deinit {
@@ -109,6 +104,27 @@ class OxSwapViewController: WKViewController {
     }
 }
 
+
+class WKViewModelBinder<T:UIView, M>: NSObject {
+    var resetDag:DisposeBag = DisposeBag()
+    public let stackView:AloeStackView!
+    public let view:T!
+    public let vModel:M!
+
+    init(stackView:AloeStackView, view:T, viewModel:M) {
+        self.view = view
+        self.vModel = viewModel
+        self.stackView = stackView
+        super.init()
+
+        logWhenDeinit()
+    }
+    func bind() { }
+
+    deinit {
+        resetDag = DisposeBag()
+    }
+}
 
 
 extension OxSwapViewController {
@@ -175,7 +191,6 @@ extension OxSwapViewController {
             
             Observable.of(stackView.rx.didScroll,
                           inputFromBinder.view.maxButton.rx.tap,
-                          //                          rateBinder.view.arrowIV.rx.tap,
                           inputSwitchBinder.view.changeBtn.rx.tap,
                           inputFromBinder.view.selectCoinButton.rx.tap,
                           inputToBinder.view.selectCoinButton.rx.tap)
@@ -188,18 +203,10 @@ extension OxSwapViewController {
                 welf?.endEditing()
             }.disposed(by: resetDag)
             
-            
-            
-            
             inputFromBinder.bind()
             inputToBinder.bind()
             inputSwitchBinder.bind()
             outputActionBinder.bind()
-            
-            
-            
-            
-            
             inputToBinder.view.helpBtn.rx.tap.subscribe { (_) in
                 
                 guard let  value = welf?.outputActionBinder.valueObserver.value else { return }
@@ -208,7 +215,7 @@ extension OxSwapViewController {
             }.disposed(by: resetDag)
             
             inputFromBinder.inputTextObserver
-                .debounce(RxTimeInterval.milliseconds(1000), scheduler: MainScheduler.instance)
+                .debounce(RxTimeInterval.milliseconds(100), scheduler: MainScheduler.instance)
                 .map({ (type, isEditing, text) -> (AmountsType, Bool, String) in
                     let inputText = text != nil ? (text!.count > 0 ? text! : "0")  : "0"
                     return (type, isEditing, inputText)
@@ -228,7 +235,7 @@ extension OxSwapViewController {
                     return Observable.empty()
                 }.flatMap { (type, amountOut, from, to, fromAccount, toAccount) -> Observable<AmountsModel> in
                     guard let this = welf else { return Observable.empty() }
-                                        
+                    
                     if amountOut.isEmpty || amountOut == "0" {
                         this.inputToBinder.view.inputTF.text = ""
                         this.inputToBinder.loadStateObserver.accept((.normal, ""))
@@ -240,6 +247,7 @@ extension OxSwapViewController {
                         return .just(v.model)
                     }
                     
+                    self.outputActionBinder.view.isUserInteractionEnabled = false
                     return this.getPrices(type: type, from: from, to: to, fromAccount: fromAccount, inputAmount: amountOut)
                     
                 }.flatMap { (model) -> Observable<AmountsModel> in
@@ -261,7 +269,7 @@ extension OxSwapViewController {
                 }).map { $0.inputFormatValue }.bind(to: inputToBinder.view.inputTF.rx.text).disposed(by: defaultBag)
             
             
-            inputToBinder.inputTextObserver.debounce(RxTimeInterval.milliseconds(1000), scheduler: MainScheduler.instance)
+            inputToBinder.inputTextObserver.debounce(RxTimeInterval.milliseconds(100), scheduler: MainScheduler.instance)
                 .map({ (type, isEditing, text) -> (AmountsType, Bool, String) in
                     let inputText = text != nil ? (text!.count > 0 ? text! : "0")  : "0"
                     return (type, isEditing, inputText)
@@ -284,16 +292,15 @@ extension OxSwapViewController {
                     
                     if amountOut.isEmpty || amountOut == "0" {
                         this.inputFromBinder.view.inputTF.text = ""
-//                        this.outputActionBinder.approveStatusObserver.accept((.first, ""))
                         this.outputActionBinder.setNeedApprove(approve: false, animate: false)
                         return Observable.empty()
                     }
                     
                     if let v =  OxSwapModel.priceModelsCache.getFromPriceModel(fromToken: from.token, toToken: to.token, fromAmount: amountOut) {
-                        
                         return .just(v.model)
                     }
                     
+                    self.outputActionBinder.view.isUserInteractionEnabled = false
                     return  this.getPrices(type: type, from: from, to: to, fromAccount: fromAccount, inputAmount: amountOut)
                     
                 }.flatMap { (model) -> Observable<AmountsModel> in
@@ -327,12 +334,15 @@ extension OxSwapViewController {
             
             vModel.tokens.subscribe(onNext: { value in
                 if let _value = value {
-                    if let fv = _value.0?.token , let tv = _value.1?.token {
+                    if let _ = _value.0?.token , let _ = _value.1?.token {
                         welf?.vModel.fromV.accept(_value.0)
                         welf?.vModel.toV.accept(_value.1)
                         
                         if let token = _value.0?.token, token.isETH {
                             welf?.outputActionBinder.setNeedApprove(approve: false, animate: true)
+                            welf?.getETHFee()
+                        } else {
+                            welf?.inputFromBinder.view.maxButton.isEnabled = true
                         }
                     } else {
                         welf?.vModel.fromV.accept(_value.0)
@@ -353,24 +363,104 @@ extension OxSwapViewController {
                 guard let wallet = welf?.vModel.wallet else { return }
                 Router.pushToAdvancedSetting(wallet: wallet) { (value) in
                     
-                    
-                    print(value)
                 }
             }.disposed(by: resetDag)
             
             self.view.approveNotice.closeBtn.rx.tap.subscribe { (_) in
                 welf?.view.close()
             }.disposed(by: resetDag)
-            
         }
         
-        private func getPrices(type:AmountsType, from:Coin, to:Coin, fromAccount: Keypair, inputAmount:String) -> Observable<AmountsModel> {
+        var xBag = DisposeBag()
+        var xB: Balance?
+        
+        private func setAllowAmount(account: Keypair, token : Coin, fee: String) {
+            
+            if token.isETH {
+                self.xBag = DisposeBag()
+                self.xB = XWallet.currentWallet?.wk.balance(of: account.address, coin: token) ?? .empty
+                self.xB!.value.asDriver()
+                    .drive(onNext: { [weak self] (value)  in
+                        let scl = value.div10(token.decimal).isLessThan(decimal: "1") ?  8 : 2
+                        let balanceTitle = value.div10(token.decimal, scl).thousandth(8, mb: true)
+                        var rs =  balanceTitle.sub(fee, scl).thousandth(8, mb: true)
+                        if rs.d < 0 {
+                            rs = "0"
+                        }
+                        self?.vModel.maxEthAmount.accept(rs)
+                        self?.inputFromBinder.view.balanceLabel.text = TR("Ox.MAX") + " " + rs
+                        self?.inputFromBinder.view.maxButton.isEnabled = rs != "0"
+                        
+                    }).disposed(by: self.xBag)
+            }
+        }
+        
+        var feeBag = DisposeBag()
+        private func getETHFee() {
+            if let from = self.vModel.fromV.value?.token,
+               let to = self.vModel.toV.value?.token,
+               let fromAccount = self.vModel.fromV.value?.account {
+                self.inputFromBinder.view.maxButton.isEnabled = false
+                feeBag = DisposeBag()
+                getPrices2(type: .out, from: from, to: to, fromAccount: fromAccount, inputAmount: "20")
+                    .subscribe(onNext: {  [weak self] (model) in
+                        if let price = model.price {
+                            let fee = price.gasPrice.mul(price.gas).div10(Coin.ethereum.decimal)
+                            self?.setAllowAmount(account: fromAccount, token: from, fee: fee)
+                        }
+                    }).disposed(by: feeBag)
+            }
+        }
+        
+        private func getPrices2(type:AmountsType, from:Coin, to:Coin, fromAccount: Keypair, inputAmount:String) -> Observable<AmountsModel> {
             let inputAmountBig = type == .out ? inputAmount.mul10(from.decimal) : inputAmount.mul10(to.decimal)
             let fToken =  from.isETH ? from.symbol : from.contract
             let tToken =  to.isETH ? to.symbol : to.contract
             
             weak var welf = self
             
+            return  FxAPIManager.fx.oxPrice(fToken, tToken, fromType: type == .out ? 0: 1 , amount: inputAmountBig).map { (price) -> AmountsModel in
+                if type == .out {
+                    
+                    let amountIn = price.sellAmount.div10(from.decimal)
+                    let amountOut = price.buyAmount.div10(to.decimal)
+                    
+                    let from = OxSwapViewController.AmountsInputModel(fromAccount, from, amountIn, price.sellAmount )
+                    let to = OxSwapViewController.AmountsInputModel(fromAccount, to, amountOut, price.buyAmount )
+                    var rs = AmountsModel(type, from, to, [])
+                    rs.price = price
+                    return rs
+                } else {
+                    let amountOut = price.sellAmount.div10(from.decimal)
+                    let amountIn = price.buyAmount.div10(to.decimal)
+                    
+                    let from = OxSwapViewController.AmountsInputModel(fromAccount, from, amountIn, price.sellAmount)
+                    let to = OxSwapViewController.AmountsInputModel(fromAccount, to, amountOut, price.buyAmount)
+                    var rs = AmountsModel(type, from, to, [])
+                    rs.price = price
+                    return rs
+                }
+            }.catchError({ (error) -> Observable<OxSwapViewController.AmountsModel> in
+                let _error = error as NSError
+                if let _rerror = JSON(_error.userInfo)["validationErrors"].array?.get(0) {
+                    if _rerror["code"].stringValue == "1004" {
+                        welf?.view.hud?.error(m: TR("Ox.Insufficient.Liquidity"))
+                    } else {
+                        welf?.view.hud?.error(m: TR("Ox.Transaction.Invalid"))
+                    }
+                }
+                
+                let null = AmountsModel(type, AmountsInputModel(fromAccount, from, "0", "0"), AmountsInputModel(fromAccount, to, inputAmount, "0"), [])
+                return  .just(null)
+            })
+        }
+        
+        
+        private func getPrices(type:AmountsType, from:Coin, to:Coin, fromAccount: Keypair, inputAmount:String) -> Observable<AmountsModel> {
+            let inputAmountBig = type == .out ? inputAmount.mul10(from.decimal) : inputAmount.mul10(to.decimal)
+            let fToken =  from.isETH ? from.symbol : from.contract
+            let tToken =  to.isETH ? to.symbol : to.contract
+            weak var welf = self
             if type == .out {
                 self.vModel.startFrom = true
                 self.inputToBinder.waitingObserver.accept(true)
@@ -378,10 +468,24 @@ extension OxSwapViewController {
                 self.vModel.startFrom = false
                 self.inputFromBinder.waitingObserver.accept(true)
             }
-            
-            self.inputToBinder.loadStateObserver.accept((.refresh, TR("Finding best price...")))
-            
-            return  FxAPIManager.fx.oxPrice(fToken, tToken, fromType: type == .out ? 0: 1 , amount: inputAmountBig).map { (price) -> AmountsModel in
+            self.inputToBinder.loadStateObserver.accept((.refresh, TR("Ox.Finding.Price")))
+            return  FxAPIManager.fx.oxPrice(fToken, tToken, fromType: type == .out ? 0: 1 , amount: inputAmountBig)
+                .flatMap({ (price) -> Observable<Price> in
+                    guard let this = welf else {return .error( NSError(0, msg: ""))}
+                    let inputBinder = type == .out ? this.inputFromBinder : this.inputToBinder
+                    
+                    if let inputAmount = inputBinder.inputTextObserver.value.2,
+                       let fcoin = inputBinder.vModel.fromV.value?.token, let tcoin = inputBinder.vModel.toV.value?.token {
+                        let inputCoin = type == .out ? fcoin : tcoin
+                        let gInputAmountStr = type == .out ? price.sellAmount : price.buyAmount
+                        let inputAmountStr = inputAmount.mul10(inputCoin.decimal) 
+                        if inputAmountStr == gInputAmountStr {
+                            return .just(price)
+                        }
+                    } 
+                    return .error( NSError(0, msg: ""))
+                })
+                .map { (price) -> AmountsModel in
                 if type == .out {
                     
                     let amountIn = price.sellAmount.div10(from.decimal)
@@ -411,20 +515,19 @@ extension OxSwapViewController {
             }.catchError({ (error) -> Observable<OxSwapViewController.AmountsModel> in
                             let _error = error as NSError
                             if let _rerror = JSON(_error.userInfo)["validationErrors"].array?.get(0) {
-                                print("===", _rerror["code"], _rerror["reason"])
                                 if _rerror["code"].stringValue == "1004" {
                                     welf?.view.hud?.error(m: TR("Ox.Insufficient.Liquidity"))
                                 } else {
                                     welf?.view.hud?.error(m: TR("Ox.Transaction.Invalid"))
                                 }
                             }
-
+                            
                             let null = AmountsModel(type, AmountsInputModel(fromAccount, from, "0", "0"), AmountsInputModel(fromAccount, to, inputAmount, "0"), [])
                             return  .just(null)               })
-            //.catchErrorJustReturn(AmountsModel(type, AmountsInputModel(fromAccount, from, "0", "0"), AmountsInputModel(toAccount, to, inputAmount, "0"), []))
             .do(onNext: { (_) in
                 welf?.inputFromBinder.waitingObserver.accept(false)
                 welf?.inputToBinder.waitingObserver.accept(false)
+                welf?.outputActionBinder.view.isUserInteractionEnabled = true
             })
         }
         
@@ -483,26 +586,32 @@ extension OxSwapViewController {
                 
                 guard let  this = self else { return }
                 if !this.view.isReceived {
-                    this.xBag = DisposeBag()
-                    this.xB = XWallet.currentWallet?.wk.balance(of: account.address, coin: token) ?? .empty
-                    this.xB!.value.asDriver()
-                        .drive(onNext: { (value)  in
-                            let scl = value.div10(token.decimal).isLessThan(decimal: "1") ?  8 : 2
-                            let balanceTitle = value.div10(token.decimal, scl).thousandth(8, mb: true)
-                            self?.view.balanceLabel.text = TR("Swap.EditPermission.Balance") + ": \(balanceTitle)" //TR("Balance: %@", balanceTitle)
-                        }).disposed(by: welf!.xBag)
+                    if !token.isETH {
+                        this.xBag = DisposeBag()
+                        this.xB = XWallet.currentWallet?.wk.balance(of: account.address, coin: token) ?? .empty
+                        this.xB!.value.asDriver()
+                            .drive(onNext: { (value)  in
+                                let scl = value.div10(token.decimal).isLessThan(decimal: "1") ?  8 : 2
+                                let balanceTitle = value.div10(token.decimal, scl).thousandth(8, mb: true)
+                                
+                                self?.view.balanceLabel.text = TR("Ox.MAX") + " \(balanceTitle)"//TR("Swap.EditPermission.Balance") + ": \(balanceTitle)"
+                            }).disposed(by: welf!.xBag)
+                    } else {
+                        self?.view.balanceLabel.text = TR("Ox.MAX") + " 0"
+                    }
                 }
             }).disposed(by: resetDag)
             
             let inputContentView = view.inputContentView
             let inputTextView = view.inputTF
+            let bottomOffset = amountsType == .in ? -50.auto() : -19.auto()
             view.inputTF.rx.controlEvent([.editingDidBegin])
                 .observeOn(MainScheduler.instance)
                 .do(afterNext: { (_) in
                     inputContentView.borderColor = HDA(0x0552DC)
                     inputContentView.snp.remakeConstraints { (make) in
                         make.left.equalTo(10.auto())
-                        make.bottom.equalToSuperview().offset(-19.auto())
+                        make.bottom.equalToSuperview().offset(bottomOffset)
                         make.height.equalTo(39.auto())
                         make.right.equalToSuperview().inset(10.auto())
                     }
@@ -523,7 +632,7 @@ extension OxSwapViewController {
                     inputContentView.borderColor = .clear
                     inputContentView.snp.remakeConstraints { (make) in
                         make.left.equalTo(10.auto())
-                        make.bottom.equalToSuperview().offset(-19.auto())
+                        make.bottom.equalToSuperview().offset(bottomOffset)
                         make.height.equalTo(39.auto())
                         make.width.equalToSuperview().multipliedBy(0.4)
                     }
@@ -540,7 +649,6 @@ extension OxSwapViewController {
     }
     
     class InputFromBinder: InputBinder {
-        /// 流动性提供者
         let mobilityScale:Double = 0.003
         override var amountsType: OxSwapViewController.AmountsType { return .out }
         
@@ -553,6 +661,9 @@ extension OxSwapViewController {
             super.bind()
             weak var welf = self
             let mobilityScale = self.mobilityScale
+            
+            view.maxButton.isEnabled = false
+            
             view.maxButton.rx.tap.subscribe(onNext: { (_) in
                 guard let tmodel = welf?.vModel?.fromV.value,
                       let token = tmodel.token, let account = tmodel.account else { return }
@@ -562,7 +673,10 @@ extension OxSwapViewController {
                 var inputValue = maxValue.sub(mobilityValue, 8)
                 if !token.isETH {
                     inputValue = maxValue.sub("0", 8)
+                } else {
+                    inputValue = welf!.vModel.maxEthAmount.value
                 }
+                
                 welf?.view.inputTF.text = inputValue
                 welf?.inputTextObserver.accept((.out, true, inputValue))
             }).disposed(by: resetDag)
@@ -572,22 +686,17 @@ extension OxSwapViewController {
                    let fObserver = welf?.inputTextObserver,
                    let tObserver = welf?.inputToBinder?.inputTextObserver
                 {
-                    let toInputValue =  tObserver.value.2 != nil ? (tObserver.value.2!.count > 0 ? tObserver.value.2! : "0")  : "0"
+                    let _ =  tObserver.value.2 != nil ? (tObserver.value.2!.count > 0 ? tObserver.value.2! : "0")  : "0"
                     
                     guard let type = welf?.vModel.startFrom  else {
-                         return Observable.empty()
+                        return Observable.empty()
                     }
                     
                     if type {
-                       return Observable.just((.out, fObserver))
+                        return Observable.just((.out, fObserver))
                     } else {
-                       return Observable.just((.in, tObserver))
+                        return Observable.just((.in, tObserver))
                     }
-                    
-//                    if toInputValue != "0" {
-//                        return Observable.just((.in,tObserver))
-//                    }
-//                    return Observable.just((.out, fObserver))
                 }else {
                     return Observable.empty()
                 }
@@ -633,25 +742,19 @@ extension OxSwapViewController {
     class InputToBinder: InputBinder {
         override var amountsType: OxSwapViewController.AmountsType { return .in }
         var inputFromBinder: InputFromBinder?
-        
-        
         let loadStateObserver = BehaviorRelay<(OxSwapViewModel.LoadState, String)>(value: (.normal, ""))
-        
         override var valueObserver: BehaviorRelay<TokenModel?>? {
             return self.vModel.toV
         }
         
+        let usdPriceObserver = BehaviorRelay<String?>(value: nil)
+        
         override func bind() {
             super.bind()
             weak var welf = self
-            
             loadStateObserver.accept((.normal, ""))
-            
-            
-            
             loadStateObserver.asDriver().drive ( onNext: { (state, message) in
                 guard let this = welf else { return }
-                
                 switch state {
                 case .normal:
                     this.view.helpBtn.isHidden = true
@@ -665,13 +768,12 @@ extension OxSwapViewController {
                 }
             }).disposed(by: resetDag)
             
-            
             view.selectCoinButton.rx.tap.subscribe { (_) in
                 guard let vmodel = welf?.vModel else { return }
                 Router.showToSelectCoin(wallet: vmodel.wallet, filterCoin: vmodel.fromV.value?.token) { (coin) in
                     
                     let  rs = TokenModel(token: coin, account: Keypair.empty)
-                    if let fV = welf?.vModel.fromV.value, let fToken = fV.token, let fAccount = fV.account {
+                    if let fV = welf?.vModel.fromV.value, let fToken = fV.token, let _ = fV.account {
                         if  fToken.symbol == rs.token!.symbol {
                             welf?.vModel.tokens.accept((welf?.vModel.toV.value, rs))
                         } else {
@@ -684,28 +786,23 @@ extension OxSwapViewController {
                 
             }.disposed(by: resetDag)
             
+            vModel.toV.flatMap { (model) -> Observable<Bool> in
+                return .just(model != nil)
+            }.bind(to: view.inputTF.rx.isEnabled).disposed(by: resetDag)
+            
             vModel.toV.filterNil().flatMap { (token) -> Observable<(AmountsType,BehaviorRelay<(AmountsType, Bool,String?)>)> in
                 if let _ = welf?.vModel.fromV.value?.token ,
                    let tObserver = welf?.inputTextObserver,
-                   let fObserver = welf?.inputFromBinder?.inputTextObserver
-                {
-                    let fromInputValue =  fObserver.value.2 != nil ? (fObserver.value.2!.count > 0 ? fObserver.value.2! : "0")  : "0"
-//                    if fromInputValue != "0" {
-//                        return Observable.just((.out,fObserver))
-//                    }
-//                    return Observable.just((.in,tObserver))
-                    
-                    
+                   let fObserver = welf?.inputFromBinder?.inputTextObserver {
+                    let _ =  fObserver.value.2 != nil ? (fObserver.value.2!.count > 0 ? fObserver.value.2! : "0")  : "0"
                     guard let type = welf?.vModel.startFrom  else {
-                         return Observable.empty()
+                        return Observable.empty()
                     }
-                    
                     if type {
-                      return  Observable.just((.out, fObserver))
+                        return  Observable.just((.out, fObserver))
                     } else {
-                      return  Observable.just((.in, tObserver))
+                        return  Observable.just((.in, tObserver))
                     }
-                    
                 }else {
                     return Observable.empty()
                 }
@@ -715,6 +812,45 @@ extension OxSwapViewController {
                 behavior.accept((type, true, value.2))
             })
             .disposed(by: resetDag)
+            
+            vModel.toV.flatMap { (model) -> Observable<String?> in
+                if let _token = model?.token {
+                    return _token.symbol.exchangeRate().value.flatMap { (rate) -> Observable<String?> in
+                        if rate.isUnknown == false {
+                            return .just("$\(rate.value.formattedDecimal(ThisAPP.CurrencyDecimal))")
+                        }
+                        return  .just(rate.value)
+                    }
+                }
+                return .just(nil)
+            }
+            .bind(to: usdPriceObserver)
+            .disposed(by: resetDag)
+            
+            usdPriceObserver.asDriver().drive ( onNext: { value in
+                welf?.setHideUsdPrice(isHide: value == nil)
+                welf?.oView?.usdPriceLabel.text = value
+            }).disposed(by: resetDag)
+        }
+        
+        var oView:OutputCoinView? {
+            return self.view as? OutputCoinView
+        }
+        
+        private func setHideUsdPrice(isHide:Bool) {
+            if isHide == false {
+                self.oView?.usdPriceLabel.isHidden = false
+                self.view.inputContentView.snp.updateConstraints { (make) in
+                    make.bottom.equalToSuperview().offset(-50.auto())
+                }
+                self.view.height(constant: 153.auto())
+            }else {
+                self.oView?.usdPriceLabel.isHidden = true
+                self.view.inputContentView.snp.updateConstraints { (make) in
+                    make.bottom.equalToSuperview().offset(-19.auto())
+                }
+                self.view.height(constant: 117.auto())
+            }
         }
     }
     
@@ -722,30 +858,7 @@ extension OxSwapViewController {
         var inputFromBinder: InputFromBinder?
         var inputToBinder: InputToBinder?
         
-        override func bind() {
-            weak var welf = self
-            resetDag = DisposeBag()
-            view.changeBtn.isEnabled = true
-            view.changeBtn.rx.tap.subscribe { (_) in
-                guard let vmodel = welf?.vModel else { return }
-                
-                //                Router.showOxTipAlert()
-                //                let vc = FxPopViewController()
-                //                Router.present(vc)
-                //                welf?.vModel.tokens.accept((vmodel.toV.value, vmodel.fromV.value))
-                //                if vmodel.startFrom {
-                //                    let fromInputValue = welf?.inputFromBinder?.view.inputTF.text
-                //                    welf?.inputToBinder?.view.inputTF.text = fromInputValue
-                //                    welf?.inputFromBinder?.view.inputTF.text = ""
-                //                    welf?.inputToBinder?.inputTextObserver.accept((.in, true, fromInputValue))
-                //                } else {
-                //                    let toInputValue = welf?.inputToBinder?.view.inputTF.text
-                //                    welf?.inputFromBinder?.view.inputTF.text = toInputValue
-                //                    welf?.inputToBinder?.view.inputTF.text = ""
-                //                    welf?.inputFromBinder?.inputTextObserver.accept((.out, true, toInputValue))
-                //                }
-            }.disposed(by: resetDag)
-        }
+        override func bind() {  }
     }
     
     
@@ -763,31 +876,24 @@ extension OxSwapViewController {
         override func bind() {
             weak var welf = self
             resetDag = DisposeBag()
-            
             welf?.setNeedApprove(approve: false, animate: false)
-            
             valueObserver.filterNil()
                 .observeOn(MainScheduler.instance)
                 .do(onNext: { (model) in
-                    let isZero:Bool = (model.from.inputValue == NSDecimalNumber.zero.stringValue || model.to.inputValue == NSDecimalNumber.zero.stringValue)
+                    let isZero:Bool = (model.from.inputValue == NSDecimalNumber.zero.stringValue ||
+                                        model.to.inputValue == NSDecimalNumber.zero.stringValue)
                     welf?.inputToBinder?.loadStateObserver.accept((.normal, ""))
-                    //                    welf?.view.alpha = isZero ? 0 : 1
-                    
-//                    welf?.inputToBinder?.loadStateObserver.accept((.normal, ""))
                     if isZero {
                         welf?.approveStatusObserver.accept((.first, ""))
                     }
                 })
                 .flatMap({ (model) -> Observable<AmountsModel> in
-                    //额度是否足够
                     if let balance = XWallet.currentWallet?.wk.balance(of: model.from.account.address,
                                                                        coin: model.from.token),
-                       let mobilityScale = welf?.inputFromBinder?.mobilityScale
+                       let _ = welf?.inputFromBinder?.mobilityScale
                     {
                         let maxValue = balance.value.value.div10(model.from.token.decimal)
-                        let mobilityValue = balance.value.value.mul(String(mobilityScale)).div10(model.from.token.decimal, 8)
-                        let inputValue = maxValue.sub(mobilityValue, 8)
-                        let balanceBigValue:BigInt = BigInt(inputValue.mul10(model.from.token.decimal)) ?? BigInt(0)
+                        let balanceBigValue:BigInt = BigInt(maxValue.mul10(model.from.token.decimal)) ?? BigInt(0)
                         let userInputBigValue:BigInt = BigInt(model.from.inputBigValue) ?? BigInt(0)
                         if userInputBigValue > balanceBigValue {
                             welf?.approveStatusObserver.accept((OxSwapViewModel.ApproveState.onEnough,
@@ -809,12 +915,9 @@ extension OxSwapViewController {
                     if inputBig == 0 { return Observable.just((BigInt(0), inputBig)) }
                     
                     guard let allowanceTarget =  model.price?.allowanceTarget else {
-                        print("-")
                         return Observable.just( (BigInt(0), inputBig) )
                     }
-                    //                    return Observable.just( (BigInt(0), inputBig) )
-                    
-                    return  OxNode.Shared.allowance(owner: tokenContract, spender: allowanceTarget, tokenContract: tokenAddress).debug().map { (reslut) -> (BigInt, BigInt) in
+                    return  OxNode.Shared.allowance(owner: tokenContract, spender: allowanceTarget, tokenContract: tokenAddress).map { (reslut) -> (BigInt, BigInt) in
                         return (BigInt(reslut) ?? BigInt(0), inputBig)
                     }.catchErrorJustReturn((BigInt(0), inputBig))
                 }
@@ -849,16 +952,14 @@ extension OxSwapViewController {
                 .disposed(by: resetDag)
             
             approveStatusObserver.asDriver().drive ( onNext: { (state, message) in
-                print(state, message)
                 guard let this = welf else { return }
-
+                
                 this.view.approveButton.isUserInteractionEnabled = true
                 this.view.isComplated = false
                 switch state {
                 case .first:
                     this.stackView.isUserInteractionEnabled = true
                     this.view.swapButton.set(title: TR("Ox.Order.Title"), enable: false, waiting: false)
-//                    self.view.relayout(false)
                 case .normal:
                     this.view.approveButton.isHidden = false
                     this.stackView.isUserInteractionEnabled = true
@@ -888,9 +989,10 @@ extension OxSwapViewController {
                     this.view.swapStepButton.isHidden = true
                     this.view.swapButton.isHidden = false
                     this.view.swapButton.set(title: message, enable: false)
+                    this.view.apporveTip.alpha = 0
                     this.view.layoutSubviews()
                 case .slidingPoint:
-
+                    
                     this.stackView.isUserInteractionEnabled = true
                     this.view.approveButton.isHidden = true
                     this.view.swapStepButton.isHidden = true
@@ -943,7 +1045,7 @@ extension OxSwapViewController {
                     }
                     return Observable.just((false, BigInt(0)))
                 }
-                .do(onNext: { (result, allowancBig) in  //显示 授权成功提示
+                .do(onNext: { (result, allowancBig) in
                     if allowancBig > 0, let from = welf?.vModel.fromV.value?.token,
                        let superview = welf?.controllerView,
                        let model =  welf?.vModel.approvedList.value.get(from.symbol) {
@@ -965,21 +1067,11 @@ extension OxSwapViewController {
                 if let inputFromValue = welf?.inputFromBinder?.inputTextObserver.value.2,
                    let inputFromToken = welf?.inputFromBinder?.valueObserver?.value?.token {
                     let value = AmountsValue(inputFromToken, inputFromValue)
-                    guard let wallet = welf?.vModel.wallet, let vm = welf?.vModel, let balance = welf?.inputFromBinder?.xB?.value.value else {
+                    guard let _ = welf?.vModel.wallet, let _ = welf?.vModel,
+                          let _ = welf?.inputFromBinder?.xB?.value.value else {
                         return
                     }
-                    
                     welf?.approved(value)
-                    
-                    //                    vm.balanceAmount.accept((balance, ""))
-                    //                    Router.pushToSwapApprove(wallet: wallet, vm: vm) { (rs) in
-                    //                        guard let _rs = rs else { return }
-                    //                        if   _rs.isEqual(to: WKError.success) {
-                    //                            welf?.approveWaitingObserver.accept((value, true))
-                    //                        } else {
-                    //                            welf?.approveStatusObserver.accept((.normal, ""))
-                    //                        }
-                    //                    }
                 }
             }).disposed(by: resetDag)
             
@@ -990,7 +1082,6 @@ extension OxSwapViewController {
                 }
                 
                 Router.pushToOxConfirmSwap(wallet: wallet, vm: vm, amountsMdoel: amountsMdoel)
-                
             }).disposed(by: resetDag)
             
             view.swapStepButton.buttonView.rx.tap.subscribe(onNext: {
@@ -1003,16 +1094,10 @@ extension OxSwapViewController {
         }
         
         func setNeedApprove(approve:Bool, animate:Bool = false) {
-            
             weak var welf = self
-            
             let block = {
-//                self.view.relayout(approve)
                 self.view.isAprove = approve
                 let state: ApproveState = approve ? .normal : .first
-                
-                print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",approve, state)
-                
                 welf?.approveStatusObserver.accept((state, ""))
             }
             
@@ -1050,16 +1135,14 @@ extension OxSwapViewController {
             OxNode.Shared.buildEthTx(txTran, fromCoin: model.from.token, wallet: wallet.rawValue)
                 .observeOn(MainScheduler.instance)
                 .subscribe(onNext: { (tx) in
-                    print("\(tx.from)")
                     tx.is0xApproved = true
                     tx.fromName = model.from.token.symbol
                     
-                   
+                    
                     welf?.controllerView?.hud?.hide()
                     Router.pushToSendTokenFee(tx: tx, account: model.from.account) { (error, json) in
                         let hash = json["hash"].stringValue
                         if hash.length > 0 {
-                            
                             welf?.vModel.approvedList.value.add(item: ApprovedModel(token: model.from.token.symbol, amount: "115792089237316195423570985008687907853269984665640564039457584007913129639935",
                                                                                     txHash: hash, coin: tx.coin))
                         }
@@ -1071,15 +1154,9 @@ extension OxSwapViewController {
                         
                         if WKError.canceled.isEqual(to: error) {
                             if value {
-                                
                                 welf?.approveWaitingObserver.accept((amountsValue, true))
-                                
-                                //                                welf?.completionHandler?(.success)
                             } else {
-                                
                                 welf?.approveStatusObserver.accept((.normal, ""))
-                                
-                                //                                welf?.completionHandler?(.canceled)
                             }
                             Router.pop(to: "OxSwapViewController")
                         }

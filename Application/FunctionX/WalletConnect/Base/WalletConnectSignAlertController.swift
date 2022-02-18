@@ -28,8 +28,7 @@ class WalletConnectSignAlertController: FxRegularPopViewController {
         self.dapp = dapp
         self.account = account
         self.message = message
-        super.init(nibName: nil, bundle: nil)
-        self.bindHero()
+        super.init(nibName: nil, bundle: nil) 
     }
     
     let dapp: Dapp
@@ -70,33 +69,7 @@ class WalletConnectSignAlertController: FxRegularPopViewController {
     
     private var messageText: String? { message as? String }
 }
-
-extension WalletConnectSignAlertController {
-    override func heroAnimator(from: String, to: String) -> WKHeroAnimator? {
-        switch (from, to) {
-        case (_, "WalletConnectSignAlertController"): return animators["0"]
-        default: return nil
-        }
-    }
-    
-    private func bindHero() {
-        weak var welf = self
-        let animator = WKHeroAnimator({ (_) in
-            welf?.setBackgoundOverlayViewImage()
-            welf?.wk.view.popAnimation(enabled: true)
-        }, onSuspend: { (_) in
-            welf?.wk.view.popAnimation(enabled: false)
-        })
-        self.animators["0"] = animator
-    }
-}
-
-
  
-
-
-
-
 //MARK: View
 extension WalletConnectSignAlertController {
     class ContentCell: FxTableViewCell {

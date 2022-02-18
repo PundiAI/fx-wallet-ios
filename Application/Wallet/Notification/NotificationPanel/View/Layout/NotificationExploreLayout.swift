@@ -16,6 +16,8 @@ protocol NotificationLayoutDelegate:NSObjectProtocol {
 
 class NotificationExpandLayout: UICollectionViewFlowLayout {
     private var delegate:NotificationLayoutDelegate!
+    var minIndexPath: IndexPath?
+    var maxIndexPath: IndexPath?
     
     private var insertedIndexPaths:Array<IndexPath>?
     private var removedIndexPaths:Array<IndexPath>? 
@@ -42,31 +44,29 @@ class NotificationExpandLayout: UICollectionViewFlowLayout {
             return
         }
         
-        var top = CGFloat(0.0)
-        let left = CGFloat(0.0)
+        var top:CGFloat = CGFloat(10.auto())
+        let left = CGFloat(24.0)
         let width = collectionView?.frame.size.width
-          
+        
         attributes0 = Array<UICollectionViewLayoutAttributes>()
         attributes1 = Array<UICollectionViewLayoutAttributes>()
         
         guard let limit0 = collectionView?.numberOfItems(inSection: 0) else {
             return
-        }
-        let scaleXY = (collectionView!.bounds.width - 24.auto() * 2) / collectionView!.bounds.width
+        } 
         for item in 0..<limit0 {
             let indexPath0 = IndexPath(item: item, section: 0)
             let attribute0 = UICollectionViewLayoutAttributes(forCellWith: indexPath0)
             let size0 = delegate.itemSize(layout: self, indexPath: indexPath0)
-            let frame = CGRect(x: left, y: ceil(top + CGFloat(indexPath0.row * 0)), width: width!, height: size0.height)
+            let frame = CGRect(x: left, y: ceil(top + CGFloat(indexPath0.row * 24)), width: width! - left * 2, height: size0.height)
             
             attribute0.frame = frame
             attribute0.zIndex = 9999
             attribute0.alpha = 0
             attribute0.isHidden = true
-            attribute0.transform = CGAffineTransform.identity.scaledBy(x: scaleXY, y: scaleXY)
             self.attributes0.append(attribute0)
         }
-         
+        
         guard let limit1 = collectionView?.numberOfItems(inSection: 1) else {
             return
         }
@@ -74,12 +74,11 @@ class NotificationExpandLayout: UICollectionViewFlowLayout {
             let indexPath = IndexPath(item: item, section: 1)
             let attribute = UICollectionViewLayoutAttributes(forCellWith: indexPath) 
             let size = delegate.itemSize(layout: self, indexPath: indexPath)
-            let frame = CGRect(x: left, y: ceil(top + CGFloat(indexPath.row * 0)), width: width!, height: size.height)
+            let frame = CGRect(x: left, y: ceil(top + CGFloat(indexPath.row * 24)), width: width! - left * 2, height: size.height)
             
             attribute.frame = frame
             attribute.zIndex = 999 - (item+1)
             attribute.alpha = 1
-            attribute.transform = CGAffineTransform.identity.scaledBy(x: scaleXY, y: scaleXY)
             self.attributes1.append(attribute)
             top += size.height
         }
@@ -114,8 +113,35 @@ extension NotificationExpandLayout {
                 }
             }
         }
+        
+        guard
+            let minIndexPath = updateItems.compactMap({ $0.indexPathBeforeUpdate ?? $0.indexPathAfterUpdate }).min(),
+            let maxIndexPath = updateItems.compactMap({ $0.indexPathBeforeUpdate ?? $0.indexPathAfterUpdate }).max()
+        else { return }
+        self.minIndexPath = minIndexPath
+        self.maxIndexPath = maxIndexPath
     }
     
+    override func targetContentOffset(forProposedContentOffset proposedContentOffset: CGPoint) -> CGPoint {
+        let targetContentOffset = super.targetContentOffset(forProposedContentOffset: proposedContentOffset)
+ 
+        guard let _ = collectionView, let _ = minIndexPath, let _ = maxIndexPath
+        else { return targetContentOffset }
+        
+//        let viewTop = collectionView.contentOffset.y
+//        let viewBottom = viewTop + collectionView.frame.size.height
+//        let updateBottom = maxAttributes.frame.origin.y
+//        let currentHeight = collectionView.contentSize.height
+//        let newHeight = collectionViewContentSize.height
+//        if currentHeight > newHeight,
+//           viewBottom > updateBottom {
+//            let diff = currentHeight - newHeight
+//            return CGPoint(x: targetContentOffset.x,
+//                           y: max(collectionView.contentOffset.y - diff, 0))
+//        }
+        return CGPoint(x: targetContentOffset.x, y: targetContentOffset.y + 0.5)
+    }
+  
     override func layoutAttributesForElements(in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
         var visibleLayoutAttributes = [UICollectionViewLayoutAttributes]()
         for attributes in self.attributes0 {
@@ -156,7 +182,7 @@ extension NotificationExpandLayout {
             return super.initialLayoutAttributesForAppearingItem(at: itemIndexPath)
         }
     }
-
+    
     override func finalLayoutAttributesForDisappearingItem(at itemIndexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
         if self.removedIndexPaths?.contains(itemIndexPath) ?? false {
             if let attributes = self.attributes1.get(itemIndexPath.row) {
@@ -167,12 +193,14 @@ extension NotificationExpandLayout {
         }
         return super.finalLayoutAttributesForDisappearingItem(at: itemIndexPath)
     }
-
+    
     override func finalizeCollectionViewUpdates() {
         super.finalizeCollectionViewUpdates()
         
         self.insertedIndexPaths = nil
         self.removedIndexPaths = nil
+        minIndexPath = nil
+        maxIndexPath = nil
     }
 }
 

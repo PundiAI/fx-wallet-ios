@@ -37,10 +37,11 @@ extension SettingsViewController {
             
             let version = (Bundle.main.infoDictionary?["CFBundleVersion"] as? String) ?? ""
             let shortVersion = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? ""
+            
             #if DEBUG
             v.text = "Beta \(shortVersion) (\(version)) \(ServerENV.current.rawString) \n \(NetworkServer.hosts.api)"
             #else
-            v.text = "Beta \(shortVersion) (\(version))"
+            v.text = "\(shortVersion)"
             #endif
             v.font = XWallet.Font(ofSize: 10)
             v.autoFont = true
@@ -113,6 +114,7 @@ extension SettingsViewController {
             case debug_web
             case message_set
             case newtrok
+            case btcAddress
         }
         
         override class func height(model: Any?) -> CGFloat {
@@ -156,6 +158,8 @@ extension SettingsViewController {
                     titleLabel.text = TR("Settings.Message.Settings")
                 case .newtrok:
                     titleLabel.text = TR("Setting.Newtrok.Title")
+                case .btcAddress:
+                    titleLabel.text = TR("Setting.ToggleBTCAddressType")
                 }
             }
         }
@@ -399,8 +403,12 @@ extension SettingsViewController {
             return v
         }()
         
+        override func initSubView() {
+            super.initSubView()
+            logWhenDeinit(tag: "Settings")
+        }
+        
         override func layoutUI() {
-            
             contentView.addSubview(titleLabel)
             titleLabel.snp.makeConstraints { (make) in
                 make.left.equalTo(24.auto())
@@ -560,6 +568,7 @@ extension SettingsViewController {
                     stateButton.setBackgroundImage(UIImage.createImageWithColor(color: .clear), for: .normal)
                     stateButton.titleColor = COLOR.subtitle
                 }
+                stateButton.isUserInteractionEnabled = dataType == .update
                 relayout()
             }
         }
